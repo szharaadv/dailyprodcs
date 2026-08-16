@@ -1,0 +1,1019 @@
+.checksheet-card {
+    background: #fff;
+    border: 1px solid #e6e8ec;
+    border-radius: 10px;
+    padding: 24px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dept-context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f0f1f3;
+    flex-shrink: 0;
+}
+
+.dept-context-label { font-size: 12.5px; color: #8b93a1; }
+.dept-context-name {
+    font-weight: 700;
+    font-size: 13.5px;
+    background: #fbeae7;
+    color: #9b3b32;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+
+.dept-switch-link {
+    font-size: 12.5px;
+    color: #9b3b32;
+    text-decoration: none;
+    font-weight: 600;
+}
+.dept-switch-link:hover { text-decoration: underline; }
+.dept-switch-link-disabled { color: #c7ccd4; cursor: default; }
+.dept-switch-link-next { margin-left: auto; }
+.dept-switch-link-disabled:hover { text-decoration: none; }
+
+.form-grid-top {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px 24px;
+    margin-bottom: 22px;
+    flex-shrink: 0;
+}
+
+.field-block { display: flex; flex-direction: column; gap: 6px; }
+
+.field-block label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: #8b93a1;
+}
+
+.field-block input,
+.field-block select {
+    padding: 10px 12px;
+    border: 1px solid #d7dbe2;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1f2430;
+    background: #fff;
+}
+
+.field-block input:focus,
+.field-block select:focus {
+    outline: none;
+    border-color: #9b3b32;
+}
+
+.field-block input[readonly] {
+    background: #f8f9fa;
+    color: #4a5262;
+    cursor: not-allowed;
+}
+
+.static-value {
+    padding: 10px 12px;
+    border: 1px solid #eef0f2;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #1f2430;
+}
+
+.table-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 120px;
+    border: 1px solid #e6e8ec;
+    border-radius: 8px;
+}
+
+.checklist-table {
+    width: 100%;
+    min-width: 1080px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.checklist-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    padding: 10px 8px;
+    font-size: 12.5px;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+}
+
+.checklist-table tbody td {
+    padding: 8px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f1f3;
+    text-align: center;
+    overflow-wrap: break-word;
+}
+
+.checklist-table tbody tr:nth-child(odd) { background: #fafafb; }
+
+.checklist-table tbody td:nth-child(2) { text-align: left; }
+
+/* column widths: Condition, Checking Item, Metode, Min, Max, Tank/Tube, Satuan, Actual Result, Category */
+.checklist-table th:nth-child(1), .checklist-table td:nth-child(1) { width: 110px; }
+.checklist-table th:nth-child(2), .checklist-table td:nth-child(2) { width: 230px; }
+.checklist-table th:nth-child(3), .checklist-table td:nth-child(3) { width: 120px; }
+.checklist-table th:nth-child(4), .checklist-table td:nth-child(4) { width: 90px; }
+.checklist-table th:nth-child(5), .checklist-table td:nth-child(5) { width: 90px; }
+.checklist-table th:nth-child(6), .checklist-table td:nth-child(6) { width: 80px; }
+.checklist-table th:nth-child(7), .checklist-table td:nth-child(7) { width: 70px; }
+.checklist-table th:nth-child(8), .checklist-table td:nth-child(8) { width: 170px; }
+.checklist-table th:nth-child(9), .checklist-table td:nth-child(9) { width: 120px; }
+
+.checklist-table td:nth-child(1), .checklist-table td:nth-child(3), .checklist-table td:nth-child(4),
+.checklist-table td:nth-child(5), .checklist-table td:nth-child(6), .checklist-table td:nth-child(7) {
+    white-space: nowrap;
+}
+
+.assy-table {
+    width: 100%;
+    min-width: 1020px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.assy-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    padding: 10px 8px;
+    font-size: 12.5px;
+    position: sticky;
+    top: 0;
+    height: 37px;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+/* Grouped two-row headers (e.g. fopump-table): the 2nd header row must stick
+ * BELOW the 1st, not at top:0 too, otherwise both rows race to the same
+ * position and the 2nd row overlaps/jumps on top of the 1st while scrolling. */
+.assy-table thead tr:nth-child(2) th {
+    top: 37px;
+}
+
+.assy-table tbody td {
+    padding: 8px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f1f3;
+    text-align: center;
+    overflow-wrap: break-word;
+}
+
+.assy-table tbody tr:nth-child(odd) { background: #fafafb; }
+.assy-table tbody td:nth-child(1) { text-align: left; }
+
+.assy-table th:nth-child(1), .assy-table td:nth-child(1) { width: 280px; }
+.assy-table th:nth-child(2), .assy-table td:nth-child(2) { width: 220px; }
+.assy-table th:nth-child(3), .assy-table td:nth-child(3) { width: 110px; }
+.assy-table th:nth-child(4), .assy-table td:nth-child(4) { width: 110px; }
+.assy-table th:nth-child(5), .assy-table td:nth-child(5) { width: 150px; }
+.assy-table th:nth-child(6), .assy-table td:nth-child(6) { width: 150px; }
+
+.assy-table td:nth-child(3), .assy-table td:nth-child(4) { white-space: nowrap; }
+
+.washing-table {
+    width: 100%;
+    min-width: 980px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.washing-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    padding: 10px 8px;
+    font-size: 12px;
+    line-height: 1.4;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    isolation: isolate;
+}
+
+.washing-table thead th small { font-weight: 400; opacity: .85; font-size: 10.5px; }
+
+.washing-table tbody td {
+    padding: 6px 8px;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f1f3;
+    text-align: center;
+}
+
+.washing-table tbody tr:nth-child(odd) { background: #fafafb; }
+.washing-table th:nth-child(1), .washing-table td:nth-child(1) { width: 60px; }
+
+.w-input, .w-select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.w-input:disabled, .w-select:disabled {
+    background: #f0f1f3;
+    color: #8b93a1;
+    cursor: not-allowed;
+    isolation: isolate;
+}
+
+.washing-table tr.row-locked { background: #f7f7f8; }
+.washing-table tr.row-locked td:first-child { color: #8b93a1; }
+.lock-icon { font-size: 11px; opacity: .6; }
+
+/* ---------- Bake Oven Temperature (F-PS-07): times as rows, days as columns ---------- */
+.bakeoven-table {
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 12px;
+}
+
+.bakeoven-table th, .bakeoven-table td {
+    border: 1px solid #e6e8ec;
+    padding: 4px;
+    text-align: center;
+}
+
+.bakeoven-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    min-width: 44px;
+    z-index: 1;
+}
+
+.bakeoven-table td.row-label, .bakeoven-table th:first-child {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    text-align: left;
+    min-width: 100px;
+    z-index: 1;
+}
+
+.bakeoven-table td.row-label {
+    font-family: 'Oswald', ui-monospace, 'SF Mono', Consolas, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    color: #8f2a1f;
+    font-variant-numeric: tabular-nums;
+    border-left: 3px solid #9b3b32;
+    text-align: center;
+}
+
+.bakeoven-table thead th:first-child { z-index: 2; background: #9b3b32; }
+
+.bo-corner-cell {
+    background: linear-gradient(135deg, #9b3b32 0%, #8f2a1f 100%) !important;
+    padding: 10px 6px !important;
+    text-align: center !important;
+}
+
+.bo-corner-text {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    line-height: 1.3;
+    color: #fff;
+}
+
+.bakeoven-table tbody tr:nth-child(odd) td:not(.row-label) { background: #fafafb; }
+
+.temp-input {
+    width: 44px;
+    padding: 4px 2px;
+    border: 1px solid #d7dbe2;
+    border-radius: 3px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.temp-input.temp-ok { background: #eafaf0; border-color: #2a6b2a; color: #2a6b2a; }
+.temp-input.temp-ng { background: #fbe9e9; border-color: #a11; color: #a11; font-weight: 700; }
+.temp-input:disabled { background: #f0f1f3; color: #8b93a1; }
+
+.bakeoven-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 18px;
+    align-items: flex-end;
+}
+
+.bakeoven-footer .field-block { min-width: 160px; }
+.bakeoven-footer textarea {
+    padding: 8px;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    font-size: 13px;
+    resize: vertical;
+}
+
+.actual-input, .actual-select, .category-select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+}
+/* Auto standard check: out-of-range result -> red, within range -> green. */
+.actual-input.val-ng, .actual-select.val-ng { border-color: #c0392b; background: #fdecea; color: #9b3b32; font-weight: 600; }
+.actual-input.val-ok, .actual-select.val-ok { border-color: #4a9d54; background: #eef7ef; }
+
+.empty { color: #8b93a1; padding: 20px; }
+
+/* ---------- Sub Assembly checking guide panel ---------- */
+.ref-panel {
+    border: 1px solid #e3e5e9;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    background: #fcfcfd;
+    overflow: hidden;
+    /* Don't let a fixed-height flex parent squeeze/clip the guide. */
+    flex-shrink: 0;
+}
+.ref-panel > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font: 600 13px Inter, sans-serif;
+    color: #181a1e;
+    background: #f4f5f7;
+}
+.ref-panel > summary::-webkit-details-marker { display: none; }
+.ref-panel > summary::after {
+    content: '▸';
+    color: #9b3b32;
+    font-size: 14px;
+    transition: transform .15s ease;
+}
+.ref-panel[open] > summary::after { transform: rotate(90deg); }
+.ref-toggle-hint {
+    font-weight: 500;
+    color: #8b93a1;
+    font-size: 11.5px;
+    margin-left: auto;
+    margin-right: 8px;
+}
+.ref-body {
+    padding: 16px;
+    /* Keep the guide compact and self-contained: scroll inside the panel
+       instead of pushing the checksheet down or getting clipped. Works on
+       tablet too (horizontal scroll for the wide table). */
+    max-height: 46vh;
+    overflow: auto;
+}
+/* Keep the summary/toggle pinned while the body scrolls. */
+.ref-panel > summary { position: sticky; top: 0; z-index: 1; }
+.ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+.ref-table th, .ref-table td {
+    border: 1px solid #e3e5e9;
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+.ref-table thead th { background: #9b3b32; color: #fff; font-weight: 600; }
+.ref-part { width: 200px; }
+.ref-part img {
+    display: block;
+    max-width: 100%;
+    border-radius: 6px;
+    margin: 0 auto 8px;
+    border: 1px solid #e3e5e9;
+}
+.ref-part span { font-weight: 600; color: #181a1e; }
+.ref-pic { width: 150px; font-weight: 600; }
+.ref-pic small { font-weight: 400; color: #6b7280; }
+.ref-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    background: #ffd400;
+    color: #181a1e;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+    margin-right: 4px;
+}
+.ref-photos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+.ref-photos figure { margin: 0; }
+.ref-photos img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e3e5e9;
+    display: block;
+}
+.ref-photos figcaption {
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+}
+@media (max-width: 720px) {
+    .ref-photos { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- FO Pump Assy daily report ---------- */
+.fopump-table { min-width: 900px; }
+.fopump-table th:nth-child(1), .fopump-table td:nth-child(1) { width: 48px; text-align: center; }
+.fopump-table th:nth-child(n+2), .fopump-table td:nth-child(n+2) { width: auto; }
+.fopump-table thead th { text-align: center; }
+.fopump-table td.row-no { font-weight: 600; color: #6b7280; }
+.fopump-table .f-input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.fopump-table .f-qty { text-align: right; }
+.fopump-table tfoot td {
+    padding: 8px;
+    border-top: 2px solid #d7dbe2;
+    font-size: 13px;
+}
+.fopump-table tfoot .sum-label { font-weight: 700; color: #181a1e; }
+.fopump-table tfoot .f-total { text-align: right; font-weight: 700; background: #f2f3f5; }
+.fopump-table tfoot input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    box-sizing: border-box;
+    text-align: right;
+}
+
+/* ---------- Checksheet card list (View Checksheets / My Drafts) ---------- */
+.cs-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cs-card {
+    background: #fff;
+    border: 1px solid #e3e5e9;
+    border-radius: 12px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.cs-card-date {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    background: #f2f3f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cs-card-day { font: 700 16px Oswald, sans-serif; color: #181a1e; }
+.cs-card-month { font-size: 10px; color: #8b93a1; text-transform: uppercase; }
+
+.cs-card-body { flex: 1; min-width: 0; }
+.cs-card-title { font-weight: 700; font-size: 15px; color: #181a1e; }
+.cs-card-meta { font-size: 12.5px; color: #8b93a1; margin-top: 3px; }
+
+.cs-status {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.cs-status-submitted { background: #e4f3e5; color: #3f7d43; }
+.cs-status-draft { background: #faf1de; color: #a5711a; }
+
+.cs-view-btn {
+    background: #fff;
+    border: 1px solid #d7dbe2;
+    color: #4a5262;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.cs-view-btn:hover { background: #f5f6f8; }
+
+.cs-card-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+/* Grouped card: multiple Conditions sharing the same Date + Time (Painting). */
+.cs-card-group { align-items: flex-start; }
+.cs-card-head-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+.cs-condition-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 14px;
+}
+.cs-condition-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+.cs-condition-name { font-weight: 600; font-size: 13.5px; color: #181a1e; flex-shrink: 0; width: 150px; }
+.cs-condition-meta { font-size: 12px; color: #8b93a1; flex: 1; min-width: 0; }
+
+.cs-summary-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.cs-summary-badge-ok { background: #e4f3e5; color: #3f7d43; }
+.cs-summary-badge-abnormal { background: #fbeae7; color: #9b3b32; }
+
+.cs-row-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.cs-row-badge-ok { background: #eef0f2; color: #6b7280; }
+.cs-row-badge-abnormal { background: #fbeae7; color: #9b3b32; }
+.cs-row-badge-fixed { background: #faf1de; color: #a5711a; }
+
+.cs-condition-row:has(.cs-row-badge-abnormal) { background: #fdf5f4; border-color: #f6d9d4; }
+.cs-view-btn-sm {
+    background: #fff;
+    border: 1px solid #d7dbe2;
+    color: #4a5262;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.cs-view-btn-sm:hover { background: #eef0f2; }
+.cs-delete-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: #9b3b32;
+    text-decoration: none;
+}
+.cs-delete-link:hover { text-decoration: underline; }
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-top: 18px;
+    flex-shrink: 0;
+}
+
+.progress-label {
+    font-size: 12.5px;
+    color: #8b93a1;
+    white-space: nowrap;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #eef0f2;
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 60px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #9b3b32;
+    transition: width .2s ease;
+}
+
+.cat-toggle {
+    display: inline-flex;
+    border: 1px solid #d7dbe2;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.cat-btn {
+    padding: 7px 16px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #fff;
+    color: #8b93a1;
+    user-select: none;
+}
+
+.cat-btn.cat-ng { border-left: 1px solid #d7dbe2; }
+.cat-btn.cat-ok.active { background: #e4f3e5; color: #3f7d43; }
+.cat-btn.cat-ng.active { background: #fbeae7; color: #9b3b32; }
+
+.jig-reference {
+    margin-bottom: 18px;
+    border: 1px solid #eef0f2;
+    border-radius: 8px;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.jig-reference summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1f2430;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.jig-reference summary::-webkit-details-marker { display: none; }
+.jig-reference summary::before {
+    content: '\25B8';
+    display: inline-block;
+    color: #9b3b32;
+    transition: transform .15s ease;
+    font-size: 12px;
+}
+.jig-reference[open] summary::before { transform: rotate(90deg); }
+.jig-reference summary:hover { background: #f8f9fa; }
+
+.jig-ref-wrap { padding: 0 16px 16px; }
+
+.jig-ref-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: #fff;
+    margin-bottom: 16px;
+}
+
+.jig-ref-col-part { width: 16%; }
+.jig-ref-col-method { width: 14%; }
+.jig-ref-col-item { width: 20%; }
+.jig-ref-col-photo { width: 16%; }
+.jig-ref-col-freq { width: 18%; }
+.jig-ref-col-pic { width: 16%; }
+
+.jig-ref-table th, .jig-ref-table td {
+    border: 1px solid #c7ccd4;
+    padding: 8px 10px;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: middle;
+    word-wrap: break-word;
+}
+
+.jig-ref-table thead th {
+    background: #f4f5f7;
+    color: #1f2430;
+    font-weight: 700;
+}
+
+.jig-ref-table td.jig-ref-item-cell { text-align: center; white-space: normal; }
+
+.jig-ref-merge {
+    font-weight: 600;
+    color: #1f2430;
+    background: #fafbfc;
+}
+
+.jig-ref-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4d03f;
+    color: #1f2430;
+    font-size: 12px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid #d4af17;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+
+.jig-ref-thumb {
+    display: block;
+    width: 84px;
+    height: 63px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #e3e5e9;
+    background: #f4f5f7;
+    margin: 0 auto;
+}
+
+button.jig-ref-thumb {
+    padding: 0;
+    cursor: zoom-in;
+}
+button.jig-ref-thumb:hover { border-color: #9b3b32; }
+
+.jig-ref-thumb-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 10.5px;
+    color: #b3b8bf;
+    border: 1px solid #e3e5e9;
+    cursor: default;
+}
+
+.jig-photo-modal .modal-card {
+    max-width: min(90vw, 640px);
+    padding: 12px;
+    text-align: center;
+}
+.jig-photo-modal img {
+    max-width: 100%;
+    max-height: 75vh;
+    border-radius: 6px;
+    display: block;
+    margin: 0 auto;
+}
+.jig-photo-modal .modal-card-header { margin-bottom: 10px; padding-bottom: 8px; }
+
+.jig-table {
+    width: 100%;
+    min-width: 480px;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.jig-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    padding: 10px 8px;
+    font-size: 12.5px;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+}
+.jig-table thead th:first-child { position: sticky; left: 0; z-index: 1; }
+
+.jig-table tbody td {
+    padding: 6px 8px;
+    font-size: 13px;
+    text-align: center;
+    border-bottom: 1px solid #f0f1f3;
+}
+.jig-table tbody tr:nth-child(odd) { background: #fafafb; }
+
+.jig-day {
+    font-weight: 700;
+    color: #4a5262;
+    background: inherit;
+    position: sticky;
+    left: 0;
+}
+
+.jig-toggle.cat-toggle { border-radius: 16px; }
+.jig-toggle .cat-btn { padding: 5px 12px; font-size: 12px; }
+
+.btn {
+    background: #9b3b32;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn:hover { background: #922b20; }
+.btn-submit { min-width: 120px; }
+.btn-draft {
+    background: #fff;
+    color: #4a5262;
+    border: 1px solid #d7dbe2;
+    margin-right: 10px;
+}
+.btn-draft:hover { background: #f5f6f8; }
+
+/* ---------- Holiday-aware date picker (assets/js/holiday-calendar.js) ---------- */
+/* It's still a genuinely editable field (via the popup, not typing) — the
+ * `.field-block input[readonly]` rule above is meant for truly locked
+ * fields like Painting's fixed-to-today Date, not this one, so override it
+ * here with higher specificity rather than looking/behaving disabled. */
+.field-block input.holiday-date-input[readonly] {
+    cursor: pointer;
+    background: #fff;
+    color: #1f2430;
+}
+.holiday-date-input {
+    cursor: pointer;
+    background: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b93a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 34px;
+}
+
+.hc-popup {
+    position: absolute;
+    z-index: 2000;
+    background: #fff;
+    border: 1px solid #d7dbe2;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 10px;
+    width: 260px;
+    font-size: 13px;
+}
+
+.hc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1f2430;
+}
+
+.hc-nav {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #4a5262;
+}
+.hc-nav:hover { background: #f4f5f7; }
+
+.hc-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+}
+
+.hc-weekdays { color: #8b93a1; font-size: 11px; margin-bottom: 4px; }
+
+.hc-day {
+    background: none;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 0;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: #1f2430;
+}
+.hc-day:hover:not(:disabled) { background: #f4f5f7; }
+.hc-day.hc-empty { cursor: default; }
+
+.hc-day.hc-holiday { background: #fbe0e0; color: #a11; font-weight: 600; }
+.hc-day.hc-workday { background: #e3f5e6; color: #2a6b2a; font-weight: 600; }
+.hc-day.hc-selected { outline: 2px solid #9b3b32; }
+.hc-day:disabled { cursor: not-allowed; opacity: .7; }
+
+.hc-footer { margin-top: 8px; text-align: center; }
+.hc-footer a { color: #9b3b32; font-size: 12px; text-decoration: none; font-weight: 600; }
+.hc-footer a:hover { text-decoration: underline; }
+
+/* ---------- Small-screen polish (phones / narrow tablets) ---------- */
+@media (max-width: 600px) {
+    .checksheet-card { padding: 16px; }
+    .form-grid-top { gap: 14px 16px; margin-bottom: 16px; }
+    /* Let the action buttons wrap and fill the row instead of overflowing. */
+    .actions { flex-wrap: wrap; justify-content: stretch; gap: 10px; }
+    .actions .btn { flex: 1 1 auto; }
+    .btn-draft { margin-right: 0; }
+    /* Guide panel a touch shorter so it doesn't dominate a small screen. */
+    .ref-body { max-height: 55vh; }
+}
+
+/* ---------- Classic light table headers (minimalist restyle) ---------- */
+.checklist-table thead th,
+.assy-table thead th,
+.washing-table thead th,
+.bakeoven-table thead th,
+.bakeoven-table thead th:first-child,
+.ref-table thead th {
+    background: #f1f2f4;
+    color: #1f2430;
+    border-bottom: 2px solid #d7dbe2;
+}
+.washing-table thead th small,
+.assy-table thead th small,
+.checklist-table thead th small { opacity: .7; color: #6b7280; }
+
+/* ---------- FO Pump Assy Check Sheet (F-FIP-01) ---------- */
+.fpcheck-table { min-width: 920px; }
+.fpcheck-table th, .fpcheck-table td { text-align: center; vertical-align: middle; }
+.fpcheck-table td.fp-point { text-align: left; }
+.fpcheck-table td.fp-no { width: 44px; color: #6b7280; font-weight: 600; }
+.fpcheck-table td.fp-std { color: #374151; font-size: 12.5px; white-space: nowrap; }
+.fpcheck-table tr.fp-group td { background: #f4f5f7; font-weight: 700; text-align: left; }
+.fpcheck-table .fp-cell {
+    width: 100%; min-width: 54px; padding: 5px;
+    border: 1px solid #d7dbe2; border-radius: 4px; text-align: center; box-sizing: border-box;
+}
+.fpcheck-table .fp-col-head {
+    width: 100%; min-width: 54px; padding: 4px;
+    border: 1px solid #cdd2da; border-radius: 4px; text-align: center; font-weight: 600;
+    background: #fbfbfc; box-sizing: border-box;
+}
+.fpcheck-table .fp-col-head::placeholder { color: #b8bec7; font-weight: 400; }
+
+/* ---------- FO Pump Check Sheet: fix column sizing (override .assy-table fixed widths) ---------- */
+.fpcheck-table { table-layout: auto !important; min-width: 760px; }
+.fpcheck-table th, .fpcheck-table td { width: auto !important; }
+.fpcheck-table td.fp-no, .fpcheck-table thead th:first-child { width: 42px !important; }
+.fpcheck-table td.fp-point { min-width: 190px; }
+.fpcheck-table td.fp-std, .fpcheck-table thead th:nth-child(3), .fpcheck-table thead th:nth-child(4) { min-width: 96px; white-space: nowrap; }
+.fpcheck-table .fp-cell { width: 100%; min-width: 56px; }
+.fpcheck-table .fp-col-head { width: 100%; min-width: 56px; }
+.fpcheck-table thead tr:nth-child(2) th { padding: 4px !important; }
+
+/* FP check: cells stay disabled until their Checking Number header is filled */
+.fpcheck-table .fp-cell:disabled {
+    background: #f0f1f3;
+    color: #b3b8bf;
+    cursor: not-allowed;
+    border-color: #e3e5e9;
+}
+
+/* FP check: active columns widen so the dropdown is fully readable;
+   empty (not-yet-filled) columns collapse narrow. */
+.fpcheck-table .fp-cell { min-width: 90px; }
+.fpcheck-table .fp-col-head { min-width: 90px; }
+.fpcheck-table .fp-cell.col-off { min-width: 30px; width: 36px; }
+.fpcheck-table .fp-col-head.col-off { min-width: 30px; width: 44px; padding-left: 2px; padding-right: 2px; }
+
+/* Size the table to its content so collapsed columns actually stay narrow
+   (instead of absorbing leftover width from a 100%-wide table). */
+.fpcheck-table { width: auto !important; min-width: 0 !important; }
+
+/* FP check: fixed layout so <colgroup> widths are authoritative (columns
+   widen/collapse exactly). CHECK POINT (the width-less <col>) absorbs slack. */
+.fpcheck-table { table-layout: fixed !important; width: 100% !important; min-width: 600px !important; }
+.fpcheck-table .fp-cell, .fpcheck-table .fp-col-head { width: 100% !important; min-width: 0 !important; box-sizing: border-box; }
+.fpcheck-table td, .fpcheck-table th { overflow: hidden; }

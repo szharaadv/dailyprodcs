@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checking Item</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../assets/css/app.css?v=1786869500">
+        <link rel="stylesheet" href="../assets/css/style.css?v=1786869500">
+        <link rel="stylesheet" href="../assets/css/admin.css?v=1786877256">
+    </head>
+<body>
+<div class="app-shell">
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+    <aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-mark">DP</div>
+        <div class="brand-text">
+            <div class="brand-title">Daily Prod</div>
+            <div class="brand-subtitle">Production Check Sheet</div>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-group-label">Workspace</div>
+        <a class="nav-item " href="../painting_list.php?department_id=1">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M15 2v5h5"/></svg> Check Sheet
+        </a>
+        <a class="nav-item " href="../view_checksheets.php">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z"/></svg> View Checksheets
+        </a>
+        <a class="nav-item " href="../my_drafts.php">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18 10l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg> My Drafts
+                    </a>
+
+        <div class="nav-group-label">Master Data</div>
+        <a class="nav-item " href="../admin/import_data.php?section_id=1">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg> Import Data
+        </a>
+        <a class="nav-item " href="../admin/conditions.php">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h9"/><path d="M17 6h3"/><circle cx="14" cy="6" r="2"/><path d="M4 12h3"/><path d="M11 12h9"/><circle cx="8" cy="12" r="2"/><path d="M4 18h9"/><path d="M17 18h3"/><circle cx="14" cy="18" r="2"/></svg> Conditions
+        </a>
+        <a class="nav-item active" href="../admin/checklist_items.php">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h9"/><path d="M17 6h3"/><circle cx="14" cy="6" r="2"/><path d="M4 12h3"/><path d="M11 12h9"/><circle cx="8" cy="12" r="2"/><path d="M4 18h9"/><path d="M17 18h3"/><circle cx="14" cy="18" r="2"/></svg> Checking Items
+        </a>
+    </nav>
+
+</aside>
+
+    <div class="app-main">
+        <div class="app-topbar">
+            <div class="topbar-heading">
+                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                </button>
+                <div>
+                    <h1>Checking Item</h1>
+                    <p>Master Data · Checking Items</p>                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-date">Sun, 16 Aug 2026</div>
+                                <div class="topbar-user">
+                    <div class="tu-avatar">
+                        <span>AD</span>
+                    </div>
+                    <div class="tu-meta">
+                        <div class="tu-name" title="Admin">Admin</div>
+                        <div class="tu-role">admin</div>
+                    </div>
+                    <a class="tu-logout" href="../logout.php">Logout</a>
+                </div>
+                            </div>
+        </div>
+
+        <div class="app-content app-content-doc">
+
+<div class="admin-tabs">
+    <a class="admin-tab " href="../admin/import_data.php">
+        Import Data
+    </a>
+    <a class="admin-tab " href="../admin/conditions.php">
+        Conditions
+    </a>
+    <a class="admin-tab active" href="../admin/checklist_items.php">
+        Checking Items
+    </a>
+</div>
+
+
+
+<details class="import-columns" style="margin-bottom:18px;">
+    <summary>Import Checking Items from Excel / CSV</summary>
+    <div class="import-steps" style="margin-top:12px;">
+        <div class="import-card">
+            <div class="import-step-head">
+                <span class="import-step-num">1</span>
+                <span class="import-step-title">Download the template</span>
+            </div>
+            <p class="import-note">Columns: Department, Condition, Checking Item, Metode Pengecekkan, Standard Min., Standard Max., Satuan, Tank/Tube, Order. "Condition" must match an existing Condition name — add "Department" if the same Condition name is used in more than one department.</p>
+            <div class="import-actions">
+                <a class="btn" href="checklist_items.php?action=template">Download Template</a>
+                <a class="btn btn-secondary" href="checklist_items.php?action=export">Export Existing Data</a>
+            </div>
+        </div>
+
+        <div class="import-card">
+            <div class="import-step-head">
+                <span class="import-step-num">2</span>
+                <span class="import-step-title">Upload the filled file</span>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="import_bulk">
+                <div class="import-dropzone">
+                    <input type="file" name="bulk[]" accept=".csv,.xlsx,text/csv" multiple required>
+                </div>
+                <button type="submit" class="btn" onclick="return confirm('Import these rows into Checking Items? Existing Condition + Checking Item matches will be updated.')">Import Now</button>
+            </form>
+            <p class="import-hint">Accepts .csv or .xlsx. Rows are matched by Condition + Checking Item — existing items are updated, new ones are created.</p>
+        </div>
+    </div>
+</details>
+
+<form method="get" class="filter-form">
+    <label>Filter Department:</label>
+    <select name="department_id" onchange="this.form.submit()">
+                    <option value="1" selected>Painting</option>
+            </select>
+    <label>Condition:</label>
+    <select name="condition_id" onchange="this.form.submit()">
+                    <option value="1" selected>Pretreatment</option>
+                    <option value="2" >Painting Line</option>
+                    <option value="3" >Water Daily Phosphate</option>
+                    </select>
+</form>
+
+<form method="post" class="admin-form">
+    <input type="hidden" name="action" value="save">
+    <input type="hidden" name="id" value="">
+
+    <div class="form-grid">
+        <div class="form-row">
+            <label>Condition</label>
+            <select name="condition_id" required>
+                                    <option value="1" selected>Pretreatment</option>
+                                    <option value="2" >Painting Line</option>
+                                    <option value="3" >Water Daily Phosphate</option>
+                            </select>
+        </div>
+        <div class="form-row">
+            <label>Checking Item</label>
+            <input type="text" name="checking_item" value="" required>
+        </div>
+        <div class="form-row">
+            <label>Metode Pengecekkan</label>
+            <input type="text" name="metode_pengecekan" value="Visual">
+        </div>
+        <div class="form-row">
+            <label>Standard Min.</label>
+            <input type="text" name="standard_min" value="">
+        </div>
+        <div class="form-row">
+            <label>Standard Max.</label>
+            <input type="text" name="standard_max" value="">
+        </div>
+        <div class="form-row">
+            <label>Satuan</label>
+            <input type="text" name="satuan" value="-">
+        </div>
+        <div class="form-row">
+            <label>Tank/Tube</label>
+            <input type="text" name="tank_tube" value="-">
+        </div>
+        <div class="form-row">
+            <label>Order</label>
+            <input type="number" name="sort_order" value="17">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <button type="submit" class="btn">Add</button>
+            </div>
+</form>
+
+<div class="table-scroll">
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>Checking Item</th>
+            <th>Metode</th>
+            <th>Std Min</th>
+            <th>Std Max</th>
+            <th>Satuan</th>
+            <th>Tank/Tube</th>
+            <th>Order</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+                <tr>
+            <td>Water pump pressure (tank 1)</td>
+            <td>Visual</td>
+            <td>1.2</td>
+            <td>1.4</td>
+            <td>-</td>
+            <td>-</td>
+            <td>1</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=1">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=1">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=1" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water phosphat temperature (tank 1)</td>
+            <td>Visual</td>
+            <td>50</td>
+            <td>60</td>
+            <td>-</td>
+            <td>-</td>
+            <td>2</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=2">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=2">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=2" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water pump leak tube1</td>
+            <td>Visual</td>
+            <td>Tidak Bocor</td>
+            <td>Tidak Bocor</td>
+            <td>-</td>
+            <td>-</td>
+            <td>3</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=3">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=3">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=3" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Filter condition tank1</td>
+            <td>Visual</td>
+            <td>Tidak Mampet</td>
+            <td>Tidak Mampet</td>
+            <td>-</td>
+            <td>-</td>
+            <td>4</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=4">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=4">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=4" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Total Acid phosphate value</td>
+            <td>Test</td>
+            <td>6.5</td>
+            <td>7.5</td>
+            <td>-</td>
+            <td>-</td>
+            <td>5</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=5">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=5">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=5" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water pump pressure (tank 2)</td>
+            <td>Visual</td>
+            <td>1.2</td>
+            <td>1.4</td>
+            <td>-</td>
+            <td>-</td>
+            <td>6</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=15">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=15">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=15" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water phosphat temperature (tank 2)</td>
+            <td>Visual</td>
+            <td>50</td>
+            <td>60</td>
+            <td>-</td>
+            <td>-</td>
+            <td>7</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=16">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=16">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=16" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water pump leak tube2</td>
+            <td>Visual</td>
+            <td>Tidak Bocor</td>
+            <td>Tidak Bocor</td>
+            <td>-</td>
+            <td>-</td>
+            <td>8</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=17">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=17">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=17" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Filter condition tank2</td>
+            <td>Visual</td>
+            <td>Tidak Mampet</td>
+            <td>Tidak Mampet</td>
+            <td>-</td>
+            <td>-</td>
+            <td>9</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=18">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=18">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=18" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water pump pressure (tank 3)</td>
+            <td>Visual</td>
+            <td>1.2</td>
+            <td>1.5</td>
+            <td>-</td>
+            <td>-</td>
+            <td>10</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=19">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=19">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=19" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water phosphat temperature (tank 3)</td>
+            <td>Visual</td>
+            <td>60</td>
+            <td>70</td>
+            <td>-</td>
+            <td>-</td>
+            <td>11</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=20">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=20">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=20" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Water pump leak tube3</td>
+            <td>Visual</td>
+            <td>Tidak Bocor</td>
+            <td>Tidak Bocor</td>
+            <td>-</td>
+            <td>-</td>
+            <td>12</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=21">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=21">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=21" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Filter condition tank3</td>
+            <td>Visual</td>
+            <td>Tidak Mampet</td>
+            <td>Tidak Mampet</td>
+            <td>-</td>
+            <td>-</td>
+            <td>13</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=22">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=22">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=22" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Visual phosphat spray tank1</td>
+            <td>Visual</td>
+            <td>Kabut</td>
+            <td>Kabut</td>
+            <td>-</td>
+            <td>-</td>
+            <td>14</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=23">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=23">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=23" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Visual phosphat spray tank2</td>
+            <td>Visual</td>
+            <td>Kabut</td>
+            <td>Kabut</td>
+            <td>-</td>
+            <td>-</td>
+            <td>15</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=24">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=24">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=24" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                <tr>
+            <td>Visual phosphat spray tank3</td>
+            <td>Visual</td>
+            <td>Kabut</td>
+            <td>Kabut</td>
+            <td>-</td>
+            <td>-</td>
+            <td>16</td>
+            <td><span class="badge badge-ok">Active</span></td>
+            <td class="row-actions">
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=edit&id=25">Edit</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=toggle&id=25">Deactivate</a>
+                <a href="checklist_items.php?department_id=1&condition_id=1&action=delete&id=25" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
+            </td>
+        </tr>
+                    </tbody>
+</table>
+</div>
+
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    const toggle = document.getElementById('menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (!toggle || !sidebar || !backdrop) return;
+
+    function isMobile() {
+        return window.innerWidth <= 960;
+    }
+
+    function closeMobileSidebar() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('open');
+    }
+
+    toggle.addEventListener('click', () => {
+        if (isMobile()) {
+            sidebar.classList.toggle('open');
+            backdrop.classList.toggle('open');
+        } else {
+            sidebar.classList.toggle('collapsed');
+        }
+    });
+    backdrop.addEventListener('click', closeMobileSidebar);
+
+    // While the window is actively resized, suppress the sidebar slide
+    // transition so it doesn't lag across the mobile/desktop breakpoint and
+    // briefly cover the content. Also close the mobile overlay once we grow
+    // back to desktop width.
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        document.body.classList.add('is-resizing');
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => document.body.classList.remove('is-resizing'), 200);
+        if (!isMobile()) closeMobileSidebar();
+    });
+})();
+</script>
+</body>
+</html>
