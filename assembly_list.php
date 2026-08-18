@@ -56,6 +56,10 @@ if ($draft_id) {
 }
 
 $selected_model_id = $_GET['model_id'] ?? ($draft['model_id'] ?? ($models[0]['id'] ?? null));
+$selected_model_name = '';
+foreach ($models as $m) {
+    if ($m['id'] == $selected_model_id) { $selected_model_name = $m['name']; break; }
+}
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -77,13 +81,7 @@ require __DIR__ . '/includes/app_top.php';
 
         <div class="field-block">
             <label>Model</label>
-            <select id="f_model">
-                <?php foreach ($models as $m): ?>
-                    <option value="<?= $m['id'] ?>" <?= $m['id'] == $selected_model_id ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($m['name']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <input type="text" id="f_model" placeholder="Search model..." value="<?= htmlspecialchars($selected_model_name) ?>">
         </div>
 
         <div class="field-block">
@@ -154,7 +152,9 @@ require __DIR__ . '/includes/app_top.php';
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const DRAFT_ID = <?= json_encode($draft_id ?: null) ?>;
     const DRAFT_VALUES = <?= json_encode($draft_values, JSON_FORCE_OBJECT) ?>;
+    const MODELS = <?= json_encode(array_map(fn($m) => ['id' => $m['id'], 'name' => $m['name']], $models)) ?>;
 </script>
+<script src="assets/js/combo-select.js"></script>
 <script src="assets/js/assy.js?v=<?= @filemtime(__DIR__ . '/assets/js/assy.js') ?: 1 ?>"></script>
 <script src="assets/js/holiday-calendar.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

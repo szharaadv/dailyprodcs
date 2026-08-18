@@ -268,6 +268,11 @@ function import_painting(PDO $pdo, int $dept, array $rows): array
             $res['created']++;
         }
 
+        // Per-group occurrence counter — lets rows that repeat the same
+        // generic label (e.g. three "Exhaust fan" rows, one per physical
+        // unit) resolve in order to the matching numbered master items
+        // ("Exhaust fan 1", "2", "3"), instead of all colliding on the first.
+        $occurrence = [];
         foreach ($g['rows'] as $rr) {
             $item = trim((string)($rr['data']['checking_item'] ?? ''));
             if ($item === '') continue;
@@ -280,11 +285,47 @@ function import_painting(PDO $pdo, int $dept, array $rows): array
                     $iid = (int) $selItem->fetchColumn();
                 }
             }
+            if (!$iid) {
+                $iid = import_match_checklist_item_loose($pdo, $cond_id, $item, $occurrence);
+            }
             if (!$iid) { $res['errors'][] = "Row {$rr['_line']}: checking_item '$item' not found for condition '{$first['condition']}' (skipped)."; continue; }
             $insD->execute([$hid, $iid, import_nz($rr['data']['actual_result'] ?? ''), import_nz($rr['data']['category'] ?? '')]);
         }
     }
     return $res;
+}
+
+/**
+ * Loose fallback once exact/tank_tube matching fails: normalize away
+ * punctuation/spacing ("Visual phosphat spray (tank 1)" -> "Filter condition
+ * tank1"-style names both collapse to the same key) and, for CSV labels that
+ * are a prefix of several numbered master items sharing one base name
+ * (e.g. "Exhaust fan" vs "Exhaust fan 1/2/3"), resolve each repeated
+ * occurrence in a group to the next one in sort_order.
+ */
+function import_match_checklist_item_loose(PDO $pdo, int $cond_id, string $item, array &$occurrence): int
+{
+    static $itemsByCondition = [];
+    if (!isset($itemsByCondition[$cond_id])) {
+        $stmt = $pdo->prepare('SELECT id, checking_item FROM m_checklist_item WHERE condition_id = ? ORDER BY sort_order, id');
+        $stmt->execute([$cond_id]);
+        $itemsByCondition[$cond_id] = $stmt->fetchAll();
+    }
+    $allItems = $itemsByCondition[$cond_id];
+    $normItem = import_normalize_name($item);
+    if ($normItem === '') return 0;
+
+    $exact = array_values(array_filter($allItems, fn($ci) => import_normalize_name($ci['checking_item']) === $normItem));
+    if (count($exact) === 1) return (int)$exact[0]['id'];
+
+    $prefixed = array_values(array_filter($allItems, fn($ci) => str_starts_with(import_normalize_name($ci['checking_item']), $normItem)));
+    if ($prefixed) {
+        $occurrence[$normItem] = ($occurrence[$normItem] ?? 0) + 1;
+        $idx = $occurrence[$normItem] - 1;
+        if (isset($prefixed[$idx])) return (int)$prefixed[$idx]['id'];
+    }
+
+    return 0;
 }
 
 // ===========================================================================

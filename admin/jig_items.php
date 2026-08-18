@@ -51,14 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
 
             if ($id !== '') {
                 if ($photo === null && !$remove_photo) {
-                    $stmt = $pdo->prepare('UPDATE m_jig_item SET jig_id=?, checking_item=?, sort_order=? WHERE id=?');
+                    $stmt = $pdo->prepare('UPDATE m_jigitem SET jig_id=?, checking_item=?, sort_order=? WHERE id=?');
                     $stmt->execute([$jig_id, $checking_item, $sort_order, (int)$id]);
                 } else {
-                    $stmt = $pdo->prepare('UPDATE m_jig_item SET jig_id=?, checking_item=?, sort_order=?, photo=? WHERE id=?');
+                    $stmt = $pdo->prepare('UPDATE m_jigitem SET jig_id=?, checking_item=?, sort_order=?, photo=? WHERE id=?');
                     $stmt->execute([$jig_id, $checking_item, $sort_order, $remove_photo ? null : $photo, (int)$id]);
                 }
             } else {
-                $stmt = $pdo->prepare('INSERT INTO m_jig_item (jig_id, checking_item, photo, sort_order) VALUES (?,?,?,?)');
+                $stmt = $pdo->prepare('INSERT INTO m_jigitem (jig_id, checking_item, photo, sort_order) VALUES (?,?,?,?)');
                 $stmt->execute([$jig_id, $checking_item, $photo, $sort_order]);
             }
             header('Location: jig_items.php?jig_id=' . $jig_id . '&saved=1');
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
 }
 
 if (($_GET['action'] ?? '') === 'toggle' && isset($_GET['id'])) {
-    $stmt = $pdo->prepare('UPDATE m_jig_item SET is_active = NOT is_active WHERE id = ?');
+    $stmt = $pdo->prepare('UPDATE m_jigitem SET is_active = NOT is_active WHERE id = ?');
     $stmt->execute([(int)$_GET['id']]);
     header('Location: jig_items.php?jig_id=' . (int)($_GET['jig_id'] ?? 0));
     exit;
@@ -78,7 +78,7 @@ if (($_GET['action'] ?? '') === 'toggle' && isset($_GET['id'])) {
 
 if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     try {
-        $stmt = $pdo->prepare('DELETE FROM m_jig_item WHERE id = ?');
+        $stmt = $pdo->prepare('DELETE FROM m_jigitem WHERE id = ?');
         $stmt->execute([(int)$_GET['id']]);
         header('Location: jig_items.php?jig_id=' . (int)($_GET['jig_id'] ?? 0) . '&deleted=1');
         exit;
@@ -92,7 +92,7 @@ $department_id = $department['id'] ?? 0;
 
 $editRow = null;
 if (($_GET['action'] ?? '') === 'edit' && isset($_GET['id'])) {
-    $stmt = $pdo->prepare('SELECT * FROM m_jig_item WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT * FROM m_jigitem WHERE id = ?');
     $stmt->execute([(int)$_GET['id']]);
     $editRow = $stmt->fetch();
 }
@@ -114,7 +114,7 @@ if (!$selectedJig && $jigs) {
 
 $rows = [];
 if ($selected_jig_id) {
-    $stmt = $pdo->prepare('SELECT * FROM m_jig_item WHERE jig_id = ? ORDER BY sort_order, id');
+    $stmt = $pdo->prepare('SELECT * FROM m_jigitem WHERE jig_id = ? ORDER BY sort_order, id');
     $stmt->execute([$selected_jig_id]);
     $rows = $stmt->fetchAll();
 }

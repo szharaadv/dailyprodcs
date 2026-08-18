@@ -1,4 +1,3 @@
-const modelSelect = document.getElementById('f_model');
 const tbody = document.getElementById('assy-tbody');
 let currentItems = [];
 let currentDraftId = typeof DRAFT_ID !== 'undefined' ? DRAFT_ID : null;
@@ -73,7 +72,7 @@ function escapeHtml(str) {
 
 async function loadItems() {
     tbody.innerHTML = '<tr><td colspan="6" class="empty">Loading data...</td></tr>';
-    const modelId = modelSelect.value;
+    const modelId = modelResolver.getValue();
     if (!modelId) {
         tbody.innerHTML = '<tr><td colspan="6" class="empty">No models set up for this department yet.</td></tr>';
         currentItems = [];
@@ -85,7 +84,8 @@ async function loadItems() {
     renderRows(currentItems);
 }
 
-modelSelect.addEventListener('change', loadItems);
+const modelOptions = (typeof MODELS !== 'undefined' ? MODELS : []).map(m => ({ value: m.id, label: m.name }));
+const modelResolver = turnIntoCombo(document.getElementById('f_model'), modelOptions, { allowCustom: false, onSelect: loadItems });
 
 function buildPayload(status) {
     const rows = currentItems.map(item => {
@@ -103,7 +103,7 @@ function buildPayload(status) {
         status,
         tanggal: document.getElementById('f_tanggal').value,
         department_id: DEPARTMENT_ID,
-        model_id: modelSelect.value,
+        model_id: modelResolver.getValue(),
         checker_id: document.getElementById('f_checker').value,
         mark_crank_shaft: document.getElementById('f_mark_crank_shaft').value,
         mark_conrod: document.getElementById('f_mark_conrod').value,

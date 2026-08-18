@@ -24,7 +24,7 @@ if ($selected_jig_id) {
 $sql = "SELECT h.*, j.name AS jig_name, chk.name AS checker_name,
                (SELECT COUNT(DISTINCT d.day) FROM t_jig_detail d WHERE d.header_id = h.id) AS filled_days,
                (SELECT COUNT(*) FROM t_jig_detail d WHERE d.header_id = h.id AND d.result = 'NG') AS ng_count
-        FROM t_jig_header h
+        FROM t_jigheader h
         JOIN m_jig j ON j.id = h.jig_id
         LEFT JOIN m_user chk ON chk.id = h.checker_id
         WHERE " . implode(' AND ', $where) . '
@@ -86,9 +86,11 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <span class="cs-status <?= $row['ng_count'] > 0 ? 'cs-status-draft' : 'cs-status-submitted' ?>"><?= $row['ng_count'] > 0 ? 'Has NG' : 'All OK' ?></span>
         <a href="sub_assembly_list.php?department_id=<?= $department_id ?>&jig_id=<?= $row['jig_id'] ?>&month=<?= $row['month'] ?>&year=<?= $row['year'] ?>" class="cs-view-btn">Open &rarr;</a>
+        <button type="button" class="cs-delete-btn" data-delete-type="jig" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($row['jig_name'] . ' · ' . $monthNames[$row['month']] . ' ' . $row['year']) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
     <?php if (!$results): ?><div class="empty-state">No jig check sheets found for <?= $year ?>.</div><?php endif; ?>
 </div>
 
+<script src="assets/js/delete-pin.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

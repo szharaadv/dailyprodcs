@@ -4,15 +4,11 @@ require_once __DIR__ . '/includes/auth.php';
 require_login();
 $pdo = get_db();
 
-$departments = $pdo->query("SELECT * FROM m_department WHERE form_type = 'assembly' ORDER BY sort_order, id")->fetchAll();
+$department = $pdo->query("SELECT * FROM m_department WHERE form_type = 'assembly' AND is_active = 1 ORDER BY sort_order, id LIMIT 1")->fetch();
+$department_id = $department['id'] ?? 0;
 
-$selected_department_id = (int)($_GET['department_id'] ?? ($_SESSION['department_id'] ?? 0));
-if (!in_array($selected_department_id, array_column($departments, 'id'))) {
-    $selected_department_id = $departments[0]['id'] ?? 0;
-}
-
-$stmt = $pdo->prepare('SELECT * FROM m_assy_model WHERE department_id = ? ORDER BY sort_order, id');
-$stmt->execute([$selected_department_id]);
+$stmt = $pdo->prepare('SELECT * FROM m_fopump_check_model WHERE department_id = ? ORDER BY sort_order, id');
+$stmt->execute([$department_id]);
 $models = $stmt->fetchAll();
 
 $selected_model_id = (int)($_GET['model_id'] ?? 0);
@@ -25,17 +21,17 @@ $monthStart = sprintf('%04d-%02d-01', $year, $month);
 $monthEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
 
 $where = ["h.status = 'submitted'", 'h.tanggal BETWEEN ? AND ?', 'h.department_id = ?'];
-$params = [$monthStart, $monthEnd, $selected_department_id];
+$params = [$monthStart, $monthEnd, $department_id];
 
 if ($selected_model_id) {
     $where[] = 'h.model_id = ?';
     $params[] = $selected_model_id;
 }
 
-$sql = 'SELECT h.*, d.name AS department_name, m.name AS model_name, ck.name AS checker_name
-        FROM t_assy_header h
-        JOIN m_department d ON d.id = h.department_id
-        JOIN m_assy_model m ON m.id = h.model_id
+$sql = 'SELECT h.*, m.name AS model_name, ck.name AS checker_name,
+            (SELECT COUNT(*) FROM t_fopump_check_sample WHERE header_id = h.id) AS sample_count
+        FROM t_fopump_check_header h
+        JOIN m_fopump_check_model m ON m.id = h.model_id
         JOIN m_user ck ON ck.id = h.checker_id
         WHERE ' . implode(' AND ', $where) . '
         ORDER BY h.tanggal DESC, h.id DESC';
@@ -48,22 +44,14 @@ $backQuery = $_SERVER['QUERY_STRING'] ?? '';
 
 $base_url = '';
 $active_nav = 'view-checksheets';
-$section_route = 'assembly_list.php';
+$section_route = 'fopump_check_list.php';
 $page_title = 'View Checksheets';
-$page_subtitle = 'Search & view submitted Torque checksheet results';
+$page_subtitle = 'Search & view submitted FO Pump check sheet results';
 require __DIR__ . '/includes/app_top.php';
 ?>
 
 <form method="get" class="admin-form filter-bar">
     <div class="form-grid">
-        <div class="form-row">
-            <label>Department</label>
-            <select name="department_id">
-                <?php foreach ($departments as $d): ?>
-                    <option value="<?= $d['id'] ?>" <?= $d['id'] == $selected_department_id ? 'selected' : '' ?>><?= htmlspecialchars($d['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
         <div class="form-row">
             <label>Month</label>
             <select name="month">
@@ -105,12 +93,12 @@ require __DIR__ . '/includes/app_top.php';
             <div class="cs-card-month"><?= htmlspecialchars(date('M', strtotime($row['tanggal']))) ?></div>
         </div>
         <div class="cs-card-body">
-            <div class="cs-card-title"><?= htmlspecialchars($row['model_name']) ?><?php if ($row['detail_model']): ?> &middot; <?= htmlspecialchars($row['detail_model']) ?><?php endif; ?></div>
-            <div class="cs-card-meta">Checked by <?= htmlspecialchars($row['checker_name']) ?><?php if ($row['no_engine']): ?> &middot; Engine <?= htmlspecialchars($row['no_engine']) ?><?php endif; ?></div>
+            <div class="cs-card-title"><?= htmlspecialchars($row['model_name']) ?></div>
+            <div class="cs-card-meta">Checked by <?= htmlspecialchars($row['checker_name']) ?> &middot; <?= (int)$row['sample_count'] ?> sample(s)</div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
-        <a href="view_assy_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
-        <button type="button" class="cs-delete-btn" data-delete-type="assy" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($row['model_name'] . ' · ' . date('d/m/Y', strtotime($row['tanggal']))) ?>">Delete</button>
+        <a href="view_fopump_check_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
+        <button type="button" class="cs-delete-btn" data-delete-type="fopump_check" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($row['model_name'] . ' · ' . date('d/m/Y', strtotime($row['tanggal']))) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
     <?php if (!$results): ?><div class="empty-state">No checksheets found for this date range / filter.</div><?php endif; ?>

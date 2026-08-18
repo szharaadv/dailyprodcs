@@ -35,6 +35,10 @@ function renderRows(items) {
         </tr>`;
     }).join('');
 
+    // Evaluate every row's auto OK/NG immediately (not just on the next
+    // keystroke), so a loaded draft's pre-filled actual results show the
+    // correct verdict right away instead of a stale/blank one.
+    items.forEach(item => applyAutoCategory(item.id));
     updateProgress();
 }
 
@@ -86,15 +90,11 @@ function updateProgress() {
     bar.style.width = total ? `${Math.round((filled / total) * 100)}%` : '0%';
 }
 
-tbody.addEventListener('click', (e) => {
-    const btn = e.target.closest('.cat-btn');
-    if (!btn) return;
-    const wrapper = btn.closest('.cat-toggle');
-    const hidden = wrapper.querySelector('.category-value');
-    hidden.value = btn.dataset.value;
-    wrapper.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-});
+// Category (OK/NG) is fully automatic — derived from Standard vs Actual
+// Result below — not a button the user picks themselves, so there's no
+// click handler here. A manual override would let it drift out of sync
+// with the actual-vs-standard comparison (e.g. showing OK while the actual
+// result is flagged out of range).
 
 // ---- Auto OK/NG from Standard vs Actual Result ----
 function toNum(v) {

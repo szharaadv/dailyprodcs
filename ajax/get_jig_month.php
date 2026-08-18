@@ -12,11 +12,11 @@ if (!$jig_id || !$month || !$year) {
     exit;
 }
 
-$stmt = $pdo->prepare('SELECT id, checking_item FROM m_jig_item WHERE jig_id = ? AND is_active = 1 ORDER BY sort_order, id');
+$stmt = $pdo->prepare('SELECT id, checking_item FROM m_jigitem WHERE jig_id = ? AND is_active = 1 ORDER BY sort_order, id');
 $stmt->execute([$jig_id]);
 $items = $stmt->fetchAll();
 
-$stmt = $pdo->prepare('SELECT * FROM t_jig_header WHERE jig_id = ? AND month = ? AND year = ?');
+$stmt = $pdo->prepare('SELECT * FROM t_jigheader WHERE jig_id = ? AND month = ? AND year = ?');
 $stmt->execute([$jig_id, $month, $year]);
 $header = $stmt->fetch() ?: null;
 

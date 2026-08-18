@@ -23,6 +23,33 @@ if (count($sections) <= 1) {
     header("Location: {$target}?department_id={$department_id}");
     exit;
 }
+
+// Sections that share a group_label collapse into a single card leading to
+// select_group.php, so a department with many related check sheets (e.g. FO
+// Pump's daily report / check sheet / test record / reject log) doesn't turn
+// into a wall of loose cards. A group with only one member is shown as a
+// plain direct-link card instead — no point routing through a sub-picker
+// for a single item.
+$groups = [];
+$cards = [];
+foreach ($sections as $s) {
+    if ($s['group_label']) {
+        $groups[$s['group_label']][] = $s;
+    } else {
+        $cards[] = ['label' => $s['name'], 'href' => $s['route'] . '?department_id=' . $department_id];
+    }
+}
+foreach ($groups as $label => $members) {
+    if (count($members) === 1) {
+        $cards[] = ['label' => $members[0]['name'], 'href' => $members[0]['route'] . '?department_id=' . $department_id];
+    } else {
+        $cards[] = [
+            'label' => $label,
+            'href' => 'select_group.php?department_id=' . $department_id . '&group=' . urlencode($label),
+            'hint' => count($members) . ' check sheets',
+        ];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,11 +76,11 @@ if (count($sections) <= 1) {
     <p class="landing-hint">Choose a check sheet section to continue.</p>
 
     <div class="dept-grid">
-        <?php foreach ($sections as $s): ?>
-            <a class="dept-card" href="<?= htmlspecialchars($s['route']) ?>?department_id=<?= $department_id ?>">
-                <div class="dept-icon"><?= strtoupper(substr($s['name'], 0, 2)) ?></div>
-                <div class="dept-name"><?= htmlspecialchars($s['name']) ?></div>
-                <div class="dept-go">Open &rarr;</div>
+        <?php foreach ($cards as $c): ?>
+            <a class="dept-card" href="<?= htmlspecialchars($c['href']) ?>">
+                <div class="dept-icon"><?= strtoupper(substr($c['label'], 0, 2)) ?></div>
+                <div class="dept-name"><?= htmlspecialchars($c['label']) ?></div>
+                <div class="dept-go"><?= isset($c['hint']) ? htmlspecialchars($c['hint']) . ' &rarr;' : 'Open &rarr;' ?></div>
             </a>
         <?php endforeach; ?>
     </div>

@@ -241,6 +241,13 @@ function import_nz($v)
     return ($v === '' || $v === null) ? null : $v;
 }
 
+/** Lowercased, punctuation/whitespace-stripped form for loose name matching
+ *  (e.g. "Visual phosphat spray (tank 1)" vs master's "Visual phosphat spray tank1"). */
+function import_normalize_name(string $s): string
+{
+    return strtolower(preg_replace('/[^a-z0-9]/i', '', $s));
+}
+
 /**
  * Read a value from a CSV row by trying several header aliases (case/space
  * tolerant). Returns the first non-empty match, or '' if none present.

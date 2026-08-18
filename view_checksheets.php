@@ -157,6 +157,7 @@ require __DIR__ . '/includes/app_top.php';
                             <span class="cs-row-badge cs-row-badge-ok">Normal</span>
                         <?php endif; ?>
                         <a href="view_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn-sm">View &rarr;</a>
+                        <button type="button" class="cs-delete-btn" data-delete-type="painting" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($row['condition_name'] . ' · ' . date('d/m/Y', strtotime($g['tanggal']))) ?>">Delete</button>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -166,4 +167,5 @@ require __DIR__ . '/includes/app_top.php';
     <?php if (!$groups): ?><div class="empty-state">No checksheets found for this date range / filter.</div><?php endif; ?>
 </div>
 
+<script src="assets/js/delete-pin.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

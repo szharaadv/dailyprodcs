@@ -81,6 +81,44 @@
     cursor: not-allowed;
 }
 
+/* ---------- Combo select (custom dropdown, replaces native <datalist>) ---------- */
+.combo-wrap { position: relative; }
+
+.combo-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    max-height: 260px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #d7dbe2;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(20, 24, 33, 0.15);
+    padding: 4px;
+}
+
+.combo-option {
+    padding: 8px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #1f2430;
+    cursor: pointer;
+}
+
+.combo-option:hover,
+.combo-option-active {
+    background: #fbeae7;
+    color: #9b3b32;
+}
+
+.combo-empty {
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #8b93a1;
+}
+
 .static-value {
     padding: 10px 12px;
     border: 1px solid #eef0f2;
@@ -456,35 +494,6 @@
 }
 
 /* ---------- FO Pump Assy daily report ---------- */
-.fopump-table { min-width: 900px; }
-.fopump-table th:nth-child(1), .fopump-table td:nth-child(1) { width: 48px; text-align: center; }
-.fopump-table th:nth-child(n+2), .fopump-table td:nth-child(n+2) { width: auto; }
-.fopump-table thead th { text-align: center; }
-.fopump-table td.row-no { font-weight: 600; color: #6b7280; }
-.fopump-table .f-input {
-    width: 100%;
-    padding: 6px;
-    border: 1px solid #d7dbe2;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-.fopump-table .f-qty { text-align: right; }
-.fopump-table tfoot td {
-    padding: 8px;
-    border-top: 2px solid #d7dbe2;
-    font-size: 13px;
-}
-.fopump-table tfoot .sum-label { font-weight: 700; color: #181a1e; }
-.fopump-table tfoot .f-total { text-align: right; font-weight: 700; background: #f2f3f5; }
-.fopump-table tfoot input {
-    width: 100%;
-    padding: 6px;
-    border: 1px solid #d7dbe2;
-    border-radius: 4px;
-    box-sizing: border-box;
-    text-align: right;
-}
-
 /* ---------- Checksheet card list (View Checksheets / My Drafts) ---------- */
 .cs-card-list {
     display: flex;
@@ -661,7 +670,7 @@
     padding: 7px 16px;
     font-size: 12.5px;
     font-weight: 700;
-    cursor: pointer;
+    cursor: default;
     background: #fff;
     color: #8b93a1;
     user-select: none;
@@ -670,6 +679,41 @@
 .cat-btn.cat-ng { border-left: 1px solid #d7dbe2; }
 .cat-btn.cat-ok.active { background: #e4f3e5; color: #3f7d43; }
 .cat-btn.cat-ng.active { background: #fbeae7; color: #9b3b32; }
+
+/* ---------- Delete PIN modal ---------- */
+.pin-modal { max-width: 340px; }
+.pin-error {
+    background: #fdecea;
+    color: #9b3b32;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+.pin-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #d7dbe2;
+    border-radius: 6px;
+    font-size: 22px;
+    letter-spacing: 10px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+.pin-input:focus { outline: none; border-color: #9b3b32; }
+
+.cs-delete-btn {
+    border: 1px solid #d7dbe2;
+    background: #fff;
+    color: #9b3b32;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.cs-delete-btn:hover { background: #fdecea; border-color: #f0b8b0; }
 
 .jig-reference {
     margin-bottom: 18px;
@@ -1017,3 +1061,137 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
 .fpcheck-table { table-layout: fixed !important; width: 100% !important; min-width: 600px !important; }
 .fpcheck-table .fp-cell, .fpcheck-table .fp-col-head { width: 100% !important; min-width: 0 !important; box-sizing: border-box; }
 .fpcheck-table td, .fpcheck-table th { overflow: hidden; }
+
+/* ---------- FO Pump Daily Report (F-FIP-03) ---------- */
+.fopump-table {
+    width: 100%;
+    min-width: 900px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.fopump-col-no { width: 48px; }
+.fopump-col-model { width: 19%; }
+.fopump-col-qty { width: 12.33%; }
+
+.fopump-table th, .fopump-table td {
+    border: 1px solid #e6e8ec;
+    padding: 6px 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.fopump-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    font-size: 12.5px;
+    position: sticky;
+    top: 0;
+    height: 33px;
+    box-sizing: border-box;
+}
+
+/* Grouped two-row header: the 2nd row must stick BELOW the 1st (see
+ * .assy-table above for why top:0 on both rows breaks this). */
+.fopump-table thead tr:nth-child(2) th {
+    top: 33px;
+}
+
+.fopump-no {
+    font-weight: 700;
+    color: #4a5262;
+    background: #fafbfc;
+}
+
+.fopump-model, .fopump-qty, .fopump-convert {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    padding: 5px 6px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.fopump-total-row td, .fopump-accum-row td { font-weight: 700; background: #f8f9fa; }
+.fopump-convert-row td { background: #fff; }
+.fopump-total, .fopump-accum { color: #9b3b32; }
+.fopump-total-row td:first-child, .fopump-convert-row td:first-child, .fopump-accum-row td:first-child {
+    text-align: left;
+    color: #1f2430;
+}
+
+/* ---------- FO Pump Assy Daily Check Sheet (F-FIP-01) ---------- */
+.fopump-check-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.fopump-check-table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.fopump-check-table th, .fopump-check-table td {
+    border: 1px solid #e6e8ec;
+    padding: 6px 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.fopump-check-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    font-size: 12.5px;
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+}
+
+.fopump-check-item-col { width: 260px; }
+.fopump-check-std-col { width: 160px; }
+.fopump-check-item-cell { text-align: left; }
+.fopump-check-sample-col { min-width: 110px; }
+
+.sample-no-input {
+    width: 56px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 4px;
+    padding: 3px 4px;
+    font-size: 12px;
+    text-align: center;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+.sample-remove-btn {
+    margin-left: 4px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    opacity: 0.8;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+}
+.sample-remove-btn:hover { opacity: 1; }
+
+.row-remove-btn { color: #c0392b; opacity: 1; font-size: 16px; }
+
+.fopump-check-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    padding: 5px 6px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.fopump-check-input.val-ng { border-color: #c0392b; background: #fdecea; color: #9b3b32; font-weight: 600; }

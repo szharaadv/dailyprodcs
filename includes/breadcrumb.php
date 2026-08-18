@@ -18,13 +18,20 @@ function build_checksheet_breadcrumb(PDO $pdo, array $department, string $curren
     $sections = $stmt->fetchAll();
 
     if (count($sections) > 1) {
-        $stmt = $pdo->prepare('SELECT name FROM m_checksheet_section WHERE department_id = ? AND route = ? AND is_active = 1');
+        $stmt = $pdo->prepare('SELECT name, group_label FROM m_checksheet_section WHERE department_id = ? AND route = ? AND is_active = 1');
         $stmt->execute([$department['id'], $current_route]);
-        $sectionName = $stmt->fetchColumn();
+        $current = $stmt->fetch();
 
-        if ($sectionName !== false) {
+        if ($current) {
+            if ($current['group_label']) {
+                $crumbs[] = [
+                    'label' => $current['group_label'],
+                    'href'  => 'select_group.php?department_id=' . $department['id'] . '&group=' . urlencode($current['group_label']),
+                    'title' => 'Change ' . $current['group_label'] . ' check sheet',
+                ];
+            }
             $crumbs[] = [
-                'label' => $sectionName,
+                'label' => $current['name'],
                 'href'  => 'select_section.php?department_id=' . $department['id'],
                 'title' => 'Change Section',
             ];

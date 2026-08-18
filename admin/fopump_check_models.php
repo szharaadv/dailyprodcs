@@ -12,35 +12,37 @@ $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save') {
     $id = $_POST['id'] ?? '';
     $name = trim($_POST['name'] ?? '');
+    $fop_code = trim($_POST['fop_code'] ?? '');
+    $part_no = trim($_POST['part_no'] ?? '');
     $sort_order = (int)($_POST['sort_order'] ?? 0);
 
     if ($name === '') {
         $error = 'Model name is required.';
     } else {
         if ($id !== '') {
-            $stmt = $pdo->prepare('UPDATE m_assy_model SET name = ?, sort_order = ? WHERE id = ?');
-            $stmt->execute([$name, $sort_order, (int)$id]);
+            $stmt = $pdo->prepare('UPDATE m_fopump_check_model SET name = ?, fop_code = ?, part_no = ?, sort_order = ? WHERE id = ?');
+            $stmt->execute([$name, $fop_code ?: null, $part_no ?: null, $sort_order, (int)$id]);
         } else {
-            $stmt = $pdo->prepare('INSERT INTO m_assy_model (department_id, name, sort_order) VALUES (?, ?, ?)');
-            $stmt->execute([$department_id, $name, $sort_order]);
+            $stmt = $pdo->prepare('INSERT INTO m_fopump_check_model (department_id, name, fop_code, part_no, sort_order) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([$department_id, $name, $fop_code ?: null, $part_no ?: null, $sort_order]);
         }
-        header('Location: assy_models.php?saved=1');
+        header('Location: fopump_check_models.php?saved=1');
         exit;
     }
 }
 
 if (($_GET['action'] ?? '') === 'toggle' && isset($_GET['id'])) {
-    $stmt = $pdo->prepare('UPDATE m_assy_model SET is_active = NOT is_active WHERE id = ?');
+    $stmt = $pdo->prepare('UPDATE m_fopump_check_model SET is_active = NOT is_active WHERE id = ?');
     $stmt->execute([(int)$_GET['id']]);
-    header('Location: assy_models.php');
+    header('Location: fopump_check_models.php');
     exit;
 }
 
 if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     try {
-        $stmt = $pdo->prepare('DELETE FROM m_assy_model WHERE id = ?');
+        $stmt = $pdo->prepare('DELETE FROM m_fopump_check_model WHERE id = ?');
         $stmt->execute([(int)$_GET['id']]);
-        header('Location: assy_models.php?deleted=1');
+        header('Location: fopump_check_models.php?deleted=1');
         exit;
     } catch (PDOException $e) {
         $error = 'Cannot delete, this model is already used by checking items / checksheets. Deactivate it instead.';
@@ -49,22 +51,22 @@ if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
 
 $editRow = null;
 if (($_GET['action'] ?? '') === 'edit' && isset($_GET['id'])) {
-    $stmt = $pdo->prepare('SELECT * FROM m_assy_model WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT * FROM m_fopump_check_model WHERE id = ?');
     $stmt->execute([(int)$_GET['id']]);
     $editRow = $stmt->fetch();
 }
 
-$rows = $pdo->prepare('SELECT * FROM m_assy_model WHERE department_id = ? ORDER BY sort_order, id');
+$rows = $pdo->prepare('SELECT * FROM m_fopump_check_model WHERE department_id = ? ORDER BY sort_order, id');
 $rows->execute([$department_id]);
 $rows = $rows->fetchAll();
 
 $engineModels = $pdo->query('SELECT model FROM m_engine WHERE is_active = 1 ORDER BY sort_order, model')->fetchAll(PDO::FETCH_COLUMN);
 
 $base_url = '../';
-$active_nav = 'config-assy-model';
-$section_route = 'assembly_list.php';
+$active_nav = 'config-fopump-check-model';
+$section_route = 'fopump_check_list.php';
 $page_title = 'Model';
-$page_subtitle = 'Master Data · Assembling Models';
+$page_subtitle = 'Master Data · FO Pump Check Sheet Models';
 require __DIR__ . '/../includes/app_top.php';
 ?>
 
@@ -82,6 +84,14 @@ require __DIR__ . '/../includes/app_top.php';
             <input type="text" name="name" id="model_name_input" placeholder="Search Master Engine..." value="<?= htmlspecialchars($editRow['name'] ?? '') ?>" required>
         </div>
         <div class="form-row">
+            <label>FOP Code</label>
+            <input type="text" name="fop_code" value="<?= htmlspecialchars($editRow['fop_code'] ?? '') ?>">
+        </div>
+        <div class="form-row">
+            <label>Part No.</label>
+            <input type="text" name="part_no" value="<?= htmlspecialchars($editRow['part_no'] ?? '') ?>">
+        </div>
+        <div class="form-row">
             <label>Order</label>
             <input type="number" name="sort_order" value="<?= htmlspecialchars($editRow['sort_order'] ?? (count($rows) + 1)) ?>">
         </div>
@@ -89,7 +99,7 @@ require __DIR__ . '/../includes/app_top.php';
 
     <div class="form-row">
         <button type="submit" class="btn"><?= $editRow ? 'Update' : 'Add' ?></button>
-        <?php if ($editRow): ?><a href="assy_models.php" class="btn btn-secondary">Cancel</a><?php endif; ?>
+        <?php if ($editRow): ?><a href="fopump_check_models.php" class="btn btn-secondary">Cancel</a><?php endif; ?>
     </div>
 </form>
 
@@ -98,6 +108,8 @@ require __DIR__ . '/../includes/app_top.php';
     <thead>
         <tr>
             <th>Model Name</th>
+            <th>FOP Code</th>
+            <th>Part No.</th>
             <th>Order</th>
             <th>Status</th>
             <th>Action</th>
@@ -107,16 +119,18 @@ require __DIR__ . '/../includes/app_top.php';
         <?php foreach ($rows as $row): ?>
         <tr>
             <td><?= htmlspecialchars($row['name']) ?></td>
+            <td><?= htmlspecialchars($row['fop_code'] ?? '') ?></td>
+            <td><?= htmlspecialchars($row['part_no'] ?? '') ?></td>
             <td><?= (int)$row['sort_order'] ?></td>
             <td><?= $row['is_active'] ? '<span class="badge badge-ok">Active</span>' : '<span class="badge badge-off">Inactive</span>' ?></td>
             <td class="row-actions">
-                <a href="assy_models.php?action=edit&id=<?= $row['id'] ?>">Edit</a>
-                <a href="assy_models.php?action=toggle&id=<?= $row['id'] ?>"><?= $row['is_active'] ? 'Deactivate' : 'Activate' ?></a>
-                <a href="assy_models.php?action=delete&id=<?= $row['id'] ?>" onclick="return confirm('Delete this model?')" class="danger">Delete</a>
+                <a href="fopump_check_models.php?action=edit&id=<?= $row['id'] ?>">Edit</a>
+                <a href="fopump_check_models.php?action=toggle&id=<?= $row['id'] ?>"><?= $row['is_active'] ? 'Deactivate' : 'Activate' ?></a>
+                <a href="fopump_check_models.php?action=delete&id=<?= $row['id'] ?>" onclick="return confirm('Delete this model?')" class="danger">Delete</a>
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$rows): ?><tr><td colspan="4" class="empty">No models yet.</td></tr><?php endif; ?>
+        <?php if (!$rows): ?><tr><td colspan="6" class="empty">No models yet.</td></tr><?php endif; ?>
     </tbody>
 </table>
 </div>

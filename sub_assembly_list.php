@@ -49,7 +49,7 @@ foreach ($jigs as $j) {
 
 $refItems = [];
 if ($selectedJig) {
-    $stmt = $pdo->prepare('SELECT checking_item, photo FROM m_jig_item WHERE jig_id = ? AND is_active = 1 ORDER BY sort_order, id');
+    $stmt = $pdo->prepare('SELECT checking_item, photo FROM m_jigitem WHERE jig_id = ? AND is_active = 1 ORDER BY sort_order, id');
     $stmt->execute([$selectedJig['id']]);
     $refItems = $stmt->fetchAll();
 }

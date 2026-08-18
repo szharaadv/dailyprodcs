@@ -15,12 +15,12 @@ if (!$jig_id || !$month || !$year || $month < 1 || $month > 12) {
     exit;
 }
 
-$stmt = $pdo->prepare('SELECT id FROM t_jig_header WHERE jig_id = ? AND month = ? AND year = ?');
+$stmt = $pdo->prepare('SELECT id FROM t_jigheader WHERE jig_id = ? AND month = ? AND year = ?');
 $stmt->execute([$jig_id, $month, $year]);
 $header_id = $stmt->fetchColumn();
 
 if (!$header_id) {
-    $ins = $pdo->prepare('INSERT INTO t_jig_header (jig_id, month, year) VALUES (?, ?, ?)');
+    $ins = $pdo->prepare('INSERT INTO t_jigheader (jig_id, month, year) VALUES (?, ?, ?)');
     $ins->execute([$jig_id, $month, $year]);
     $header_id = (int)$pdo->lastInsertId();
 }
@@ -35,7 +35,7 @@ if (isset($input['field'])) {
     }
     $value = trim((string)($input['value'] ?? ''));
     $value = $value !== '' ? (int)$value : null;
-    $stmt = $pdo->prepare("UPDATE t_jig_header SET `$field` = ? WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE t_jigheader SET `$field` = ? WHERE id = ?");
     $stmt->execute([$value, $header_id]);
     echo json_encode(['ok' => true, 'header_id' => $header_id]);
     exit;

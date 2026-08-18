@@ -41,9 +41,16 @@ if ($section_route) {
     }
 }
 
-$draft_count = $is_assy_context
-    ? (int)$pdo->query("SELECT COUNT(*) FROM t_assy_header WHERE status = 'draft'")->fetchColumn()
-    : (int)$pdo->query("SELECT COUNT(*) FROM t_checksheet_header WHERE status = 'draft'")->fetchColumn();
+$draft_table_map = [
+    'painting_list.php' => 't_checksheet_header',
+    'assembly_list.php' => 't_assy_header',
+    'fopump_list.php' => 't_fopump_header',
+    'fopump_check_list.php' => 't_fopump_check_header',
+    'fopump_test_list.php' => 't_fopump_test_header',
+    'fopump_reject_list.php' => 't_fopump_reject_header',
+];
+$draft_table = $draft_table_map[$section_route] ?? ($is_assy_context ? 't_assy_header' : 't_checksheet_header');
+$draft_count = (int)$pdo->query("SELECT COUNT(*) FROM `$draft_table` WHERE status = 'draft'")->fetchColumn();
 
 $checksheet_href = $section_route
     ? $base_url . $section_route . ($nav_department_id ? '?department_id=' . $nav_department_id : '')
@@ -57,6 +64,10 @@ $view_map = [
     'assembly_list.php' => 'view_assy_checksheets.php',
     'sub_assembly_list.php' => 'view_jig_checksheets.php',
     'bakeoven_list.php' => 'view_bakeoven_checksheets.php',
+    'fopump_list.php' => 'view_fopump_checksheets.php',
+    'fopump_check_list.php' => 'view_fopump_check_checksheets.php',
+    'fopump_test_list.php' => 'view_fopump_test_checksheets.php',
+    'fopump_reject_list.php' => 'view_fopump_reject_checksheets.php',
 ];
 $view_href = $base_url . ($view_map[$section_route] ?? ($is_assy_context ? 'view_assy_checksheets.php' : 'view_checksheets.php'));
 
@@ -65,6 +76,10 @@ $drafts_map = [
     'assembly_list.php' => 'my_assy_drafts.php',
     'sub_assembly_list.php' => null,
     'bakeoven_list.php' => null,
+    'fopump_list.php' => 'my_fopump_drafts.php',
+    'fopump_check_list.php' => 'my_fopump_check_drafts.php',
+    'fopump_test_list.php' => 'my_fopump_test_drafts.php',
+    'fopump_reject_list.php' => 'my_fopump_reject_drafts.php',
 ];
 $show_drafts = !array_key_exists($section_route ?? '', $drafts_map) || $drafts_map[$section_route] !== null;
 $drafts_href = $base_url . ($drafts_map[$section_route] ?? ($is_assy_context ? 'my_assy_drafts.php' : 'my_drafts.php'));
@@ -141,13 +156,24 @@ function icon(string $name): string
                 ['key' => 'config-bakeoven', 'label' => 'Oven', 'href' => 'admin/bakeovens.php'],
                 ['key' => 'config-bakeoven-time', 'label' => 'Checking Time', 'href' => 'admin/bakeoven_times.php'],
             ],
+            'fopump_list.php' => [
+                ['key' => 'config-fopump-import', 'label' => 'Import Data', 'href' => 'admin/import_fopump.php'],
+            ],
+            'fopump_check_list.php' => [
+                ['key' => 'config-fopump-check-model', 'label' => 'Model', 'href' => 'admin/fopump_check_models.php'],
+                ['key' => 'config-fopump-check-item', 'label' => 'Checking Item', 'href' => 'admin/fopump_check_items.php'],
+            ],
+            'fopump_test_list.php' => [
+                ['key' => 'config-fopump-test-model', 'label' => 'Model', 'href' => 'admin/fopump_test_models.php'],
+            ],
+            'fopump_reject_list.php' => [],
         ];
         $config_items = $config_map[$section_route] ?? $config_map['painting_list.php'];
         $show_import = in_array($section_route, ['painting_list.php', 'assembly_list.php'], true);
         $config_children = array_column($config_items, 'key');
         if ($show_import) $config_children[] = 'config-import';
         $config_open = in_array($active_nav, $config_children, true);
-        $mgmt_children = ['mgmt-users'];
+        $mgmt_children = ['mgmt-users', 'config-settings'];
         $mgmt_open = in_array($active_nav, $mgmt_children, true);
         ?>
         <div class="nav-group-label">Master Data</div>
@@ -165,6 +191,13 @@ function icon(string $name): string
             <?php endif; ?>
         </div>
 
+        <a class="nav-item <?= $active_nav === 'config-master-engine' ? 'active' : '' ?>" href="<?= $base_url ?>admin/engines.php">
+            <?= icon('sliders') ?> Master Engine
+        </a>
+        <a class="nav-item <?= $active_nav === 'config-holidays' ? 'active' : '' ?>" href="<?= $base_url ?>admin/holidays.php">
+            <?= icon('clock') ?> YADIN Calendar
+        </a>
+
         <div class="nav-group-label">Management</div>
         <a class="nav-parent <?= $mgmt_open ? 'active' : '' ?>" href="#" data-nav-toggle>
             <?= icon('users') ?> Management
@@ -172,6 +205,7 @@ function icon(string $name): string
         </a>
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
+            <a class="nav-subitem <?= $active_nav === 'config-settings' ? 'active' : '' ?>" href="<?= $base_url ?>admin/settings.php">Settings</a>
         </div>
     </nav>
 
