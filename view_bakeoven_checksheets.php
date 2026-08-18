@@ -69,9 +69,6 @@ require __DIR__ . '/includes/app_top.php';
             </select>
         </div>
     </div>
-    <div class="form-row">
-        <button type="submit" class="btn">Search</button>
-    </div>
 </form>
 
 <div class="cs-card-list">
@@ -102,4 +99,5 @@ require __DIR__ . '/includes/app_top.php';
 </div>
 
 <script src="assets/js/delete-pin.js"></script>
+<script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

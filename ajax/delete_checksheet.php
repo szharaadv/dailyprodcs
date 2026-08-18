@@ -23,6 +23,7 @@ $tables = [
     'fopump_check'  => 't_fopump_check_header',
     'fopump_test'   => 't_fopump_test_header',
     'fopump_reject' => 't_fopump_reject_header',
+    'washing'       => 't_washing_header',
 ];
 
 if (!isset($tables[$type]) || !$id) {

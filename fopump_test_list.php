@@ -58,6 +58,7 @@ $selected_model_name = '';
 foreach ($models as $m) {
     if ($m['id'] == $selected_model_id) { $selected_model_name = $m['name']; break; }
 }
+$prefill_tanggal = $_GET['tanggal'] ?? null;
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -73,11 +74,18 @@ require __DIR__ . '/includes/app_top.php';
     <div class="form-grid-top">
         <div class="field-block">
             <label>Date</label>
-            <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= htmlspecialchars($draft['tanggal'] ?? date('Y-m-d')) ?>" max="<?= date('Y-m-d') ?>">
+            <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= htmlspecialchars($draft['tanggal'] ?? ((preg_match('/^\d{4}-\d{2}-\d{2}$/', $prefill_tanggal ?? '') ? $prefill_tanggal : null) ?? date('Y-m-d'))) ?>" max="<?= date('Y-m-d') ?>">
         </div>
         <div class="field-block">
             <label>Model</label>
             <input type="text" id="f_model" placeholder="Search model..." value="<?= htmlspecialchars($selected_model_name) ?>">
+        </div>
+        <div class="field-block">
+            <label>Destination</label>
+            <select id="f_destination">
+                <option value="local" <?= ($draft['destination'] ?? 'local') === 'local' ? 'selected' : '' ?>>Local</option>
+                <option value="export" <?= ($draft['destination'] ?? '') === 'export' ? 'selected' : '' ?>>Export</option>
+            </select>
         </div>
         <div class="field-block"><label>FOP Code</label><div class="static-value" id="f_fop_code">-</div></div>
         <div class="field-block"><label>Standard (cc/sec)</label><div class="static-value" id="f_standard_cc_sec">-</div></div>

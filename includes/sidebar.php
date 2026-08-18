@@ -68,6 +68,7 @@ $view_map = [
     'fopump_check_list.php' => 'view_fopump_check_checksheets.php',
     'fopump_test_list.php' => 'view_fopump_test_checksheets.php',
     'fopump_reject_list.php' => 'view_fopump_reject_checksheets.php',
+    'washing_list.php' => 'view_washing_checksheets.php',
 ];
 $view_href = $base_url . ($view_map[$section_route] ?? ($is_assy_context ? 'view_assy_checksheets.php' : 'view_checksheets.php'));
 
@@ -76,6 +77,7 @@ $drafts_map = [
     'assembly_list.php' => 'my_assy_drafts.php',
     'sub_assembly_list.php' => null,
     'bakeoven_list.php' => null,
+    'washing_list.php' => null,
     'fopump_list.php' => 'my_fopump_drafts.php',
     'fopump_check_list.php' => 'my_fopump_check_drafts.php',
     'fopump_test_list.php' => 'my_fopump_test_drafts.php',
@@ -167,6 +169,7 @@ function icon(string $name): string
                 ['key' => 'config-fopump-test-model', 'label' => 'Model', 'href' => 'admin/fopump_test_models.php'],
             ],
             'fopump_reject_list.php' => [],
+            'washing_list.php' => [],
         ];
         $config_items = $config_map[$section_route] ?? $config_map['painting_list.php'];
         $show_import = in_array($section_route, ['painting_list.php', 'assembly_list.php'], true);

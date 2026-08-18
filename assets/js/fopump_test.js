@@ -100,6 +100,7 @@ function buildPayload(status) {
         tanggal: document.getElementById('f_tanggal').value,
         department_id: DEPARTMENT_ID,
         model_id: modelResolver.getValue(),
+        destination: document.getElementById('f_destination').value,
         oil_pressure: document.getElementById('f_oil_pressure').value,
         oil_temp: document.getElementById('f_oil_temp').value,
         room_temp: document.getElementById('f_room_temp').value,

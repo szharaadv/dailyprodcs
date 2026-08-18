@@ -9,24 +9,24 @@ $department_id = $department['id'] ?? 0;
 
 $year = (int)($_GET['year'] ?? date('Y'));
 
-$stmt = $pdo->prepare(
-    "SELECT h.*,
-        (SELECT COALESCE(SUM(quantity),0) FROM t_fopump_reject_line WHERE header_id = h.id) AS total_reject
-     FROM t_fopump_reject_header h
-     WHERE h.department_id = ? AND h.year = ? AND h.status = 'submitted'
-     ORDER BY h.month"
-);
+$sql = "SELECT h.*,
+               (SELECT COUNT(*) FROM t_washing_detail d WHERE d.header_id = h.id
+                    AND (d.ganti_air IS NOT NULL OR d.temperatur_air IS NOT NULL OR d.penambahan_gildaon IS NOT NULL OR d.total_acid IS NOT NULL)
+               ) AS filled_count
+        FROM t_washing_header h
+        WHERE h.department_id = ? AND h.year = ?
+        ORDER BY h.month";
+$stmt = $pdo->prepare($sql);
 $stmt->execute([$department_id, $year]);
 $results = $stmt->fetchAll();
 
 $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-$backQuery = $_SERVER['QUERY_STRING'] ?? '';
 
 $base_url = '';
 $active_nav = 'view-checksheets';
-$section_route = 'fopump_reject_list.php';
+$section_route = 'washing_list.php';
 $page_title = 'View Checksheets';
-$page_subtitle = 'Search & view FO Pump monthly reject logs';
+$page_subtitle = 'Search & view Washing Machine Liquid Monitoring records';
 require __DIR__ . '/includes/app_top.php';
 ?>
 
@@ -45,20 +45,22 @@ require __DIR__ . '/includes/app_top.php';
 
 <div class="cs-card-list">
     <?php foreach ($results as $row): ?>
+    <?php $daysInThisMonth = (int)date('t', mktime(0, 0, 0, $row['month'], 1, $row['year'])); ?>
     <div class="cs-card">
         <div class="cs-card-date">
-            <div class="cs-card-day"><?= htmlspecialchars($monthNames[$row['month']]) ?></div>
+            <div class="cs-card-day"><?= substr($monthNames[$row['month']], 0, 3) ?></div>
             <div class="cs-card-month"><?= (int)$row['year'] ?></div>
         </div>
         <div class="cs-card-body">
-            <div class="cs-card-title">Total Reject <?= (int)$row['total_reject'] ?><?= $row['target'] !== null ? ' &middot; Target ' . (int)$row['target'] : '' ?></div>
+            <div class="cs-card-title">Washing Machine Liquid Monitoring</div>
+            <div class="cs-card-meta"><?= (int)$row['filled_count'] ?> of <?= $daysInThisMonth ?> days filled</div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
-        <a href="view_fopump_reject_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
-        <button type="button" class="cs-delete-btn" data-delete-type="fopump_reject" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($monthNames[$row['month']] . ' ' . $row['year']) ?>">Delete</button>
+        <a href="washing_list.php?department_id=<?= $department_id ?>&month=<?= $row['month'] ?>&year=<?= $row['year'] ?>" class="cs-view-btn">Open &rarr;</a>
+        <button type="button" class="cs-delete-btn" data-delete-type="washing" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($monthNames[$row['month']] . ' ' . $row['year']) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
-    <?php if (!$results): ?><div class="empty-state">No reject logs found for this year.</div><?php endif; ?>
+    <?php if (!$results): ?><div class="empty-state">No washing machine records found for <?= $year ?>.</div><?php endif; ?>
 </div>
 
 <script src="assets/js/delete-pin.js"></script>

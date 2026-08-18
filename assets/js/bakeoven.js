@@ -33,24 +33,33 @@ function verdictClass(value, min, max) {
     return (v < min || v > max) ? 'temp-ng' : 'temp-ok';
 }
 
-function renderHead(days) {
+function renderHead(days, month, year, holidays) {
     let html = '<th class="bo-corner-cell"><span class="bo-corner-text">Waktu<br>Pengecekan</span></th>';
-    for (let d = 1; d <= days; d++) html += `<th>${d}</th>`;
+    for (let d = 1; d <= days; d++) {
+        const { cls, title } = getDayInfo(d, month, year, holidays);
+        html += `<th class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${d}</th>`;
+    }
     tableHead.innerHTML = html;
 }
 
-function renderRows(times, details, paraf, day1Total, min, max) {
+function renderRows(times, details, paraf, day1Total, min, max, month, year, holidays) {
     if (!times.length) {
         tbody.innerHTML = '<tr><td class="empty">No checking times set up for this oven yet.</td></tr>';
         return;
     }
+    const blockedDays = new Set();
+    for (let day = 1; day <= day1Total; day++) {
+        if (getDayInfo(day, month, year, holidays).blocked) blockedDays.add(day);
+    }
+
     let html = '';
     for (const t of times) {
         html += `<tr><td class="row-label">${escapeHtml(t.time_label)}</td>`;
         for (let day = 1; day <= day1Total; day++) {
             const value = details[`${t.id}_${day}`] ?? '';
             const cls = verdictClass(value, min, max);
-            html += `<td><input type="text" inputmode="decimal" class="temp-input ${cls}" data-time-id="${t.id}" data-day="${day}" value="${escapeHtml(value)}"></td>`;
+            const dis = blockedDays.has(day) ? 'disabled' : '';
+            html += `<td><input type="text" inputmode="decimal" class="temp-input ${cls}" data-time-id="${t.id}" data-day="${day}" value="${escapeHtml(value)}" ${dis}></td>`;
         }
         html += '</tr>';
     }
@@ -58,7 +67,8 @@ function renderRows(times, details, paraf, day1Total, min, max) {
     html += '<tr><td class="row-label">PARAF</td>';
     for (let day = 1; day <= day1Total; day++) {
         const selectedUser = paraf[day] ?? '';
-        html += `<td><select class="paraf-select" data-day="${day}"><option value="">-</option>`;
+        const dis = blockedDays.has(day) ? 'disabled' : '';
+        html += `<td><select class="paraf-select" data-day="${day}" ${dis}><option value="">-</option>`;
         for (const p of PEOPLE) {
             html += `<option value="${p.id}" ${String(p.id) === String(selectedUser) ? 'selected' : ''}>${escapeHtml(p.name.split(' ')[0])}</option>`;
         }
@@ -87,13 +97,16 @@ async function loadMonth() {
     const min = oven ? toNum(oven.standard_min) : null;
     const max = oven ? toNum(oven.standard_max) : null;
 
-    const res = await fetch(`ajax/get_bakeoven_month.php?bakeoven_id=${ovenId}&month=${month}&year=${year}`);
+    const [res, holidays] = await Promise.all([
+        fetch(`ajax/get_bakeoven_month.php?bakeoven_id=${ovenId}&month=${month}&year=${year}`),
+        fetchHolidays(year),
+    ]);
     const data = await res.json();
     currentTimes = data.times || [];
 
     const days = daysInMonth(Number(month), Number(year));
-    renderHead(days);
-    renderRows(currentTimes, data.details || {}, data.paraf || {}, days, min, max);
+    renderHead(days, Number(month), Number(year), holidays);
+    renderRows(currentTimes, data.details || {}, data.paraf || {}, days, min, max, Number(month), Number(year), holidays);
 
     const header = data.header;
     asstForemanSelect.value = header?.asst_foreman_id ?? '';
@@ -177,6 +190,7 @@ tbody.addEventListener('change', (e) => {
 ovenSelect.addEventListener('change', loadMonth);
 monthSelect.addEventListener('change', loadMonth);
 yearSelect.addEventListener('change', loadMonth);
+wireMonthNav('btn-prev-month', 'btn-next-month', monthSelect, yearSelect);
 
 asstForemanSelect.addEventListener('change', () => saveHeaderField('asst_foreman_id', asstForemanSelect.value));
 foremanSelect.addEventListener('change', () => saveHeaderField('foreman_id', foremanSelect.value));

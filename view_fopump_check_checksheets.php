@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/calendar_lib.php';
 require_login();
 $pdo = get_db();
 
@@ -39,6 +40,35 @@ $sql = 'SELECT h.*, m.name AS model_name, ck.name AS checker_name,
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $results = $stmt->fetchAll();
+
+// ---- Missing checks: working days this month with zero submitted
+// checksheets for an active model. Only days up to today are considered.
+$today = date('Y-m-d');
+$capEnd = min($monthEnd, $today);
+$missingByModel = [];
+
+if ($department_id && $capEnd >= $monthStart) {
+    $workingDays = get_working_days($pdo, $monthStart, $capEnd);
+
+    $activeModelsStmt = $pdo->prepare('SELECT id, name FROM m_fopump_check_model WHERE department_id = ? AND is_active = 1 ORDER BY sort_order, id');
+    $activeModelsStmt->execute([$department_id]);
+    $activeModels = $activeModelsStmt->fetchAll();
+
+    $presentStmt = $pdo->prepare(
+        "SELECT model_id, DATE(tanggal) AS d FROM t_fopump_check_header
+         WHERE department_id = ? AND tanggal BETWEEN ? AND ? AND status = 'submitted'
+         GROUP BY model_id, DATE(tanggal)"
+    );
+    $presentStmt->execute([$department_id, $monthStart, $capEnd]);
+    $present = [];
+    foreach ($presentStmt->fetchAll() as $p) { $present[$p['model_id']][$p['d']] = true; }
+
+    foreach ($activeModels as $m) {
+        if ($selected_model_id && $selected_model_id != $m['id']) continue;
+        $missing = array_values(array_filter($workingDays, fn($d) => empty($present[$m['id']][$d])));
+        if ($missing) $missingByModel[] = ['id' => $m['id'], 'name' => $m['name'], 'dates' => $missing];
+    }
+}
 
 $backQuery = $_SERVER['QUERY_STRING'] ?? '';
 
@@ -80,10 +110,24 @@ require __DIR__ . '/includes/app_top.php';
             </select>
         </div>
     </div>
-    <div class="form-row">
-        <button type="submit" class="btn">Search</button>
-    </div>
 </form>
+
+<?php if ($missingByModel): ?>
+<div class="missing-banner">
+    <div class="missing-banner-title">&#9888; Missing checks this month</div>
+    <?php foreach ($missingByModel as $mm): ?>
+        <div class="missing-banner-row">
+            <span class="missing-banner-cond"><?= htmlspecialchars($mm['name']) ?></span>
+            <span class="missing-banner-dates"><?= format_missing_dates($mm['dates']) ?></span>
+        </div>
+        <div class="missing-banner-fill-list">
+            <?php foreach ($mm['dates'] as $d): ?>
+                <a class="missing-banner-fill-btn" href="fopump_check_list.php?department_id=<?= $department_id ?>&model_id=<?= $mm['id'] ?>&tanggal=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?></a>
+            <?php endforeach; ?>
+        </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
 
 <div class="cs-card-list">
     <?php foreach ($results as $row): ?>
@@ -105,4 +149,5 @@ require __DIR__ . '/includes/app_top.php';
 </div>
 
 <script src="assets/js/delete-pin.js"></script>
+<script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

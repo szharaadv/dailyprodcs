@@ -68,6 +68,13 @@ require __DIR__ . '/includes/app_top.php';
             </select>
         </div>
         <div class="field-block">
+            <label>&nbsp;</label>
+            <div class="month-nav">
+                <button type="button" class="month-nav-btn" id="btn-prev-month">&larr; Prev</button>
+                <button type="button" class="month-nav-btn" id="btn-next-month">Next &rarr;</button>
+            </div>
+        </div>
+        <div class="field-block">
             <label>Target</label>
             <input type="number" id="f_target" min="0" value="<?= htmlspecialchars($draft['target'] ?? '') ?>">
         </div>
@@ -108,5 +115,6 @@ require __DIR__ . '/includes/app_top.php';
     const MODEL_NAMES = <?= json_encode($models) ?>;
 </script>
 <script src="assets/js/combo-select.js"></script>
+<script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/fopump_reject.js?v=<?= @filemtime(__DIR__ . '/assets/js/fopump_reject.js') ?: 1 ?>"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

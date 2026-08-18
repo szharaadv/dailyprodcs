@@ -605,6 +605,7 @@ CREATE TABLE `t_fopump_test_header` (
   `tanggal` date NOT NULL,
   `department_id` int(11) NOT NULL,
   `model_id` int(11) NOT NULL,
+  `destination` enum('local','export') NOT NULL DEFAULT 'local',
   `oil_pressure` varchar(50) NULL DEFAULT NULL,
   `oil_temp` varchar(50) NULL DEFAULT NULL,
   `room_temp` varchar(50) NULL DEFAULT NULL,
@@ -672,6 +673,46 @@ CREATE TABLE `t_fopump_reject_line` (
   PRIMARY KEY (`id`),
   KEY `fk_fopumprejectline_header` (`header_id`),
   CONSTRAINT `fk_fopumprejectline_header` FOREIGN KEY (`header_id`) REFERENCES `t_fopump_reject_header` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Assembling: Washing Machine Liquid Monitoring — monthly grid, one row per
+-- day (Ganti Air / Temperatur Air / Penambahan Gildaon / Total Acid), plus a
+-- Checker (Foreman) and Control (Supervisor) pick per day. Same
+-- auto-save-per-cell UX as Bake Oven, but day-as-row instead of day-as-column
+-- since there's only one fixed set of fields (no per-machine time grid).
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS `t_washing_header`;
+CREATE TABLE `t_washing_header` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `month` tinyint(2) NOT NULL,
+  `year` smallint(6) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_washingheader_period` (`department_id`, `month`, `year`),
+  CONSTRAINT `fk_washingheader_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_washing_detail`;
+CREATE TABLE `t_washing_detail` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `header_id` int(11) NOT NULL,
+  `day` tinyint(2) NOT NULL,
+  `ganti_air` varchar(50) NULL DEFAULT NULL,
+  `temperatur_air` varchar(20) NULL DEFAULT NULL,
+  `penambahan_gildaon` varchar(50) NULL DEFAULT NULL,
+  `total_acid` varchar(20) NULL DEFAULT NULL,
+  `checker_id` int(11) NULL DEFAULT NULL,
+  `control_id` int(11) NULL DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_washingdetail_day` (`header_id`, `day`),
+  KEY `fk_washingdetail_checker` (`checker_id`),
+  KEY `fk_washingdetail_control` (`control_id`),
+  CONSTRAINT `fk_washingdetail_header` FOREIGN KEY (`header_id`) REFERENCES `t_washing_header` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_washingdetail_checker` FOREIGN KEY (`checker_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_washingdetail_control` FOREIGN KEY (`control_id`) REFERENCES `m_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

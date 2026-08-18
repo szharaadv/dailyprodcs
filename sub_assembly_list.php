@@ -95,6 +95,13 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             </select>
         </div>
         <div class="field-block">
+            <label>&nbsp;</label>
+            <div class="month-nav">
+                <button type="button" class="month-nav-btn" id="btn-prev-month">&larr; Prev</button>
+                <button type="button" class="month-nav-btn" id="btn-next-month">Next &rarr;</button>
+            </div>
+        </div>
+        <div class="field-block">
             <label>Supervisor</label>
             <select id="f_supervisor">
                 <option value="">—</option>
@@ -198,6 +205,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
 </script>
+<script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/subassy.js?v=<?= @filemtime(__DIR__ . '/assets/js/subassy.js') ?: 1 ?>"></script>
 <script>
 (function () {

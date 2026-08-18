@@ -71,6 +71,7 @@ async function loadContext() {
 
 monthSelect.addEventListener('change', loadContext);
 yearSelect.addEventListener('change', loadContext);
+wireMonthNav('btn-prev-month', 'btn-next-month', monthSelect, yearSelect);
 
 function buildPayload(status) {
     return {

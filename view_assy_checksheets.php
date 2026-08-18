@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/calendar_lib.php';
 require_login();
 $pdo = get_db();
 
@@ -43,6 +44,27 @@ $sql = 'SELECT h.*, d.name AS department_name, m.name AS model_name, ck.name AS 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $results = $stmt->fetchAll();
+
+// ---- Missing checks: working days this month with zero submitted
+// checksheets at all (any one engine/model checked that day is enough —
+// Torque only requires one engine input per day, not every model).
+// Only days up to today are considered.
+$today = date('Y-m-d');
+$capEnd = min($monthEnd, $today);
+$missingDates = [];
+
+if ($selected_department_id && $capEnd >= $monthStart) {
+    $workingDays = get_working_days($pdo, $monthStart, $capEnd);
+
+    $presentStmt = $pdo->prepare(
+        "SELECT DISTINCT DATE(tanggal) AS d FROM t_assy_header
+         WHERE department_id = ? AND tanggal BETWEEN ? AND ? AND status = 'submitted'"
+    );
+    $presentStmt->execute([$selected_department_id, $monthStart, $capEnd]);
+    $present = array_flip($presentStmt->fetchAll(PDO::FETCH_COLUMN));
+
+    $missingDates = array_values(array_filter($workingDays, fn($d) => !isset($present[$d])));
+}
 
 $backQuery = $_SERVER['QUERY_STRING'] ?? '';
 
@@ -92,10 +114,21 @@ require __DIR__ . '/includes/app_top.php';
             </select>
         </div>
     </div>
-    <div class="form-row">
-        <button type="submit" class="btn">Search</button>
-    </div>
 </form>
+
+<?php if ($missingDates): ?>
+<div class="missing-banner">
+    <div class="missing-banner-title">&#9888; Missing checks this month</div>
+    <div class="missing-banner-row">
+        <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
+    </div>
+    <div class="missing-banner-fill-list">
+        <?php foreach ($missingDates as $d): ?>
+            <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>&tanggal=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?></a>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="cs-card-list">
     <?php foreach ($results as $row): ?>
@@ -117,4 +150,5 @@ require __DIR__ . '/includes/app_top.php';
 </div>
 
 <script src="assets/js/delete-pin.js"></script>
+<script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

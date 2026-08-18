@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/calendar_lib.php';
 require_login();
 $pdo = get_db();
 
@@ -72,6 +73,32 @@ foreach ($groups as &$g) {
 }
 unset($g);
 
+// ---- Missing checks: working days in this month with zero submitted
+// checksheets for a condition. Only days up to today are considered — a
+// future date hasn't been missed yet.
+$today = date('Y-m-d');
+$capEnd = min($monthEnd, $today);
+$missingByCondition = [];
+
+if ($selected_department_id && $capEnd >= $monthStart) {
+    $workingDays = get_working_days($pdo, $monthStart, $capEnd);
+
+    $presentStmt = $pdo->prepare(
+        "SELECT condition_id, DATE(tanggal) AS d FROM t_checksheet_header
+         WHERE department_id = ? AND tanggal BETWEEN ? AND ? AND status = 'submitted'
+         GROUP BY condition_id, DATE(tanggal)"
+    );
+    $presentStmt->execute([$selected_department_id, $monthStart, $capEnd]);
+    $present = [];
+    foreach ($presentStmt->fetchAll() as $p) { $present[$p['condition_id']][$p['d']] = true; }
+
+    foreach ($conditions as $c) {
+        if ($selected_condition_id && $selected_condition_id != $c['id']) continue;
+        $missing = array_values(array_filter($workingDays, fn($d) => empty($present[$c['id']][$d])));
+        if ($missing) $missingByCondition[] = ['id' => $c['id'], 'name' => $c['name'], 'dates' => $missing];
+    }
+}
+
 $backQuery = $_SERVER['QUERY_STRING'] ?? '';
 
 $base_url = '';
@@ -113,10 +140,24 @@ require __DIR__ . '/includes/app_top.php';
             </select>
         </div>
     </div>
-    <div class="form-row">
-        <button type="submit" class="btn">Search</button>
-    </div>
 </form>
+
+<?php if ($missingByCondition): ?>
+<div class="missing-banner">
+    <div class="missing-banner-title">&#9888; Missing checks this month</div>
+    <?php foreach ($missingByCondition as $mc): ?>
+        <div class="missing-banner-row">
+            <span class="missing-banner-cond"><?= htmlspecialchars($mc['name']) ?></span>
+            <span class="missing-banner-dates"><?= format_missing_dates($mc['dates']) ?></span>
+        </div>
+        <div class="missing-banner-fill-list">
+            <?php foreach ($mc['dates'] as $d): ?>
+                <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>&tanggal=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?></a>
+            <?php endforeach; ?>
+        </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
 
 <div class="cs-card-list">
     <?php foreach ($groups as $g): ?>
@@ -168,4 +209,5 @@ require __DIR__ . '/includes/app_top.php';
 </div>
 
 <script src="assets/js/delete-pin.js"></script>
+<script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

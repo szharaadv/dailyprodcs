@@ -13,6 +13,7 @@ if (!$d || $d->format('Y-m-d') !== $tanggal || $tanggal > date('Y-m-d')) {
 }
 $department_id   = (int)($input['department_id'] ?? 0);
 $model_id        = (int)($input['model_id'] ?? 0);
+$destination     = ($input['destination'] ?? 'local') === 'export' ? 'export' : 'local';
 $oil_pressure    = $input['oil_pressure'] ?? null;
 $oil_temp        = $input['oil_temp'] ?? null;
 $room_temp       = $input['room_temp'] ?? null;
@@ -33,7 +34,7 @@ try {
     $pdo->beginTransaction();
 
     $params = [
-        $tanggal, $department_id, $model_id,
+        $tanggal, $department_id, $model_id, $destination,
         $oil_pressure ?: null, $oil_temp ?: null, $room_temp ?: null, $start_test_time ?: null,
         $checker_id, $foreman_id, $supervisor_id, $status,
     ];
@@ -41,7 +42,7 @@ try {
     if ($header_id) {
         $stmt = $pdo->prepare(
             'UPDATE t_fopump_test_header
-             SET tanggal=?, department_id=?, model_id=?, oil_pressure=?, oil_temp=?, room_temp=?, start_test_time=?,
+             SET tanggal=?, department_id=?, model_id=?, destination=?, oil_pressure=?, oil_temp=?, room_temp=?, start_test_time=?,
                  checker_id=?, foreman_id=?, supervisor_id=?, status=?
              WHERE id=?'
         );
@@ -51,8 +52,8 @@ try {
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO t_fopump_test_header
-             (tanggal, department_id, model_id, oil_pressure, oil_temp, room_temp, start_test_time, checker_id, foreman_id, supervisor_id, status)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+             (tanggal, department_id, model_id, destination, oil_pressure, oil_temp, room_temp, start_test_time, checker_id, foreman_id, supervisor_id, status)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute($params);
         $header_id = $pdo->lastInsertId();

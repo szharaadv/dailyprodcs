@@ -88,6 +88,13 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             </select>
         </div>
         <div class="field-block">
+            <label>&nbsp;</label>
+            <div class="month-nav">
+                <button type="button" class="month-nav-btn" id="btn-prev-month">&larr; Prev</button>
+                <button type="button" class="month-nav-btn" id="btn-next-month">Next &rarr;</button>
+            </div>
+        </div>
+        <div class="field-block">
             <label>Standard</label>
             <div class="static-value" id="f_standard"><?= $selectedOven ? htmlspecialchars($selectedOven['standard_min'] . '°C ~ ' . $selectedOven['standard_max'] . '°C') : '-' ?></div>
         </div>
@@ -147,5 +154,6 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
     const STANDARDS = <?= json_encode(array_column($ovens, null, 'id')) ?>;
     const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $people)) ?>;
 </script>
+<script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/bakeoven.js?v=<?= @filemtime(__DIR__ . '/assets/js/bakeoven.js') ?: 1 ?>"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

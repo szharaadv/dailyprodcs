@@ -680,6 +680,80 @@
 .cat-btn.cat-ok.active { background: #e4f3e5; color: #3f7d43; }
 .cat-btn.cat-ng.active { background: #fbeae7; color: #9b3b32; }
 
+/* ---------- Washing Machine Liquid Monitoring ---------- */
+.washing-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.washing-table th, .washing-table td {
+    border: 1px solid #e6e8ec;
+    padding: 6px 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.washing-table thead th {
+    background: #9b3b32;
+    color: #fff;
+    font-size: 12.5px;
+    position: sticky;
+    top: 0;
+}
+
+.washing-subhead { font-weight: 400; font-size: 11px; opacity: 0.85; }
+.washing-date-col { width: 60px; font-weight: 700; color: #4a5262; background: #fafbfc; }
+
+.washing-input, .washing-select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    padding: 5px 6px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.washing-row-blocked { background: #fbfafa; }
+
+/* ---------- Month navigation (Prev/Next) ---------- */
+.month-nav { display: flex; gap: 6px; }
+.month-nav-btn {
+    background: #fff;
+    border: 1px solid #d7dbe2;
+    color: #4a5262;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.month-nav-btn:hover { background: #f5f6f8; border-color: #c3c8d1; }
+
+/* ---------- Calendar day-blocking (shared: Bake Oven / Sub Assembly / Washing) ---------- */
+.cal-day-holiday { background: #fbe0e0; color: #a11; }
+.cal-day-workday { background: #e3f5e6; color: #2a6b2a; }
+.cal-day-weekend { background: #eef0f2; color: #8b93a1; }
+
+.washing-input:disabled, .washing-select:disabled,
+.temp-input:disabled,
+.paraf-select:disabled {
+    background: #f0f1f3;
+    color: #b7bcc4;
+    cursor: not-allowed;
+    border-color: #e6e8ec;
+}
+
+/* Sub Assembly's OK/NG toggle is built from <span> buttons, which have no
+ * native disabled state — this class fakes it visually and via pointer-events. */
+.cat-toggle.cal-blocked {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 /* ---------- Delete PIN modal ---------- */
 .pin-modal { max-width: 340px; }
 .pin-error {
@@ -702,6 +776,46 @@
     margin-bottom: 16px;
 }
 .pin-input:focus { outline: none; border-color: #9b3b32; }
+
+.missing-banner {
+    background: #fdecea;
+    border: 1px solid #f0b8b0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+.missing-banner-title { font-weight: 700; color: #9b3b32; margin-bottom: 8px; }
+.missing-banner-row { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0; font-size: 13px; }
+.missing-banner-cond { font-weight: 600; color: #1f2430; min-width: 140px; }
+.missing-banner-dates { color: #6b4340; }
+
+.missing-banner-fill-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.missing-banner-fill-btn {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid #e3a39b;
+    color: #9b3b32;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.missing-banner-fill-btn:hover { background: #9b3b32; color: #fff; border-color: #9b3b32; }
+
+.dest-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+.dest-badge-local { background: #e3f5e6; color: #2a6b2a; }
+.dest-badge-export { background: #e6f0fb; color: #2857a1; }
 
 .cs-delete-btn {
     border: 1px solid #d7dbe2;
@@ -847,7 +961,8 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
 .jig-table {
     width: 100%;
     min-width: 480px;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: #fff;
 }
 
@@ -859,16 +974,18 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     position: sticky;
     top: 0;
     white-space: nowrap;
+    z-index: 2;
 }
-.jig-table thead th:first-child { position: sticky; left: 0; z-index: 1; }
+.jig-table thead th:first-child { position: sticky; left: 0; z-index: 3; }
 
 .jig-table tbody td {
     padding: 6px 8px;
     font-size: 13px;
     text-align: center;
     border-bottom: 1px solid #f0f1f3;
+    background: #fff;
 }
-.jig-table tbody tr:nth-child(odd) { background: #fafafb; }
+.jig-table tbody tr:nth-child(odd) td { background: #fafafb; }
 
 .jig-day {
     font-weight: 700;

@@ -23,7 +23,7 @@ function renderHead(items) {
     tableHead.innerHTML = '<th>Day</th>' + items.map((it) => `<th>${escapeHtml(it.checking_item)}</th>`).join('');
 }
 
-function renderRows(items, details, month, year) {
+function renderRows(items, details, month, year, holidays) {
     const total = daysInMonth(month, year);
     if (!items.length) {
         tbody.innerHTML = '<tr><td class="empty">No checking items set up for this jig yet.</td></tr>';
@@ -31,11 +31,12 @@ function renderRows(items, details, month, year) {
     }
     let html = '';
     for (let day = 1; day <= total; day++) {
-        html += `<tr><td class="jig-day">${day}</td>`;
+        const { cls, title, blocked } = getDayInfo(day, month, year, holidays);
+        html += `<tr><td class="jig-day ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>`;
         for (const item of items) {
             const value = details[`${item.id}_${day}`] ?? '';
             html += `<td>
-                <div class="cat-toggle jig-toggle" data-item-id="${item.id}" data-day="${day}">
+                <div class="cat-toggle jig-toggle ${blocked ? 'cal-blocked' : ''}" data-item-id="${item.id}" data-day="${day}">
                     <span class="cat-btn cat-ok ${value === 'OK' ? 'active' : ''}" data-value="OK">OK</span>
                     <span class="cat-btn cat-ng ${value === 'NG' ? 'active' : ''}" data-value="NG">NG</span>
                 </div>
@@ -59,12 +60,15 @@ async function loadMonth() {
         return;
     }
 
-    const res = await fetch(`ajax/get_jig_month.php?jig_id=${jigId}&month=${month}&year=${year}`);
+    const [res, holidays] = await Promise.all([
+        fetch(`ajax/get_jig_month.php?jig_id=${jigId}&month=${month}&year=${year}`),
+        fetchHolidays(year),
+    ]);
     const data = await res.json();
     currentItems = data.items || [];
 
     renderHead(currentItems);
-    renderRows(currentItems, data.details || {}, Number(month), Number(year));
+    renderRows(currentItems, data.details || {}, Number(month), Number(year), holidays);
 
     const header = data.header;
     supervisorSelect.value = header?.supervisor_id ?? '';
@@ -117,6 +121,7 @@ tbody.addEventListener('click', (e) => {
 jigSelect.addEventListener('change', loadMonth);
 monthSelect.addEventListener('change', loadMonth);
 yearSelect.addEventListener('change', loadMonth);
+wireMonthNav('btn-prev-month', 'btn-next-month', monthSelect, yearSelect);
 
 supervisorSelect.addEventListener('change', () => saveHeaderField('supervisor_id', supervisorSelect.value));
 foremanSelect.addEventListener('change', () => saveHeaderField('foreman_id', foremanSelect.value));

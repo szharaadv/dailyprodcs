@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/calendar_lib.php';
 require_login();
 $pdo = get_db();
 
@@ -10,6 +11,9 @@ $department_id = $department['id'] ?? 0;
 $month = (int)($_GET['month'] ?? date('n'));
 $year = (int)($_GET['year'] ?? date('Y'));
 $month = max(1, min(12, $month));
+$daysInMonth = (int) date('t', mktime(0, 0, 0, $month, 1, $year));
+$monthStart = sprintf('%04d-%02d-01', $year, $month);
+$monthEnd = sprintf('%04d-%02d-%02d', $year, $month, $daysInMonth);
 
 $stmt = $pdo->prepare(
     "SELECT h.*,
@@ -24,6 +28,26 @@ $stmt->execute([$department_id, $year, $month]);
 $results = $stmt->fetchAll();
 
 $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// ---- Missing checks: working days this month with no submitted report at
+// all (one header per day, no sub-entity breakdown). Only up to today.
+$today = date('Y-m-d');
+$capEnd = min($monthEnd, $today);
+$missingDates = [];
+
+if ($department_id && $capEnd >= $monthStart) {
+    $workingDays = get_working_days($pdo, $monthStart, $capEnd);
+
+    $presentStmt = $pdo->prepare(
+        "SELECT DATE(tanggal) AS d FROM t_fopump_header
+         WHERE department_id = ? AND tanggal BETWEEN ? AND ? AND status = 'submitted'"
+    );
+    $presentStmt->execute([$department_id, $monthStart, $capEnd]);
+    $present = array_flip($presentStmt->fetchAll(PDO::FETCH_COLUMN));
+
+    $missingDates = array_values(array_filter($workingDays, fn($d) => !isset($present[$d])));
+}
+
 $backQuery = $_SERVER['QUERY_STRING'] ?? '';
 
 $base_url = '';
@@ -53,10 +77,22 @@ require __DIR__ . '/includes/app_top.php';
             </select>
         </div>
     </div>
-    <div class="form-row">
-        <button type="submit" class="btn">Search</button>
-    </div>
 </form>
+
+<?php if ($missingDates): ?>
+<div class="missing-banner">
+    <div class="missing-banner-title">&#9888; Missing checks this month</div>
+    <div class="missing-banner-row">
+        <span class="missing-banner-cond">FO Pump Daily Report</span>
+        <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
+    </div>
+    <div class="missing-banner-fill-list">
+        <?php foreach ($missingDates as $d): ?>
+            <a class="missing-banner-fill-btn" href="fopump_list.php?department_id=<?= $department_id ?>&tanggal=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?></a>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="cs-card-list">
     <?php foreach ($results as $row): ?>
@@ -78,4 +114,5 @@ require __DIR__ . '/includes/app_top.php';
 </div>
 
 <script src="assets/js/delete-pin.js"></script>
+<script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>
