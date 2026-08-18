@@ -2,7 +2,6 @@ const ovenSelect = document.getElementById('f_oven');
 const monthSelect = document.getElementById('f_month');
 const yearSelect = document.getElementById('f_year');
 const standardEl = document.getElementById('f_standard');
-const asstForemanSelect = document.getElementById('f_asst_foreman');
 const foremanSelect = document.getElementById('f_foreman');
 const supervisorSelect = document.getElementById('f_supervisor');
 const notesEl = document.getElementById('f_notes');
@@ -109,7 +108,6 @@ async function loadMonth() {
     renderRows(currentTimes, data.details || {}, data.paraf || {}, days, min, max, Number(month), Number(year), holidays);
 
     const header = data.header;
-    asstForemanSelect.value = header?.asst_foreman_id ?? '';
     foremanSelect.value = header?.foreman_id ?? '';
     supervisorSelect.value = header?.supervisor_id ?? '';
     notesEl.value = header?.notes ?? '';
@@ -192,7 +190,6 @@ monthSelect.addEventListener('change', loadMonth);
 yearSelect.addEventListener('change', loadMonth);
 wireMonthNav('btn-prev-month', 'btn-next-month', monthSelect, yearSelect);
 
-asstForemanSelect.addEventListener('change', () => saveHeaderField('asst_foreman_id', asstForemanSelect.value));
 foremanSelect.addEventListener('change', () => saveHeaderField('foreman_id', foremanSelect.value));
 supervisorSelect.addEventListener('change', () => saveHeaderField('supervisor_id', supervisorSelect.value));
 notesEl.addEventListener('change', () => saveHeaderField('notes', notesEl.value));

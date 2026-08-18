@@ -34,8 +34,8 @@ require __DIR__ . '/includes/app_top.php';
     <?php foreach ($drafts as $row): ?>
     <div class="cs-card">
         <div class="cs-card-date">
-            <div class="cs-card-day"><?= htmlspecialchars(date('d', strtotime($row['tanggal']))) ?></div>
-            <div class="cs-card-month"><?= htmlspecialchars(date('M', strtotime($row['tanggal']))) ?></div>
+            <div class="cs-card-day"><?= htmlspecialchars(date('d', strtotime($row['created_at']))) ?></div>
+            <div class="cs-card-month"><?= htmlspecialchars(date('M', strtotime($row['created_at']))) ?></div>
         </div>
         <div class="cs-card-body">
             <div class="cs-card-title"><?= htmlspecialchars($row['department_name']) ?> &middot; <?= htmlspecialchars($row['model_name']) ?></div>
@@ -43,7 +43,7 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <span class="cs-status cs-status-draft">Draft</span>
         <div class="cs-card-actions">
-            <a href="fopump_check_list.php?department_id=<?= $row['department_id'] ?>&draft_id=<?= $row['id'] ?>" class="cs-view-btn">Continue</a>
+            <a href="fopump_check_list.php?department_id=<?= $row['department_id'] ?>&model_id=<?= $row['model_id'] ?>" class="cs-view-btn">Continue</a>
             <a href="my_fopump_check_drafts.php?action=delete&id=<?= $row['id'] ?>" onclick="return confirm('Delete this draft?')" class="cs-delete-link">Delete</a>
         </div>
     </div>

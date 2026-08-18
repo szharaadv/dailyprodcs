@@ -38,51 +38,28 @@ $stmt = $pdo->prepare('SELECT * FROM m_fopump_check_model WHERE department_id = 
 $stmt->execute([$department['id']]);
 $models = $stmt->fetchAll();
 
-$draft_id = (int)($_GET['draft_id'] ?? 0);
-$draft = null;
-$draft_samples = [];
-$draft_values = [];
-if ($draft_id) {
-    $stmt = $pdo->prepare("SELECT * FROM t_fopump_check_header WHERE id = ? AND status = 'draft'");
-    $stmt->execute([$draft_id]);
-    $draft = $stmt->fetch();
-
-    if ($draft) {
-        $stmt = $pdo->prepare('SELECT id, sample_no FROM t_fopump_check_sample WHERE header_id = ? ORDER BY sort_order, id');
-        $stmt->execute([$draft_id]);
-        $draft_samples = $stmt->fetchAll();
-
-        $stmt = $pdo->prepare('SELECT checklist_item_id, sample_id, actual_result FROM t_fopump_check_detail WHERE header_id = ?');
-        $stmt->execute([$draft_id]);
-        foreach ($stmt->fetchAll() as $d) {
-            $draft_values[$d['checklist_item_id']][$d['sample_id']] = $d['actual_result'];
-        }
-    }
-}
-
-$selected_model_id = $_GET['model_id'] ?? ($draft['model_id'] ?? ($models[0]['id'] ?? null));
+$selected_model_id = $_GET['model_id'] ?? ($models[0]['id'] ?? null);
 $selected_model_name = '';
 foreach ($models as $m) {
     if ($m['id'] == $selected_model_id) { $selected_model_name = $m['name']; break; }
 }
-$prefill_tanggal = $_GET['tanggal'] ?? null;
 
 $base_url = '';
 $active_nav = 'checksheet';
 $section_route = 'fopump_check_list.php';
 $page_title = 'FO Pump Assy Daily Check Sheet';
-$page_subtitle = $department['name'] . ' · F-FIP-01 quality checklist';
+$page_subtitle = $department['name'] . ' · F-FIP-01 quality checklist · one ongoing record per model';
 require_once __DIR__ . '/includes/breadcrumb.php';
 $breadcrumb = build_checksheet_breadcrumb($pdo, $department, 'fopump_check_list.php');
 require __DIR__ . '/includes/app_top.php';
 ?>
 
 <div class="checksheet-card">
-    <div class="form-grid-top">
-        <div class="field-block">
-            <label>Date</label>
-            <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= htmlspecialchars($draft['tanggal'] ?? ((preg_match('/^\d{4}-\d{2}-\d{2}$/', $prefill_tanggal ?? '') ? $prefill_tanggal : null) ?? date('Y-m-d'))) ?>" max="<?= date('Y-m-d') ?>">
-        </div>
+    <div class="form-section-header">
+        <span>Check Sheet Details</span>
+        <button type="button" class="form-toggle-btn" id="btn-toggle-details">Hide &#9650;</button>
+    </div>
+    <div class="form-grid-top" id="form-grid-top">
         <div class="field-block">
             <label>Model</label>
             <input type="text" id="f_model" placeholder="Search model..." value="<?= htmlspecialchars($selected_model_name) ?>">
@@ -97,14 +74,14 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <div class="field-block">
             <label>Prod. Date Code</label>
-            <input type="text" id="f_prod_date_code" placeholder="e.g. 2024/10" value="<?= htmlspecialchars($draft['prod_date_code'] ?? '') ?>">
+            <input type="text" id="f_prod_date_code" placeholder="e.g. 2024/10">
         </div>
         <div class="field-block">
             <label>Checker</label>
             <select id="f_checker">
                 <option value="">—</option>
                 <?php foreach ($people as $p): ?>
-                    <option value="<?= $p['id'] ?>" <?= $draft && $p['id'] == $draft['checker_id'] ? 'selected' : '' ?>><?= htmlspecialchars($p['name']) ?></option>
+                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -113,7 +90,7 @@ require __DIR__ . '/includes/app_top.php';
             <select id="f_foreman">
                 <option value="">—</option>
                 <?php foreach ($people as $p): ?>
-                    <option value="<?= $p['id'] ?>" <?= $draft && $p['id'] == $draft['foreman_id'] ? 'selected' : '' ?>><?= htmlspecialchars($p['name']) ?></option>
+                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -122,7 +99,7 @@ require __DIR__ . '/includes/app_top.php';
             <select id="f_supervisor">
                 <option value="">—</option>
                 <?php foreach ($people as $p): ?>
-                    <option value="<?= $p['id'] ?>" <?= $draft && $p['id'] == $draft['supervisor_id'] ? 'selected' : '' ?>><?= htmlspecialchars($p['name']) ?></option>
+                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -130,7 +107,7 @@ require __DIR__ . '/includes/app_top.php';
 
     <div class="fopump-check-toolbar">
         <button type="button" class="btn btn-secondary" id="btn-add-sample">+ Add Sample</button>
-        <span class="import-hint">Add one column per unit sampled today (e.g. unit #1, #11, #21 …).</span>
+        <span class="import-hint">Add one column per unit sampled. Submitting updates this model's record in place — there's no date to track.</span>
     </div>
 
     <div class="table-wrap">
@@ -148,6 +125,7 @@ require __DIR__ . '/includes/app_top.php';
     </div>
 
     <div class="actions">
+        <div class="progress-label" id="fopump-check-status-label"></div>
         <button type="button" class="btn btn-draft" id="btn-draft">Save as Draft</button>
         <button type="button" class="btn btn-submit" id="btn-submit">Submit</button>
     </div>
@@ -155,12 +133,18 @@ require __DIR__ . '/includes/app_top.php';
 
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
-    const DRAFT_ID = <?= json_encode($draft_id ?: null) ?>;
-    const DRAFT_SAMPLES = <?= json_encode($draft_samples) ?>;
-    const DRAFT_VALUES = <?= json_encode($draft_values, JSON_FORCE_OBJECT) ?>;
     const MODELS = <?= json_encode(array_map(fn($m) => ['id' => $m['id'], 'name' => $m['name']], $models)) ?>;
 </script>
 <script src="assets/js/combo-select.js"></script>
 <script src="assets/js/fopump_check.js?v=<?= @filemtime(__DIR__ . '/assets/js/fopump_check.js') ?: 1 ?>"></script>
-<script src="assets/js/holiday-calendar.js"></script>
+<script>
+(function () {
+    const panel = document.getElementById('form-grid-top');
+    const btn = document.getElementById('btn-toggle-details');
+    btn.addEventListener('click', () => {
+        const hidden = panel.classList.toggle('is-hidden');
+        btn.innerHTML = hidden ? 'Show &#9660;' : 'Hide &#9650;';
+    });
+})();
+</script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

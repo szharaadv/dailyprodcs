@@ -2,14 +2,17 @@ const headRow = document.getElementById('fopump-check-head-row');
 const tbody = document.getElementById('fopump-check-tbody');
 const fopCodeEl = document.getElementById('f_fop_code');
 const partNoEl = document.getElementById('f_part_no');
+const statusLabel = document.getElementById('fopump-check-status-label');
+const prodDateCodeEl = document.getElementById('f_prod_date_code');
+const checkerEl = document.getElementById('f_checker');
+const foremanEl = document.getElementById('f_foreman');
+const supervisorEl = document.getElementById('f_supervisor');
 
 let currentItems = [];
 let currentModel = null;
+let currentHeaderId = null;
 let samples = []; // [{sample_no}]
 let values = {};  // { [itemId]: [actual_result, ...] } indexed same as samples
-let currentDraftId = typeof DRAFT_ID !== 'undefined' ? DRAFT_ID : null;
-const draftSamples = typeof DRAFT_SAMPLES !== 'undefined' ? DRAFT_SAMPLES : [];
-const draftValues = typeof DRAFT_VALUES !== 'undefined' ? DRAFT_VALUES : {};
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, m => ({
@@ -122,14 +125,20 @@ document.getElementById('btn-add-sample').addEventListener('click', () => {
 async function loadItems() {
     tbody.innerHTML = '<tr><td colspan="2" class="empty">Loading data...</td></tr>';
     const modelId = modelResolver.getValue();
+    currentHeaderId = null;
+    samples = [];
+    values = {};
     if (!modelId) {
         currentItems = [];
         currentModel = null;
         fopCodeEl.textContent = '-';
         partNoEl.textContent = '-';
+        statusLabel.textContent = '';
         render();
         return;
     }
+
+    statusLabel.textContent = 'Loading...';
     const res = await fetch(`ajax/get_fopump_check_items.php?model_id=${modelId}`);
     const data = await res.json();
     currentItems = data.items || [];
@@ -137,28 +146,35 @@ async function loadItems() {
     fopCodeEl.textContent = currentModel?.fop_code || '-';
     partNoEl.textContent = currentModel?.part_no || '-';
 
-    // Preserve loaded-draft values on the first load only.
-    if (currentDraftId && draftSamples.length && Object.keys(values).length === 0) {
-        samples = draftSamples.map(s => ({ sample_no: s.sample_no }));
+    const header = data.header;
+    currentHeaderId = header ? header.id : null;
+    prodDateCodeEl.value = header?.prod_date_code ?? '';
+    checkerEl.value = header?.checker_id ?? '';
+    foremanEl.value = header?.foreman_id ?? '';
+    supervisorEl.value = header?.supervisor_id ?? '';
+
+    const loadedSamples = data.samples || [];
+    if (loadedSamples.length) {
+        samples = loadedSamples.map(s => ({ sample_no: s.sample_no }));
         currentItems.forEach(item => {
-            const savedForItem = draftValues[item.id] || {};
-            values[item.id] = draftSamples.map(s => savedForItem[s.id] ?? '');
+            const savedForItem = (data.values || {})[item.id] || {};
+            values[item.id] = loadedSamples.map(s => savedForItem[s.id] ?? '');
         });
-    } else if (!samples.length) {
+    } else {
         addSampleColumn('1');
     }
 
     render();
+
+    statusLabel.textContent = header
+        ? (header.status === 'draft' ? 'Editing a saved draft for this model.' : 'This model already has a submitted record — saving will update it.')
+        : 'New record for this model.';
 }
 
 const modelOptions = (typeof MODELS !== 'undefined' ? MODELS : []).map(m => ({ value: m.id, label: m.name }));
 const modelResolver = turnIntoCombo(document.getElementById('f_model'), modelOptions, {
     allowCustom: false,
-    onSelect: () => {
-        values = {};
-        samples = [];
-        loadItems();
-    },
+    onSelect: loadItems,
 });
 
 function buildPayload(status) {
@@ -168,21 +184,21 @@ function buildPayload(status) {
     }));
 
     return {
-        header_id: currentDraftId,
+        header_id: currentHeaderId,
         status,
-        tanggal: document.getElementById('f_tanggal').value,
         department_id: DEPARTMENT_ID,
         model_id: modelResolver.getValue(),
-        prod_date_code: document.getElementById('f_prod_date_code').value,
-        checker_id: document.getElementById('f_checker').value,
-        foreman_id: document.getElementById('f_foreman').value,
-        supervisor_id: document.getElementById('f_supervisor').value,
+        prod_date_code: prodDateCodeEl.value,
+        checker_id: checkerEl.value,
+        foreman_id: foremanEl.value,
+        supervisor_id: supervisorEl.value,
         samples: samples.map(s => s.sample_no),
         rows,
     };
 }
 
 async function saveChecksheet(status) {
+    statusLabel.textContent = 'Saving...';
     const payload = buildPayload(status);
 
     const res = await fetch('ajax/save_fopump_check.php', {
@@ -193,16 +209,18 @@ async function saveChecksheet(status) {
     const data = await res.json();
 
     if (!data.success) {
+        statusLabel.textContent = '';
         alert('Failed to save: ' + (data.error || 'unknown error'));
         return;
     }
 
+    currentHeaderId = data.header_id;
     if (status === 'draft') {
-        currentDraftId = data.header_id;
-        alert('Saved as draft. You can continue it later from the My Drafts menu.');
+        statusLabel.textContent = 'Editing a saved draft for this model.';
+        alert('Saved as draft.');
     } else {
+        statusLabel.textContent = 'This model already has a submitted record — saving will update it.';
         alert('Checksheet submitted successfully.');
-        window.location.href = 'view_fopump_check_checksheets.php';
     }
 }
 

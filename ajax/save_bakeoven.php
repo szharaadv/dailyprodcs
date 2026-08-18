@@ -25,9 +25,9 @@ if (!$header_id) {
     $header_id = (int)$pdo->lastInsertId();
 }
 
-// Header-level field (Asst. Foreman / Foreman / Supervisor / Keterangan).
+// Header-level field (Foreman / Supervisor / Keterangan).
 if (isset($input['field'])) {
-    $allowed = ['asst_foreman_id' => true, 'foreman_id' => true, 'supervisor_id' => true, 'notes' => true];
+    $allowed = ['foreman_id' => true, 'supervisor_id' => true, 'notes' => true];
     $field = $input['field'];
     if (!isset($allowed[$field])) {
         http_response_code(400);

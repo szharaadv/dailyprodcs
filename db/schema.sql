@@ -525,9 +525,12 @@ CREATE TABLE `m_fopump_check_item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP TABLE IF EXISTS `t_fopump_check_header`;
+-- One row per model (uq_fopumpcheckheader_model) — like t_fopump_test_header,
+-- the source F-FIP-01 sheet has no daily date, so this isn't a per-day log:
+-- selecting a Model on the entry form loads/updates that model's single
+-- ongoing record. No View Checksheets page or date field for this section.
 CREATE TABLE `t_fopump_check_header` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `tanggal` date NOT NULL,
   `department_id` int(11) NOT NULL,
   `model_id` int(11) NOT NULL,
   `prod_date_code` varchar(50) NULL DEFAULT NULL,
@@ -537,8 +540,8 @@ CREATE TABLE `t_fopump_check_header` (
   `status` enum('draft','submitted') NOT NULL DEFAULT 'submitted',
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_fopumpcheckheader_model` (`model_id`),
   KEY `fk_fopumpcheckheader_department` (`department_id`),
-  KEY `fk_fopumpcheckheader_model` (`model_id`),
   KEY `fk_fopumpcheckheader_checker` (`checker_id`),
   KEY `fk_fopumpcheckheader_foreman` (`foreman_id`),
   KEY `fk_fopumpcheckheader_supervisor` (`supervisor_id`),
@@ -599,10 +602,13 @@ CREATE TABLE `m_fopump_test_model` (
   CONSTRAINT `fk_fopumptestmodel_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- One row per model (uq_fopumptestheader_model) — the source F-FIP-02 sheet
+-- has no daily date, so this isn't a per-day log like the other checksheets:
+-- selecting a Model on the entry form loads/updates that model's single
+-- ongoing record. No View Checksheets page or date field for this section.
 DROP TABLE IF EXISTS `t_fopump_test_header`;
 CREATE TABLE `t_fopump_test_header` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `tanggal` date NOT NULL,
   `department_id` int(11) NOT NULL,
   `model_id` int(11) NOT NULL,
   `destination` enum('local','export') NOT NULL DEFAULT 'local',
@@ -616,8 +622,8 @@ CREATE TABLE `t_fopump_test_header` (
   `status` enum('draft','submitted') NOT NULL DEFAULT 'submitted',
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_fopumptestheader_model` (`model_id`),
   KEY `fk_fopumptestheader_department` (`department_id`),
-  KEY `fk_fopumptestheader_model` (`model_id`),
   KEY `fk_fopumptestheader_checker` (`checker_id`),
   KEY `fk_fopumptestheader_foreman` (`foreman_id`),
   KEY `fk_fopumptestheader_supervisor` (`supervisor_id`),

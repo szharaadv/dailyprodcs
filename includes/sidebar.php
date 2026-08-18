@@ -24,17 +24,27 @@ $pdo = get_db();
 
 // Resolve department + form_type from the section route itself (not from
 // $_SESSION) so the whole sidebar stays locked to the section the current
-// page actually belongs to.
+// page actually belongs to. A handful of routes (e.g. 3s3t_list.php) are
+// shared by more than one department's section — in that case, prefer
+// whichever match agrees with the session's current department so the
+// sidebar reflects the department the user is actually working in.
 $nav_department_id = null;
 $is_assy_context = false;
 if ($section_route) {
     $stmt = $pdo->prepare(
         'SELECT s.department_id, d.form_type FROM m_checksheet_section s
          JOIN m_department d ON d.id = s.department_id
-         WHERE s.route = ? AND s.is_active = 1 LIMIT 1'
+         WHERE s.route = ? AND s.is_active = 1'
     );
     $stmt->execute([$section_route]);
-    $row = $stmt->fetch();
+    $matches = $stmt->fetchAll();
+    $row = null;
+    if (count($matches) > 1 && isset($_SESSION['department_id'])) {
+        foreach ($matches as $m) {
+            if ((int) $m['department_id'] === (int) $_SESSION['department_id']) { $row = $m; break; }
+        }
+    }
+    $row = $row ?? ($matches[0] ?? null);
     if ($row) {
         $nav_department_id = (int) $row['department_id'];
         $is_assy_context = $row['form_type'] === 'assembly';
@@ -65,11 +75,17 @@ $view_map = [
     'sub_assembly_list.php' => 'view_jig_checksheets.php',
     'bakeoven_list.php' => 'view_bakeoven_checksheets.php',
     'fopump_list.php' => 'view_fopump_checksheets.php',
-    'fopump_check_list.php' => 'view_fopump_check_checksheets.php',
-    'fopump_test_list.php' => 'view_fopump_test_checksheets.php',
+    // Check Sheet and Test Record have no daily date (their source sheets
+    // don't carry one) — each is a single ongoing record per model, so
+    // there's no per-day list to view.
+    'fopump_check_list.php' => null,
+    'fopump_test_list.php' => null,
     'fopump_reject_list.php' => 'view_fopump_reject_checksheets.php',
     'washing_list.php' => 'view_washing_checksheets.php',
+    'paint_viscosity_list.php' => 'view_paint_viscosity_checksheets.php',
+    '3s3t_list.php' => 'view_3s3t_checksheets.php',
 ];
+$show_view = !array_key_exists($section_route ?? '', $view_map) || $view_map[$section_route] !== null;
 $view_href = $base_url . ($view_map[$section_route] ?? ($is_assy_context ? 'view_assy_checksheets.php' : 'view_checksheets.php'));
 
 $drafts_map = [
@@ -78,6 +94,8 @@ $drafts_map = [
     'sub_assembly_list.php' => null,
     'bakeoven_list.php' => null,
     'washing_list.php' => null,
+    'paint_viscosity_list.php' => null,
+    '3s3t_list.php' => null,
     'fopump_list.php' => 'my_fopump_drafts.php',
     'fopump_check_list.php' => 'my_fopump_check_drafts.php',
     'fopump_test_list.php' => 'my_fopump_test_drafts.php',
@@ -126,9 +144,11 @@ function icon(string $name): string
         <a class="nav-item <?= $active_nav === 'checksheet' ? 'active' : '' ?>" href="<?= $checksheet_href ?>">
             <?= icon('doc') ?> Check Sheet
         </a>
+        <?php if ($show_view): ?>
         <a class="nav-item <?= $active_nav === 'view-checksheets' ? 'active' : '' ?>" href="<?= $view_href ?>">
             <?= icon('folder') ?> View Checksheets
         </a>
+        <?php endif; ?>
         <?php if ($show_drafts): ?>
         <a class="nav-item <?= $active_nav === 'my-drafts' ? 'active' : '' ?>" href="<?= $drafts_href ?>">
             <?= icon('edit') ?> My Drafts
@@ -170,6 +190,12 @@ function icon(string $name): string
             ],
             'fopump_reject_list.php' => [],
             'washing_list.php' => [],
+            'paint_viscosity_list.php' => [
+                ['key' => 'config-paint-viscosity-item', 'label' => 'Product', 'href' => 'admin/paint_viscosity_items.php'],
+            ],
+            '3s3t_list.php' => [
+                ['key' => 'config-3s3t-item', 'label' => 'Item', 'href' => 'admin/3s3t_items.php'],
+            ],
         ];
         $config_items = $config_map[$section_route] ?? $config_map['painting_list.php'];
         $show_import = in_array($section_route, ['painting_list.php', 'assembly_list.php'], true);

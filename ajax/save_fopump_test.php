@@ -5,12 +5,6 @@ header('Content-Type: application/json');
 $pdo = get_db();
 $input = json_decode(file_get_contents('php://input'), true);
 
-$header_id       = (int)($input['header_id'] ?? 0);
-$tanggal         = $input['tanggal'] ?? date('Y-m-d');
-$d = DateTime::createFromFormat('Y-m-d', $tanggal);
-if (!$d || $d->format('Y-m-d') !== $tanggal || $tanggal > date('Y-m-d')) {
-    $tanggal = date('Y-m-d');
-}
 $department_id   = (int)($input['department_id'] ?? 0);
 $model_id        = (int)($input['model_id'] ?? 0);
 $destination     = ($input['destination'] ?? 'local') === 'export' ? 'export' : 'local';
@@ -24,7 +18,7 @@ $supervisor_id   = (int)($input['supervisor_id'] ?? 0) ?: null;
 $status          = ($input['status'] ?? 'submitted') === 'draft' ? 'draft' : 'submitted';
 $rows            = $input['rows'] ?? [];
 
-if (!$tanggal || !$department_id || !$model_id || !$checker_id || empty($rows)) {
+if (!$department_id || !$model_id || !$checker_id || empty($rows)) {
     http_response_code(400);
     echo json_encode(['error' => 'Data tidak lengkap.']);
     exit;
@@ -33,8 +27,14 @@ if (!$tanggal || !$department_id || !$model_id || !$checker_id || empty($rows)) 
 try {
     $pdo->beginTransaction();
 
+    // One record per model: reuse the existing header for this model if
+    // there is one, regardless of what header_id the client sent.
+    $stmt = $pdo->prepare('SELECT id FROM t_fopump_test_header WHERE model_id = ?');
+    $stmt->execute([$model_id]);
+    $header_id = $stmt->fetchColumn() ?: null;
+
     $params = [
-        $tanggal, $department_id, $model_id, $destination,
+        $department_id, $model_id, $destination,
         $oil_pressure ?: null, $oil_temp ?: null, $room_temp ?: null, $start_test_time ?: null,
         $checker_id, $foreman_id, $supervisor_id, $status,
     ];
@@ -42,7 +42,7 @@ try {
     if ($header_id) {
         $stmt = $pdo->prepare(
             'UPDATE t_fopump_test_header
-             SET tanggal=?, department_id=?, model_id=?, destination=?, oil_pressure=?, oil_temp=?, room_temp=?, start_test_time=?,
+             SET department_id=?, model_id=?, destination=?, oil_pressure=?, oil_temp=?, room_temp=?, start_test_time=?,
                  checker_id=?, foreman_id=?, supervisor_id=?, status=?
              WHERE id=?'
         );
@@ -52,8 +52,8 @@ try {
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO t_fopump_test_header
-             (tanggal, department_id, model_id, destination, oil_pressure, oil_temp, room_temp, start_test_time, checker_id, foreman_id, supervisor_id, status)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+             (department_id, model_id, destination, oil_pressure, oil_temp, room_temp, start_test_time, checker_id, foreman_id, supervisor_id, status)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute($params);
         $header_id = $pdo->lastInsertId();

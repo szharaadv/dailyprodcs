@@ -24,6 +24,8 @@ $tables = [
     'fopump_test'   => 't_fopump_test_header',
     'fopump_reject' => 't_fopump_reject_header',
     'washing'       => 't_washing_header',
+    'paint_viscosity' => 't_paint_viscosity_header',
+    '3s3t'          => 't_3s3t_header',
 ];
 
 if (!isset($tables[$type]) || !$id) {

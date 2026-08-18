@@ -3,11 +3,19 @@ const fopCodeEl = document.getElementById('f_fop_code');
 const stdCcSecEl = document.getElementById('f_standard_cc_sec');
 const rpmStdEl = document.getElementById('f_rpm_std');
 const masterTestEl = document.getElementById('f_master_test');
+const statusLabel = document.getElementById('fopump-test-status-label');
+const destinationEl = document.getElementById('f_destination');
+const oilPressureEl = document.getElementById('f_oil_pressure');
+const oilTempEl = document.getElementById('f_oil_temp');
+const roomTempEl = document.getElementById('f_room_temp');
+const startTestTimeEl = document.getElementById('f_start_test_time');
+const checkerEl = document.getElementById('f_checker');
+const foremanEl = document.getElementById('f_foreman');
+const supervisorEl = document.getElementById('f_supervisor');
 
 let currentModel = null;
+let currentHeaderId = null;
 let rows = []; // [{rpm, cc_sec, shim}]
-let currentDraftId = typeof DRAFT_ID !== 'undefined' ? DRAFT_ID : null;
-const draftRows = typeof DRAFT_ROWS !== 'undefined' ? DRAFT_ROWS : [];
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, m => ({
@@ -62,11 +70,17 @@ document.getElementById('btn-add-row').addEventListener('click', () => {
 
 async function loadModel() {
     const modelId = modelResolver.getValue();
+    currentHeaderId = null;
+    rows = [];
     if (!modelId) {
         currentModel = null;
         fopCodeEl.textContent = stdCcSecEl.textContent = rpmStdEl.textContent = masterTestEl.textContent = '-';
+        statusLabel.textContent = '';
+        render();
         return;
     }
+
+    statusLabel.textContent = 'Loading...';
     const res = await fetch(`ajax/get_fopump_test_model.php?model_id=${modelId}`);
     const data = await res.json();
     currentModel = data.model || null;
@@ -75,44 +89,51 @@ async function loadModel() {
     rpmStdEl.textContent = currentModel?.rpm || '-';
     masterTestEl.textContent = currentModel?.master_test || '-';
 
-    if (currentDraftId && draftRows.length && rows.length === 0) {
-        rows = draftRows.map(r => ({ rpm: r.rpm ?? '', cc_sec: r.cc_sec ?? '', shim: r.shim ?? '' }));
-    } else if (!rows.length) {
-        rows.push(defaultRow());
-    }
+    const header = data.header;
+    currentHeaderId = header ? header.id : null;
+    destinationEl.value = header?.destination ?? 'local';
+    oilPressureEl.value = header?.oil_pressure ?? '';
+    oilTempEl.value = header?.oil_temp ?? '';
+    roomTempEl.value = header?.room_temp ?? '';
+    startTestTimeEl.value = header?.start_test_time ?? '';
+    checkerEl.value = header?.checker_id ?? '';
+    foremanEl.value = header?.foreman_id ?? '';
+    supervisorEl.value = header?.supervisor_id ?? '';
 
+    rows = (data.rows && data.rows.length) ? data.rows.map(r => ({ rpm: r.rpm ?? '', cc_sec: r.cc_sec ?? '', shim: r.shim ?? '' })) : [defaultRow()];
     render();
+
+    statusLabel.textContent = header
+        ? (header.status === 'draft' ? 'Editing a saved draft for this model.' : 'This model already has a submitted record — saving will update it.')
+        : 'New record for this model.';
 }
 
 const modelOptions = (typeof MODELS !== 'undefined' ? MODELS : []).map(m => ({ value: m.id, label: m.name }));
 const modelResolver = turnIntoCombo(document.getElementById('f_model'), modelOptions, {
     allowCustom: false,
-    onSelect: () => {
-        rows = [];
-        loadModel();
-    },
+    onSelect: loadModel,
 });
 
 function buildPayload(status) {
     return {
-        header_id: currentDraftId,
+        header_id: currentHeaderId,
         status,
-        tanggal: document.getElementById('f_tanggal').value,
         department_id: DEPARTMENT_ID,
         model_id: modelResolver.getValue(),
-        destination: document.getElementById('f_destination').value,
-        oil_pressure: document.getElementById('f_oil_pressure').value,
-        oil_temp: document.getElementById('f_oil_temp').value,
-        room_temp: document.getElementById('f_room_temp').value,
-        start_test_time: document.getElementById('f_start_test_time').value,
-        checker_id: document.getElementById('f_checker').value,
-        foreman_id: document.getElementById('f_foreman').value,
-        supervisor_id: document.getElementById('f_supervisor').value,
+        destination: destinationEl.value,
+        oil_pressure: oilPressureEl.value,
+        oil_temp: oilTempEl.value,
+        room_temp: roomTempEl.value,
+        start_test_time: startTestTimeEl.value,
+        checker_id: checkerEl.value,
+        foreman_id: foremanEl.value,
+        supervisor_id: supervisorEl.value,
         rows,
     };
 }
 
 async function saveChecksheet(status) {
+    statusLabel.textContent = 'Saving...';
     const payload = buildPayload(status);
 
     const res = await fetch('ajax/save_fopump_test.php', {
@@ -123,16 +144,18 @@ async function saveChecksheet(status) {
     const data = await res.json();
 
     if (!data.success) {
+        statusLabel.textContent = '';
         alert('Failed to save: ' + (data.error || 'unknown error'));
         return;
     }
 
+    currentHeaderId = data.header_id;
     if (status === 'draft') {
-        currentDraftId = data.header_id;
-        alert('Saved as draft. You can continue it later from the My Drafts menu.');
+        statusLabel.textContent = 'Editing a saved draft for this model.';
+        alert('Saved as draft.');
     } else {
+        statusLabel.textContent = 'This model already has a submitted record — saving will update it.';
         alert('Checksheet submitted successfully.');
-        window.location.href = 'view_fopump_test_checksheets.php';
     }
 }
 

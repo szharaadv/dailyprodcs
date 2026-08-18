@@ -5,12 +5,6 @@ header('Content-Type: application/json');
 $pdo = get_db();
 $input = json_decode(file_get_contents('php://input'), true);
 
-$header_id      = (int)($input['header_id'] ?? 0);
-$tanggal        = $input['tanggal'] ?? date('Y-m-d');
-$d = DateTime::createFromFormat('Y-m-d', $tanggal);
-if (!$d || $d->format('Y-m-d') !== $tanggal || $tanggal > date('Y-m-d')) {
-    $tanggal = date('Y-m-d');
-}
 $department_id  = (int)($input['department_id'] ?? 0);
 $model_id       = (int)($input['model_id'] ?? 0);
 $prod_date_code = $input['prod_date_code'] ?? null;
@@ -21,7 +15,7 @@ $status         = ($input['status'] ?? 'submitted') === 'draft' ? 'draft' : 'sub
 $sampleNos      = $input['samples'] ?? [];
 $rows           = $input['rows'] ?? [];
 
-if (!$tanggal || !$department_id || !$model_id || !$checker_id || empty($rows)) {
+if (!$department_id || !$model_id || !$checker_id || empty($rows)) {
     http_response_code(400);
     echo json_encode(['error' => 'Data tidak lengkap.']);
     exit;
@@ -30,12 +24,18 @@ if (!$tanggal || !$department_id || !$model_id || !$checker_id || empty($rows)) 
 try {
     $pdo->beginTransaction();
 
-    $params = [$tanggal, $department_id, $model_id, $prod_date_code ?: null, $checker_id, $foreman_id, $supervisor_id, $status];
+    // One record per model: reuse the existing header for this model if
+    // there is one, regardless of what header_id the client sent.
+    $stmt = $pdo->prepare('SELECT id FROM t_fopump_check_header WHERE model_id = ?');
+    $stmt->execute([$model_id]);
+    $header_id = $stmt->fetchColumn() ?: null;
+
+    $params = [$department_id, $model_id, $prod_date_code ?: null, $checker_id, $foreman_id, $supervisor_id, $status];
 
     if ($header_id) {
         $stmt = $pdo->prepare(
             'UPDATE t_fopump_check_header
-             SET tanggal=?, department_id=?, model_id=?, prod_date_code=?, checker_id=?, foreman_id=?, supervisor_id=?, status=?
+             SET department_id=?, model_id=?, prod_date_code=?, checker_id=?, foreman_id=?, supervisor_id=?, status=?
              WHERE id=?'
         );
         $stmt->execute(array_merge($params, [$header_id]));
@@ -45,8 +45,8 @@ try {
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO t_fopump_check_header
-             (tanggal, department_id, model_id, prod_date_code, checker_id, foreman_id, supervisor_id, status)
-             VALUES (?,?,?,?,?,?,?,?)'
+             (department_id, model_id, prod_date_code, checker_id, foreman_id, supervisor_id, status)
+             VALUES (?,?,?,?,?,?,?)'
         );
         $stmt->execute($params);
         $header_id = $pdo->lastInsertId();
