@@ -227,14 +227,23 @@ function icon(string $name): string
             <?= icon('clock') ?> YADIN Calendar
         </a>
 
-        <?php if (is_admin()): ?>
         <div class="nav-group-label">Management</div>
+        <?php if (is_admin()): ?>
         <a class="nav-parent <?= $mgmt_open ? 'active' : '' ?>" href="#" data-nav-toggle>
             <?= icon('users') ?> Management
             <?= icon('chevron') ?>
         </a>
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
+        </div>
+        <?php else: ?>
+        <!-- Visible but inert for non-admins: shows the nav exists without letting them click into it. -->
+        <span class="nav-parent disabled" aria-disabled="true" title="Admin only">
+            <?= icon('users') ?> Management
+            <?= icon('chevron') ?>
+        </span>
+        <div class="nav-submenu">
+            <span class="nav-subitem disabled" aria-disabled="true">Users</span>
         </div>
         <?php endif; ?>
     </nav>

@@ -189,6 +189,14 @@ body {
 .nav-item.disabled { color: #b3b8bf; cursor: default; }
 .nav-item.disabled .nav-icon { opacity: .4; }
 
+.nav-parent.disabled, .nav-subitem.disabled {
+    color: #b3b8bf;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.nav-parent.disabled .nav-icon { opacity: .4; }
+.nav-submenu:has(.nav-subitem.disabled) { display: flex; }
+
 .nav-badge {
     margin-left: auto;
     background: #9b3b32;
