@@ -78,7 +78,7 @@ require __DIR__ . '/includes/app_top.php';
         <div class="field-block">
             <label>Date</label>
             <input type="text" id="f_tanggal" class="holiday-date-input" readonly
-                   value="<?= htmlspecialchars($draft['tanggal'] ?? ((preg_match('/^\d{4}-\d{2}-\d{2}$/', $prefill_tanggal ?? '') ? $prefill_tanggal : null) ?? date('Y-m-d'))) ?>" max="<?= date('Y-m-d') ?>">
+                   value="<?= htmlspecialchars($draft['tanggal'] ?? ((preg_match('/^\d{4}-\d{2}-\d{2}$/', $prefill_tanggal ?? '') ? $prefill_tanggal : null) ?? date('Y-m-d'))) ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
         </div>
 
         <div class="field-block">

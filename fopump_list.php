@@ -60,7 +60,7 @@ require __DIR__ . '/includes/app_top.php';
     <div class="form-grid-top">
         <div class="field-block">
             <label>Date</label>
-            <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>">
+            <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
         </div>
         <div class="field-block">
             <label>Employee</label>

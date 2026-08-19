@@ -15,24 +15,25 @@ if (!empty($_SESSION['auth_user']['name'])) {
     exit;
 }
 
+const ADMIN_PIN = '0709';
 $error = null;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'pick') {
-    $userId = (int)($_POST['user_id'] ?? 0);
-    $stmt = $pdo->prepare('SELECT * FROM m_user WHERE id = ? AND is_active = 1');
-    $stmt->execute([$userId]);
-    $picked = $stmt->fetch();
-
-    if (!$picked) {
-        $error = 'User not found.';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'admin_login') {
+    $pin = trim($_POST['pin'] ?? '');
+    if ($pin !== ADMIN_PIN) {
+        $error = 'Incorrect password.';
     } else {
-        $_SESSION['auth_user'] = ['name' => $picked['name'], 'role' => $picked['role']];
+        $_SESSION['auth_user'] = ['name' => 'Admin', 'role' => 'admin'];
         header('Location: ' . $next);
         exit;
     }
 }
 
-$users = $pdo->query('SELECT * FROM m_user WHERE is_active = 1 ORDER BY name')->fetchAll();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'user_login') {
+    $_SESSION['auth_user'] = ['name' => 'User', 'role' => 'user'];
+    header('Location: ' . $next);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -56,26 +57,29 @@ $users = $pdo->query('SELECT * FROM m_user WHERE is_active = 1 ORDER BY name')->
     </div>
 
     <h1>Who's this?</h1>
-    <p class="landing-hint">Pick your name to continue.</p>
+    <p class="landing-hint">Pick how you're signing in.</p>
 
     <?php if ($error): ?><div class="alert alert-error" style="max-width: 420px; margin: 0 auto 16px;"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
-    <form method="post">
-        <input type="hidden" name="action" value="pick">
-        <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
-        <div class="dept-grid">
-            <?php foreach ($users as $u): ?>
-                <button type="submit" name="user_id" value="<?= $u['id'] ?>" class="dept-card" style="border: none; cursor: pointer; font: inherit;">
-                    <div class="dept-icon"><?= strtoupper(substr($u['name'], 0, 2)) ?></div>
-                    <div class="dept-name"><?= htmlspecialchars($u['name']) ?></div>
-                    <div class="dept-go">Continue &rarr;</div>
-                </button>
-            <?php endforeach; ?>
-            <?php if (!$users): ?>
-                <p class="empty">No users set up yet.</p>
-            <?php endif; ?>
-        </div>
-    </form>
+    <div class="dept-grid" style="max-width: 480px; margin: 0 auto;">
+        <form method="post" class="dept-card" style="cursor: default;">
+            <input type="hidden" name="action" value="admin_login">
+            <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
+            <div class="dept-icon">AD</div>
+            <div class="dept-name">Admin</div>
+            <input type="password" name="pin" placeholder="Password" required
+                   style="margin-top:10px; width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #d7dbe2; border-radius:6px; font-size:14px; text-align:center;">
+            <button type="submit" class="dept-go" style="border:none; background:none; cursor:pointer; font:inherit; padding:8px 0 0; width:100%;">Continue &rarr;</button>
+        </form>
+
+        <form method="post" class="dept-card" style="cursor: default;">
+            <input type="hidden" name="action" value="user_login">
+            <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
+            <div class="dept-icon">US</div>
+            <div class="dept-name">User</div>
+            <button type="submit" class="dept-go" style="border:none; background:none; cursor:pointer; font:inherit; padding:8px 0 0; width:100%;">Continue &rarr;</button>
+        </form>
+    </div>
 </div>
 </body>
 </html>
