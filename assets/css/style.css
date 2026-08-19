@@ -207,9 +207,12 @@
     width: 100%;
     min-width: 1020px;
     table-layout: fixed;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: #fff;
 }
+
+.assy-table td { background: #fff; }
 
 .assy-table thead th {
     background: #9b3b32;
@@ -221,6 +224,7 @@
     height: 37px;
     box-sizing: border-box;
     white-space: nowrap;
+    z-index: 2;
 }
 
 /* Grouped two-row headers (e.g. fopump-table): the 2nd header row must stick
@@ -238,7 +242,7 @@
     overflow-wrap: break-word;
 }
 
-.assy-table tbody tr:nth-child(odd) { background: #fafafb; }
+.assy-table tbody tr:nth-child(odd) td { background: #fafafb; }
 .assy-table tbody td:nth-child(1) { text-align: left; }
 
 .assy-table th:nth-child(1), .assy-table td:nth-child(1) { width: 280px; }
@@ -388,8 +392,16 @@
 
 /* ---------- Checksheet 3S-3T: weekly audit grid ---------- */
 .threes3t-table .t3-no-col { min-width: 36px; }
-.threes3t-table .t3-category-col,
-.threes3t-table .t3-category-cell { min-width: 130px; text-align: left; font-weight: 600; color: #8f2a1f; }
+.threes3t-table .t3-category-col { min-width: 130px; }
+.threes3t-table .t3-category-cell {
+    min-width: 130px;
+    text-align: left;
+    font-weight: 700;
+    color: #8f2a1f;
+    background: #fdf3f1;
+    vertical-align: middle;
+    border-right: 3px solid #9b3b32;
+}
 .threes3t-table .t3-item-col,
 .threes3t-table .t3-item-cell { min-width: 220px; text-align: left; }
 .threes3t-table .t3-standard-col,
@@ -1231,7 +1243,8 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     width: 100%;
     min-width: 900px;
     table-layout: fixed;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: #fff;
 }
 
@@ -1244,6 +1257,7 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     padding: 6px 8px;
     font-size: 13px;
     text-align: center;
+    background: #fff;
 }
 
 .fopump-table thead th {
@@ -1254,6 +1268,7 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     top: 0;
     height: 33px;
     box-sizing: border-box;
+    z-index: 2;
 }
 
 /* Grouped two-row header: the 2nd row must stick BELOW the 1st (see

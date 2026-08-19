@@ -25,18 +25,38 @@ function weekToggle(itemId, week, value) {
     </div>`;
 }
 
+/** Each category only appears on the first item of its group in the data
+ * (continuation rows have category === null/empty) — compute how many rows
+ * that first cell should span so the category merges visually instead of
+ * repeating an empty cell per row. */
+function categorySpans(items) {
+    const spans = new Array(items.length).fill(0);
+    let groupStart = 0;
+    for (let i = 1; i <= items.length; i++) {
+        if (i === items.length || (items[i].category ?? '') !== '') {
+            spans[groupStart] = i - groupStart;
+            groupStart = i;
+        }
+    }
+    return spans;
+}
+
 function renderRows(items, details) {
     if (!items.length) {
         tbody.innerHTML = '<tr><td colspan="11" class="empty">No 3S-3T items set up yet.</td></tr>';
         return;
     }
+    const spans = categorySpans(items);
     let html = '';
     let no = 1;
-    for (const item of items) {
+    items.forEach((item, idx) => {
         const d = details[item.id] || {};
+        const categoryCell = spans[idx] > 0
+            ? `<td class="t3-category-cell" rowspan="${spans[idx]}">${escapeHtml(item.category ?? '')}</td>`
+            : '';
         html += `<tr>
             <td>${no++}</td>
-            <td class="t3-category-cell">${escapeHtml(item.category ?? '')}</td>
+            ${categoryCell}
             <td class="t3-item-cell">${escapeHtml(item.item_pemeriksaan)}</td>
             <td class="t3-standard-cell">${escapeHtml(item.standar_kriteria ?? '-')}</td>
             <td>${weekToggle(item.id, 'week1', d.week1)}</td>
@@ -47,7 +67,7 @@ function renderRows(items, details) {
             <td><input type="text" class="t3-remarks-input" data-item-id="${item.id}" value="${escapeHtml(d.remarks ?? '')}"></td>
             <td><select class="t3-pic-select" data-item-id="${item.id}">${peopleOptions(d.pic_id, PIC_PEOPLE)}</select></td>
         </tr>`;
-    }
+    });
     tbody.innerHTML = html;
 }
 
