@@ -415,6 +415,46 @@
 .t3-toggle.cat-toggle { border-radius: 16px; }
 .t3-toggle .cat-btn { padding: 5px 10px; font-size: 11.5px; }
 
+.t3-remarks-btn {
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 10px;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    font-size: 12.5px;
+    background: #fff;
+    color: #4a5262;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.t3-remarks-btn:hover { border-color: #9b3b32; }
+.t3-remarks-btn.has-note { color: #1f2430; font-weight: 500; }
+.t3-remarks-btn.empty { color: #b3b8bf; font-style: italic; }
+.t3-remarks-btn:disabled { background: #f0f1f3; color: #b3b8bf; cursor: not-allowed; }
+
+.t3-remarks-modal .modal-card { max-width: 480px; }
+#t3-remarks-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #d7dbe2;
+    border-radius: 6px;
+    font: 14px/1.4 Inter, sans-serif;
+    resize: vertical;
+}
+.t3-remarks-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+.t3-remarks-history { margin-top: 18px; padding-top: 14px; border-top: 1px solid #eee; }
+.t3-remarks-history-title { font-size: 12.5px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px; }
+.t3-remarks-history-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
+.t3-remarks-history-empty { color: #b3b8bf; font-size: 13px; font-style: italic; }
+.t3-remarks-history-row { padding: 8px 10px; background: #f8f9fa; border-radius: 6px; font-size: 13px; }
+.t3-remarks-history-period { font-weight: 700; color: #8f2a1f; margin-bottom: 2px; }
+.t3-remarks-history-text { color: #4a5262; }
+
 .bakeoven-footer {
     display: flex;
     flex-wrap: wrap;
@@ -730,14 +770,16 @@
     font-size: 12.5px;
     font-weight: 700;
     cursor: default;
-    background: #fff;
-    color: #8b93a1;
+    background: #f5f6f8;
+    color: #a8afb9;
     user-select: none;
 }
 
 .cat-btn.cat-ng { border-left: 1px solid #d7dbe2; }
-.cat-btn.cat-ok.active { background: #e4f3e5; color: #3f7d43; }
-.cat-btn.cat-ng.active { background: #fbeae7; color: #9b3b32; }
+/* Solid fill (not a pale tint) so which side is selected reads clearly
+ * at a glance, even at the small size used in dense grids like 3S-3T. */
+.cat-btn.cat-ok.active { background: #2f8f4e; color: #fff; }
+.cat-btn.cat-ng.active { background: #9b3b32; color: #fff; }
 
 /* ---------- Washing Machine Liquid Monitoring ---------- */
 .washing-table {
@@ -1312,7 +1354,8 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
 .fopump-check-table {
     width: 100%;
     min-width: 720px;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: #fff;
 }
 
@@ -1321,6 +1364,7 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     padding: 6px 8px;
     font-size: 13px;
     text-align: center;
+    background: #fff;
 }
 
 .fopump-check-table thead th {
@@ -1330,7 +1374,12 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     position: sticky;
     top: 0;
     white-space: nowrap;
+    z-index: 2;
 }
+
+/* Re-assert after the generic td background above (same specificity,
+ * later wins) so 3S-3T's merged category cell keeps its highlight. */
+.threes3t-table .t3-category-cell { background: #fdf3f1; }
 
 .fopump-check-item-col { width: 260px; }
 .fopump-check-std-col { width: 160px; }

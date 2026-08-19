@@ -28,6 +28,15 @@ function isEditablePeriod() {
     return Number(monthSelect.value) === CURRENT_MONTH && Number(yearSelect.value) === CURRENT_YEAR;
 }
 
+/** Short one-line preview of a (possibly long) remark for the grid cell. */
+function remarksButton(itemId, itemLabel, remarks) {
+    const text = (remarks ?? '').trim();
+    const preview = text ? text : '+ Add note';
+    const cls = text ? 'has-note' : 'empty';
+    const dis = isEditablePeriod() ? '' : 'disabled';
+    return `<button type="button" class="t3-remarks-btn ${cls}" data-item-id="${itemId}" data-item-label="${escapeHtml(itemLabel)}" title="${escapeHtml(text)}" ${dis}>${escapeHtml(preview)}</button>`;
+}
+
 function weekToggle(itemId, week, value) {
     const blocked = !isEditableWeek(parseInt(week.replace('week', ''), 10));
     return `<div class="cat-toggle t3-toggle ${blocked ? 'cal-blocked' : ''}" data-item-id="${itemId}" data-week="${week}">
@@ -75,7 +84,7 @@ function renderRows(items, details) {
             <td>${weekToggle(item.id, 'week3', d.week3)}</td>
             <td>${weekToggle(item.id, 'week4', d.week4)}</td>
             <td>${weekToggle(item.id, 'week5', d.week5)}</td>
-            <td><input type="text" class="t3-remarks-input" data-item-id="${item.id}" value="${escapeHtml(d.remarks ?? '')}" ${isEditablePeriod() ? '' : 'disabled'}></td>
+            <td>${remarksButton(item.id, item.item_pemeriksaan, d.remarks)}</td>
             <td><select class="t3-pic-select" data-item-id="${item.id}" ${isEditablePeriod() ? '' : 'disabled'}>${peopleOptions(d.pic_id, PIC_PEOPLE)}</select></td>
         </tr>`;
     });
@@ -137,6 +146,13 @@ async function saveHeaderField(field, value) {
 }
 
 tbody.addEventListener('click', (e) => {
+    const remarksBtn = e.target.closest('.t3-remarks-btn');
+    if (remarksBtn) {
+        if (remarksBtn.disabled) return;
+        openRemarksModal(remarksBtn.dataset.itemId, remarksBtn.dataset.itemLabel);
+        return;
+    }
+
     const btn = e.target.closest('.cat-btn');
     if (!btn) return;
     const wrapper = btn.closest('.t3-toggle');
@@ -151,11 +167,61 @@ tbody.addEventListener('click', (e) => {
 });
 
 tbody.addEventListener('change', (e) => {
-    if (e.target.matches('.t3-remarks-input')) {
-        saveCell(e.target.dataset.itemId, 'remarks', e.target.value.trim());
-    } else if (e.target.matches('.t3-pic-select')) {
+    if (e.target.matches('.t3-pic-select')) {
         saveCell(e.target.dataset.itemId, 'pic_id', e.target.value);
     }
+});
+
+// ---- Remarks / Tindakan Perbaikan modal (roomier input + past-months history) ----
+const remarksModal = document.getElementById('t3-remarks-modal');
+const remarksModalTitle = document.getElementById('t3-remarks-modal-title');
+const remarksTextarea = document.getElementById('t3-remarks-textarea');
+const remarksHistoryList = document.getElementById('t3-remarks-history-list');
+let remarksModalItemId = null;
+
+function closeRemarksModal() {
+    remarksModal.style.display = 'none';
+    remarksModalItemId = null;
+}
+
+async function openRemarksModal(itemId, itemLabel) {
+    remarksModalItemId = itemId;
+    remarksModalTitle.textContent = itemLabel || 'Keterangan / Tindakan Perbaikan';
+    const btn = tbody.querySelector(`.t3-remarks-btn[data-item-id="${itemId}"]`);
+    remarksTextarea.value = btn?.classList.contains('has-note') ? (btn.getAttribute('title') || '') : '';
+    remarksModal.style.display = 'flex';
+    remarksTextarea.focus();
+
+    remarksHistoryList.innerHTML = 'Loading...';
+    const line = lineInput.value.trim();
+    const res = await fetch(`ajax/get_3s3t_remarks_history.php?department_id=${DEPARTMENT_ID}&line=${encodeURIComponent(line)}&item_id=${itemId}`);
+    const data = await res.json();
+    const history = data.history || [];
+    const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    remarksHistoryList.innerHTML = history.length
+        ? history.map(h => `<div class="t3-remarks-history-row">
+              <div class="t3-remarks-history-period">${monthNames[h.month]} ${h.year}</div>
+              <div class="t3-remarks-history-text">${escapeHtml(h.remarks)}</div>
+          </div>`).join('')
+        : '<div class="t3-remarks-history-empty">No previous notes for this item yet.</div>';
+}
+
+document.getElementById('t3-remarks-modal-close').addEventListener('click', (e) => { e.preventDefault(); closeRemarksModal(); });
+document.getElementById('t3-remarks-cancel').addEventListener('click', () => closeRemarksModal());
+remarksModal.addEventListener('click', (e) => { if (e.target === remarksModal) closeRemarksModal(); });
+
+document.getElementById('t3-remarks-save').addEventListener('click', async () => {
+    if (!remarksModalItemId) return;
+    const value = remarksTextarea.value.trim();
+    await saveCell(remarksModalItemId, 'remarks', value);
+    const btn = tbody.querySelector(`.t3-remarks-btn[data-item-id="${remarksModalItemId}"]`);
+    if (btn) {
+        btn.textContent = value || '+ Add note';
+        btn.title = value;
+        btn.classList.toggle('has-note', !!value);
+        btn.classList.toggle('empty', !value);
+    }
+    closeRemarksModal();
 });
 
 lineInput.addEventListener('change', loadMonth);

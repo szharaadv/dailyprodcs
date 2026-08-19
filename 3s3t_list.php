@@ -116,6 +116,24 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
     <p class="import-hint">Tap OK / NG for each week — it saves right away, no submit button needed.</p>
 </div>
 
+<div class="modal-overlay t3-remarks-modal" id="t3-remarks-modal" style="display:none;">
+    <div class="modal-card">
+        <div class="modal-card-header">
+            <h3 id="t3-remarks-modal-title">Keterangan / Tindakan Perbaikan</h3>
+            <a href="#" class="modal-close" id="t3-remarks-modal-close">&times;</a>
+        </div>
+        <textarea id="t3-remarks-textarea" rows="4" placeholder="Type the finding and corrective action taken..."></textarea>
+        <div class="t3-remarks-modal-actions">
+            <button type="button" class="btn btn-secondary" id="t3-remarks-cancel">Cancel</button>
+            <button type="button" class="btn" id="t3-remarks-save">Save</button>
+        </div>
+        <div class="t3-remarks-history">
+            <div class="t3-remarks-history-title">History (previous months)</div>
+            <div class="t3-remarks-history-list" id="t3-remarks-history-list">Loading...</div>
+        </div>
+    </div>
+</div>
+
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $people)) ?>;
