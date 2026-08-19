@@ -227,6 +227,7 @@ function icon(string $name): string
             <?= icon('clock') ?> YADIN Calendar
         </a>
 
+        <?php if (is_admin()): ?>
         <div class="nav-group-label">Management</div>
         <a class="nav-parent <?= $mgmt_open ? 'active' : '' ?>" href="#" data-nav-toggle>
             <?= icon('users') ?> Management
@@ -235,6 +236,7 @@ function icon(string $name): string
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
         </div>
+        <?php endif; ?>
     </nav>
 
 </aside>

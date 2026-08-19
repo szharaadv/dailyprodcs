@@ -25,6 +25,27 @@ function require_login(): void
     }
 }
 
+/** Whether the current session is the Admin identity (not the shared User one). */
+function is_admin(): bool
+{
+    $u = current_user();
+    return $u !== null && ($u['role'] ?? '') === 'admin';
+}
+
+/**
+ * Gate an admin-only page: must be logged in AND be Admin, else bounce to
+ * index. Every admin-only page lives one level under /admin, so the
+ * redirect target is relative to that, not to the site root.
+ */
+function require_admin(): void
+{
+    require_login();
+    if (!is_admin()) {
+        header('Location: ../index.php');
+        exit;
+    }
+}
+
 /** Initials for the avatar fallback, e.g. "Budi Santoso" -> "BS". */
 function user_initials(string $name): string
 {
