@@ -721,4 +721,114 @@ CREATE TABLE `t_washing_detail` (
   CONSTRAINT `fk_washingdetail_control` FOREIGN KEY (`control_id`) REFERENCES `m_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ---------- Paint Viscosity Check Sheet (F-PS-08) ----------
+DROP TABLE IF EXISTS `m_paint_viscosity_item`;
+CREATE TABLE `m_paint_viscosity_item` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `process_name` varchar(100) NULL DEFAULT NULL,
+  `product_name` varchar(150) NOT NULL,
+  `maker_brand` varchar(100) NULL DEFAULT NULL,
+  `standard_min` varchar(20) NULL DEFAULT NULL,
+  `standard_max` varchar(20) NULL DEFAULT NULL,
+  `standard_unit` varchar(50) NULL DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `fk_paintviscosityitem_department` (`department_id`),
+  CONSTRAINT `fk_paintviscosityitem_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_paint_viscosity_header`;
+CREATE TABLE `t_paint_viscosity_header` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `month` tinyint(2) NOT NULL,
+  `year` smallint(6) NOT NULL,
+  `checker_id` int(11) NULL DEFAULT NULL,
+  `foreman_id` int(11) NULL DEFAULT NULL,
+  `supervisor_id` int(11) NULL DEFAULT NULL,
+  `notes` text NULL DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_paintviscosityheader_period` (`department_id`, `month`, `year`),
+  KEY `fk_paintviscosityheader_department` (`department_id`),
+  KEY `fk_paintviscosityheader_foreman` (`foreman_id`),
+  KEY `fk_paintviscosityheader_supervisor` (`supervisor_id`),
+  CONSTRAINT `fk_paintviscosityheader_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`),
+  CONSTRAINT `fk_paintviscosityheader_foreman` FOREIGN KEY (`foreman_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_paintviscosityheader_supervisor` FOREIGN KEY (`supervisor_id`) REFERENCES `m_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_paint_viscosity_detail`;
+CREATE TABLE `t_paint_viscosity_detail` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `header_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `day` tinyint(2) NOT NULL,
+  `actual_result` varchar(20) NULL DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_paintviscositydetail_day` (`header_id`, `item_id`, `day`),
+  KEY `fk_paintviscositydetail_item` (`item_id`),
+  CONSTRAINT `fk_paintviscositydetail_header` FOREIGN KEY (`header_id`) REFERENCES `t_paint_viscosity_header` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_paintviscositydetail_item` FOREIGN KEY (`item_id`) REFERENCES `m_paint_viscosity_item` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------- Checksheet 3S-3T (weekly 5S/3T audit) ----------
+-- Shared by two m_checksheet_section rows (one per department, Painting +
+-- Assembling) pointing at the same route (3s3t_list.php); items are seeded
+-- separately per department so each keeps its own master list.
+DROP TABLE IF EXISTS `m_3s3t_item`;
+CREATE TABLE `m_3s3t_item` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `category` varchar(100) NULL DEFAULT NULL,
+  `item_pemeriksaan` varchar(255) NOT NULL,
+  `standar_kriteria` varchar(255) NULL DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `fk_3s3titem_department` (`department_id`),
+  CONSTRAINT `fk_3s3titem_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_3s3t_header`;
+CREATE TABLE `t_3s3t_header` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `line` varchar(100) NOT NULL,
+  `month` tinyint(2) NOT NULL,
+  `year` smallint(6) NOT NULL,
+  `operator_id` int(11) NULL DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_3s3theader_period` (`department_id`, `line`, `month`, `year`),
+  KEY `fk_3s3theader_department` (`department_id`),
+  KEY `fk_3s3theader_operator` (`operator_id`),
+  CONSTRAINT `fk_3s3theader_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`),
+  CONSTRAINT `fk_3s3theader_operator` FOREIGN KEY (`operator_id`) REFERENCES `m_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_3s3t_detail`;
+CREATE TABLE `t_3s3t_detail` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `header_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `week1` varchar(10) NULL DEFAULT NULL,
+  `week2` varchar(10) NULL DEFAULT NULL,
+  `week3` varchar(10) NULL DEFAULT NULL,
+  `week4` varchar(10) NULL DEFAULT NULL,
+  `week5` varchar(10) NULL DEFAULT NULL,
+  `remarks` varchar(255) NULL DEFAULT NULL,
+  `pic_id` int(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_3s3tdetail_item` (`header_id`, `item_id`),
+  KEY `fk_3s3tdetail_item` (`item_id`),
+  KEY `fk_3s3tdetail_pic` (`pic_id`),
+  CONSTRAINT `fk_3s3tdetail_header` FOREIGN KEY (`header_id`) REFERENCES `t_3s3t_header` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_3s3tdetail_item` FOREIGN KEY (`item_id`) REFERENCES `m_3s3t_item` (`id`),
+  CONSTRAINT `fk_3s3tdetail_pic` FOREIGN KEY (`pic_id`) REFERENCES `m_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;

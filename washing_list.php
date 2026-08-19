@@ -101,6 +101,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $people)) ?>;
+    const TODAY = <?= json_encode(date('Y-m-d')) ?>;
 </script>
 <script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/washing.js?v=<?= @filemtime(__DIR__ . '/assets/js/washing.js') ?: 1 ?>"></script>

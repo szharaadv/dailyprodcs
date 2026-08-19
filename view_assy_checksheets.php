@@ -122,11 +122,6 @@ require __DIR__ . '/includes/app_top.php';
     <div class="missing-banner-row">
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
     </div>
-    <div class="missing-banner-fill-list">
-        <?php foreach ($missingDates as $d): ?>
-            <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>&tanggal=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?></a>
-        <?php endforeach; ?>
-    </div>
 </div>
 <?php endif; ?>
 

@@ -150,11 +150,6 @@ require __DIR__ . '/includes/app_top.php';
             <span class="missing-banner-cond"><?= htmlspecialchars($mc['name']) ?></span>
             <span class="missing-banner-dates"><?= format_missing_dates($mc['dates']) ?></span>
         </div>
-        <div class="missing-banner-fill-list">
-            <?php foreach ($mc['dates'] as $d): ?>
-                <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>&tanggal=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?></a>
-            <?php endforeach; ?>
-        </div>
     <?php endforeach; ?>
 </div>
 <?php endif; ?>

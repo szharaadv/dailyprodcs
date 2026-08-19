@@ -1,17 +1,15 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/calendar_lib.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
 $input = json_decode(file_get_contents('php://input'), true);
 
 $header_id      = (int)($input['header_id'] ?? 0);
-$tanggal        = $input['tanggal'] ?? date('Y-m-d');
-// Validate date; reject invalid or future dates (backdate allowed).
-$d = DateTime::createFromFormat('Y-m-d', $tanggal);
-if (!$d || $d->format('Y-m-d') !== $tanggal || $tanggal > date('Y-m-d')) {
-    $tanggal = date('Y-m-d');
-}
+// No backdating, no future-dating — a checksheet can only ever be saved
+// for today. Any other value is simply overridden, not just clamped.
+$tanggal        = date('Y-m-d');
 $department_id  = (int)($input['department_id'] ?? 0);
 $condition_id   = (int)($input['condition_id'] ?? 0);
 $checker_id     = (int)($input['checker_id'] ?? 0);
@@ -30,12 +28,21 @@ try {
     $pdo->beginTransaction();
 
     if ($header_id) {
+        // Once submitted, a record is locked — only a still-draft record
+        // can be updated (this is how a draft transitions to submitted).
         $stmt = $pdo->prepare(
             'UPDATE t_checksheet_header
              SET tanggal = ?, department_id = ?, condition_id = ?, checker_id = ?, jam = ?, shift_id = ?, status = ?
-             WHERE id = ?'
+             WHERE id = ? AND status = "draft"'
         );
         $stmt->execute([$tanggal, $department_id, $condition_id, $checker_id, $jam, $shift_id, $status, $header_id]);
+
+        if ($stmt->rowCount() === 0) {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode(['error' => 'Checksheet ini sudah disubmit dan tidak bisa diubah lagi.']);
+            exit;
+        }
 
         $pdo->prepare('DELETE FROM t_checksheet_detail WHERE header_id = ?')->execute([$header_id]);
     } else {

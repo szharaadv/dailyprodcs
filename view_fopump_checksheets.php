@@ -86,11 +86,6 @@ require __DIR__ . '/includes/app_top.php';
         <span class="missing-banner-cond">FO Pump Daily Report</span>
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
     </div>
-    <div class="missing-banner-fill-list">
-        <?php foreach ($missingDates as $d): ?>
-            <a class="missing-banner-fill-btn" href="fopump_list.php?department_id=<?= $department_id ?>&tanggal=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?></a>
-        <?php endforeach; ?>
-    </div>
 </div>
 <?php endif; ?>
 

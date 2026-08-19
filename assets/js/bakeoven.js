@@ -35,7 +35,7 @@ function verdictClass(value, min, max) {
 function renderHead(days, month, year, holidays) {
     let html = '<th class="bo-corner-cell"><span class="bo-corner-text">Waktu<br>Pengecekan</span></th>';
     for (let d = 1; d <= days; d++) {
-        const { cls, title } = getDayInfo(d, month, year, holidays);
+        const { cls, title } = getDayInfo(d, month, year, holidays, TODAY);
         html += `<th class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${d}</th>`;
     }
     tableHead.innerHTML = html;
@@ -48,7 +48,7 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
     }
     const blockedDays = new Set();
     for (let day = 1; day <= day1Total; day++) {
-        if (getDayInfo(day, month, year, holidays).blocked) blockedDays.add(day);
+        if (getDayInfo(day, month, year, holidays, TODAY).blocked) blockedDays.add(day);
     }
 
     let html = '';

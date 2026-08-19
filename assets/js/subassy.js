@@ -31,7 +31,7 @@ function renderRows(items, details, month, year, holidays) {
     }
     let html = '';
     for (let day = 1; day <= total; day++) {
-        const { cls, title, blocked } = getDayInfo(day, month, year, holidays);
+        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, TODAY);
         html += `<tr><td class="jig-day ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>`;
         for (const item of items) {
             const value = details[`${item.id}_${day}`] ?? '';
@@ -109,6 +109,9 @@ tbody.addEventListener('click', (e) => {
     const btn = e.target.closest('.cat-btn');
     if (!btn) return;
     const wrapper = btn.closest('.jig-toggle');
+    // Defense-in-depth: pointer-events:none (cal-blocked) stops real clicks,
+    // but a programmatic .click() bypasses CSS hit-testing, so check here too.
+    if (wrapper.classList.contains('cal-blocked')) return;
     const itemId = wrapper.dataset.itemId;
     const day = wrapper.dataset.day;
     const value = btn.dataset.value;

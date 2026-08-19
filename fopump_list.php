@@ -44,7 +44,7 @@ if ($draft_id) {
     $draft = $stmt->fetch();
 }
 
-$selected_date = $draft['tanggal'] ?? ($_GET['tanggal'] ?? date('Y-m-d'));
+$selected_date = date('Y-m-d');
 
 $base_url = '';
 $active_nav = 'checksheet';

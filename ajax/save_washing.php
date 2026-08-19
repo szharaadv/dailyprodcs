@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/calendar_lib.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -17,6 +18,11 @@ $allowed = ['ganti_air', 'temperatur_air', 'penambahan_gildaon', 'total_acid', '
 if (!$department_id || $month < 1 || $month > 12 || !$year || $day < 1 || $day > 31 || !in_array($field, $allowed, true)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid request.']);
+    exit;
+}
+if (!is_today_ymd($day, $month, $year)) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
     exit;
 }
 

@@ -120,6 +120,12 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $people)) ?>;
     const PIC_PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], array_values(array_filter($people, fn($p) => in_array($p['name'], ['Rinaldi', 'Mita'], true))))) ?>;
+    // No backdating, no future-dating: only the current week of the
+    // current month is editable (see includes/calendar_lib.php's
+    // is_current_period()/current_week_of_month()).
+    const CURRENT_MONTH = <?= json_encode((int) date('n')) ?>;
+    const CURRENT_YEAR = <?= json_encode((int) date('Y')) ?>;
+    const CURRENT_WEEK = <?= json_encode((int) ceil(((int) date('j')) / 7)) ?>;
 </script>
 <script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/3s3t.js?v=<?= @filemtime(__DIR__ . '/assets/js/3s3t.js') ?: 1 ?>"></script>

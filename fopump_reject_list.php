@@ -34,8 +34,11 @@ if ($draft_id) {
     $draft = $stmt->fetch();
 }
 
-$selected_month = (int)($draft['month'] ?? ($_GET['month'] ?? date('n')));
-$selected_year = (int)($draft['year'] ?? ($_GET['year'] ?? date('Y')));
+// No backdating, no future-dating — this log has no day, only month/year,
+// so entry is always scoped to the current month.
+$selected_month = (int) date('n');
+$selected_year = (int) date('Y');
+$month_label = date('F Y');
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -51,28 +54,9 @@ require __DIR__ . '/includes/app_top.php';
     <div class="form-grid-top">
         <div class="field-block">
             <label>Month</label>
-            <select id="f_month">
-                <?php
-                $monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-                foreach ($monthNames as $i => $mName): ?>
-                    <option value="<?= $i + 1 ?>" <?= ($i + 1) == $selected_month ? 'selected' : '' ?>><?= $mName ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="field-block">
-            <label>Year</label>
-            <select id="f_year">
-                <?php for ($y = (int)date('Y') - 2; $y <= (int)date('Y') + 1; $y++): ?>
-                    <option value="<?= $y ?>" <?= $y == $selected_year ? 'selected' : '' ?>><?= $y ?></option>
-                <?php endfor; ?>
-            </select>
-        </div>
-        <div class="field-block">
-            <label>&nbsp;</label>
-            <div class="month-nav">
-                <button type="button" class="month-nav-btn" id="btn-prev-month">&larr; Prev</button>
-                <button type="button" class="month-nav-btn" id="btn-next-month">Next &rarr;</button>
-            </div>
+            <div class="static-value"><?= htmlspecialchars($month_label) ?></div>
+            <input type="hidden" id="f_month" value="<?= $selected_month ?>">
+            <input type="hidden" id="f_year" value="<?= $selected_year ?>">
         </div>
         <div class="field-block">
             <label>Target</label>
@@ -115,6 +99,5 @@ require __DIR__ . '/includes/app_top.php';
     const MODEL_NAMES = <?= json_encode($models) ?>;
 </script>
 <script src="assets/js/combo-select.js"></script>
-<script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/fopump_reject.js?v=<?= @filemtime(__DIR__ . '/assets/js/fopump_reject.js') ?: 1 ?>"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

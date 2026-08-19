@@ -7,17 +7,29 @@
  * in its popup — this covers the grid-style ones where every day is always
  * visible and needs its own inputs disabled instead.
  */
-function getDayInfo(day, month, year, holidays) {
+/**
+ * `todayStr` (optional, "YYYY-MM-DD") enforces the no-backdate/no-future
+ * rule on top of the holiday/weekend check: any day that isn't today is
+ * blocked from input, whether it's already passed (locked, read-only) or
+ * hasn't arrived yet (can't fill ahead). Pass the server's TODAY constant,
+ * not a client Date, so this can't be fooled by the browser's clock.
+ */
+function getDayInfo(day, month, year, holidays, todayStr) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    let info;
     const h = holidays[dateStr];
     if (h) {
-        return h.is_workday
+        info = h.is_workday
             ? { cls: 'cal-day-workday', title: h.label, blocked: false }
             : { cls: 'cal-day-holiday', title: h.label, blocked: true };
+    } else {
+        const dow = new Date(year, month - 1, day).getDay(); // 0=Sun..6=Sat
+        info = (dow === 0 || dow === 6) ? { cls: 'cal-day-weekend', title: 'Weekend', blocked: true } : { cls: '', title: '', blocked: false };
     }
-    const dow = new Date(year, month - 1, day).getDay(); // 0=Sun..6=Sat
-    if (dow === 0 || dow === 6) return { cls: 'cal-day-weekend', title: 'Weekend', blocked: true };
-    return { cls: '', title: '', blocked: false };
+    if (todayStr && dateStr !== todayStr && !info.blocked) {
+        info = { ...info, blocked: true, title: info.title || (dateStr < todayStr ? 'Locked — already past' : "Can't fill ahead of today") };
+    }
+    return info;
 }
 
 async function fetchHolidays(year) {

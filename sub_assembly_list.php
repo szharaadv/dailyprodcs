@@ -204,6 +204,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
 
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
+    const TODAY = <?= json_encode(date('Y-m-d')) ?>;
 </script>
 <script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/subassy.js?v=<?= @filemtime(__DIR__ . '/assets/js/subassy.js') ?: 1 ?>"></script>

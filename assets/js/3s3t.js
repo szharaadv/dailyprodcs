@@ -18,8 +18,19 @@ function peopleOptions(selected, list) {
     return html;
 }
 
+/** Only the current week of the current month is ever editable. */
+function isEditableWeek(weekNum) {
+    return Number(monthSelect.value) === CURRENT_MONTH
+        && Number(yearSelect.value) === CURRENT_YEAR
+        && weekNum === CURRENT_WEEK;
+}
+function isEditablePeriod() {
+    return Number(monthSelect.value) === CURRENT_MONTH && Number(yearSelect.value) === CURRENT_YEAR;
+}
+
 function weekToggle(itemId, week, value) {
-    return `<div class="cat-toggle t3-toggle" data-item-id="${itemId}" data-week="${week}">
+    const blocked = !isEditableWeek(parseInt(week.replace('week', ''), 10));
+    return `<div class="cat-toggle t3-toggle ${blocked ? 'cal-blocked' : ''}" data-item-id="${itemId}" data-week="${week}">
         <span class="cat-btn cat-ok ${value === 'OK' ? 'active' : ''}" data-value="OK">OK</span>
         <span class="cat-btn cat-ng ${value === 'NG' ? 'active' : ''}" data-value="NG">NG</span>
     </div>`;
@@ -64,8 +75,8 @@ function renderRows(items, details) {
             <td>${weekToggle(item.id, 'week3', d.week3)}</td>
             <td>${weekToggle(item.id, 'week4', d.week4)}</td>
             <td>${weekToggle(item.id, 'week5', d.week5)}</td>
-            <td><input type="text" class="t3-remarks-input" data-item-id="${item.id}" value="${escapeHtml(d.remarks ?? '')}"></td>
-            <td><select class="t3-pic-select" data-item-id="${item.id}">${peopleOptions(d.pic_id, PIC_PEOPLE)}</select></td>
+            <td><input type="text" class="t3-remarks-input" data-item-id="${item.id}" value="${escapeHtml(d.remarks ?? '')}" ${isEditablePeriod() ? '' : 'disabled'}></td>
+            <td><select class="t3-pic-select" data-item-id="${item.id}" ${isEditablePeriod() ? '' : 'disabled'}>${peopleOptions(d.pic_id, PIC_PEOPLE)}</select></td>
         </tr>`;
     });
     tbody.innerHTML = html;
@@ -82,6 +93,7 @@ async function loadMonth() {
 
     const header = data.header;
     operatorSelect.value = header?.operator_id ?? '';
+    operatorSelect.disabled = !isEditablePeriod();
 }
 
 async function saveCell(itemId, field, value) {
@@ -128,6 +140,7 @@ tbody.addEventListener('click', (e) => {
     const btn = e.target.closest('.cat-btn');
     if (!btn) return;
     const wrapper = btn.closest('.t3-toggle');
+    if (wrapper.classList.contains('cal-blocked')) return;
     const itemId = wrapper.dataset.itemId;
     const week = wrapper.dataset.week;
     const value = btn.dataset.value;

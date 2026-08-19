@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/calendar_lib.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -35,6 +36,11 @@ if (isset($input['field'])) {
         echo json_encode(['error' => 'Invalid field.']);
         exit;
     }
+    if (!is_current_period($month, $year)) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Bulan ini sudah lewat dan tidak bisa diubah lagi.']);
+        exit;
+    }
     $value = trim((string)($input['value'] ?? ''));
     $value = $value !== '' ? (int)$value : null;
     $stmt = $pdo->prepare("UPDATE t_3s3t_header SET `$field` = ? WHERE id = ?");
@@ -51,6 +57,19 @@ $allowedCellFields = ['week1', 'week2', 'week3', 'week4', 'week5', 'remarks', 'p
 if (!$item_id || !in_array($field, $allowedCellFields, true)) {
     http_response_code(400);
     echo json_encode(['error' => 'item_id and a valid cell_field are required.']);
+    exit;
+}
+
+// week1..week5 are only writable for the *current* week of the *current*
+// month; remarks/pic_id are writable for the whole current month.
+if (!is_current_period($month, $year)) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Bulan ini sudah lewat dan tidak bisa diubah lagi.']);
+    exit;
+}
+if (preg_match('/^week([1-5])$/', $field, $m) && (int)$m[1] !== current_week_of_month()) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Minggu ini bukan minggu berjalan dan tidak bisa diubah.']);
     exit;
 }
 

@@ -48,7 +48,7 @@ function standardLabel(item) {
 function renderHead(days, month, year, holidays) {
     let html = FIXED_HEAD_HTML;
     for (let d = 1; d <= days; d++) {
-        const { cls, title } = getDayInfo(d, month, year, holidays);
+        const { cls, title } = getDayInfo(d, month, year, holidays, TODAY);
         html += `<th class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${d}</th>`;
     }
     tableHeadRow.innerHTML = html;
@@ -61,7 +61,7 @@ function renderRows(items, details, day1Total, month, year, holidays) {
     }
     const blockedDays = new Set();
     for (let day = 1; day <= day1Total; day++) {
-        if (getDayInfo(day, month, year, holidays).blocked) blockedDays.add(day);
+        if (getDayInfo(day, month, year, holidays, TODAY).blocked) blockedDays.add(day);
     }
 
     let html = '';

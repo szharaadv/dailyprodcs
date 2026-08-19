@@ -144,6 +144,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const STANDARDS = <?= json_encode(array_column($ovens, null, 'id')) ?>;
     const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $people)) ?>;
+    const TODAY = <?= json_encode(date('Y-m-d')) ?>;
 </script>
 <script src="assets/js/calendar-day.js"></script>
 <script src="assets/js/bakeoven.js?v=<?= @filemtime(__DIR__ . '/assets/js/bakeoven.js') ?: 1 ?>"></script>

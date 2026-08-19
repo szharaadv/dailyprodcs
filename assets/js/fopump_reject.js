@@ -69,10 +69,6 @@ async function loadContext() {
         : 'New entry for this month.';
 }
 
-monthSelect.addEventListener('change', loadContext);
-yearSelect.addEventListener('change', loadContext);
-wireMonthNav('btn-prev-month', 'btn-next-month', monthSelect, yearSelect);
-
 function buildPayload(status) {
     return {
         header_id: currentHeaderId,

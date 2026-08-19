@@ -6,13 +6,8 @@ $pdo = get_db();
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 
 $header_id = (int)($input['header_id'] ?? 0);
-$tanggal = $input['tanggal'] ?? '';
-$d = DateTime::createFromFormat('Y-m-d', $tanggal);
-if (!$d || $d->format('Y-m-d') !== $tanggal) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid date.']);
-    exit;
-}
+// No backdating, no future-dating — always today, never the client's value.
+$tanggal = date('Y-m-d');
 $department_id = (int)($input['department_id'] ?? 0);
 $employee = $input['employee_count'] ?? null;
 $workingMinutes = $input['working_minutes'] ?? null;
@@ -41,9 +36,18 @@ try {
     $pdo->beginTransaction();
 
     if (!$header_id) {
-        $stmt = $pdo->prepare('SELECT id FROM t_fopump_header WHERE department_id = ? AND tanggal = ?');
+        // Only reuse an existing header for today if it's still a draft —
+        // a submitted one is locked and must not be silently overwritten.
+        $stmt = $pdo->prepare('SELECT id, status FROM t_fopump_header WHERE department_id = ? AND tanggal = ?');
         $stmt->execute([$department_id, $tanggal]);
-        $header_id = (int)$stmt->fetchColumn() ?: 0;
+        $existing = $stmt->fetch();
+        if ($existing && $existing['status'] === 'submitted') {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode(['error' => 'Laporan untuk hari ini sudah disubmit dan tidak bisa diubah lagi.']);
+            exit;
+        }
+        $header_id = $existing ? (int)$existing['id'] : 0;
     }
 
     $params = [
@@ -61,12 +65,21 @@ try {
     ];
 
     if ($header_id) {
+        // Once submitted, a record is locked — only a still-draft record
+        // can be updated (this is how a draft transitions to submitted).
         $stmt = $pdo->prepare(
             'UPDATE t_fopump_header SET tanggal=?, department_id=?, employee_count=?, working_minutes=?, shift_label=?,
                 operator_id=?, foreman_id=?, supervisor_id=?, convert_production=?, convert_assembly=?, convert_export=?, status=?
-             WHERE id=?'
+             WHERE id=? AND status="draft"'
         );
         $stmt->execute(array_merge($params, [$header_id]));
+
+        if ($stmt->rowCount() === 0) {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode(['error' => 'Checksheet ini sudah disubmit dan tidak bisa diubah lagi.']);
+            exit;
+        }
         $pdo->prepare('DELETE FROM t_fopump_line WHERE header_id = ?')->execute([$header_id]);
     } else {
         $stmt = $pdo->prepare(

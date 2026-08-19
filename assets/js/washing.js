@@ -24,7 +24,7 @@ function renderRows(days, rows, month, year, holidays) {
     let html = '';
     for (let day = 1; day <= days; day++) {
         const r = rows[day] || {};
-        const { cls, title, blocked } = getDayInfo(day, month, year, holidays);
+        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, TODAY);
         const dis = blocked ? 'disabled' : '';
         const rowCls = blocked ? 'washing-row-blocked' : '';
         html += `<tr class="${rowCls}">

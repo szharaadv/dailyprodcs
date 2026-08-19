@@ -7,8 +7,10 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 $header_id     = (int)($input['header_id'] ?? 0);
 $department_id = (int)($input['department_id'] ?? 0);
-$month         = (int)($input['month'] ?? 0);
-$year          = (int)($input['year'] ?? 0);
+// No backdating, no future-dating — this log has no day, only month/year,
+// so the rule maps to "current month only".
+$month         = (int) date('n');
+$year          = (int) date('Y');
 $target        = $input['target'] ?? null;
 $status        = ($input['status'] ?? 'submitted') === 'draft' ? 'draft' : 'submitted';
 $lines         = $input['lines'] ?? [];
@@ -30,18 +32,35 @@ try {
     $params = [$department_id, $month, $year, ($target !== null && $target !== '') ? (int)$target : null, $status];
 
     if ($header_id) {
-        $stmt = $pdo->prepare('UPDATE t_fopump_reject_header SET department_id=?, month=?, year=?, target=?, status=? WHERE id=?');
+        // Once submitted, a record is locked — only a still-draft record
+        // can be updated (this is how a draft transitions to submitted).
+        $stmt = $pdo->prepare('UPDATE t_fopump_reject_header SET department_id=?, month=?, year=?, target=?, status=? WHERE id=? AND status="draft"');
         $stmt->execute(array_merge($params, [$header_id]));
+
+        if ($stmt->rowCount() === 0) {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode(['error' => 'Checksheet ini sudah disubmit dan tidak bisa diubah lagi.']);
+            exit;
+        }
         $pdo->prepare('DELETE FROM t_fopump_reject_line WHERE header_id = ?')->execute([$header_id]);
     } else {
-        // A header may already exist for this department+month+year (created
-        // on a previous save); reuse it instead of violating the unique key.
-        $stmt = $pdo->prepare('SELECT id FROM t_fopump_reject_header WHERE department_id = ? AND month = ? AND year = ?');
+        // A draft header may already exist for this department+month+year
+        // (created on a previous save); reuse it instead of violating the
+        // unique key. A submitted one, however, is locked.
+        $stmt = $pdo->prepare('SELECT id, status FROM t_fopump_reject_header WHERE department_id = ? AND month = ? AND year = ?');
         $stmt->execute([$department_id, $month, $year]);
-        $existingId = $stmt->fetchColumn();
+        $existing = $stmt->fetch();
 
-        if ($existingId) {
-            $header_id = $existingId;
+        if ($existing && $existing['status'] === 'submitted') {
+            $pdo->rollBack();
+            http_response_code(409);
+            echo json_encode(['error' => 'Laporan reject bulan ini sudah disubmit dan tidak bisa diubah lagi.']);
+            exit;
+        }
+
+        if ($existing) {
+            $header_id = $existing['id'];
             $stmt = $pdo->prepare('UPDATE t_fopump_reject_header SET target=?, status=? WHERE id=?');
             $stmt->execute([$params[3], $status, $header_id]);
             $pdo->prepare('DELETE FROM t_fopump_reject_line WHERE header_id = ?')->execute([$header_id]);
