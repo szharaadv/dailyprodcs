@@ -149,6 +149,9 @@ require __DIR__ . '/includes/app_top.php';
         <div class="missing-banner-row">
             <span class="missing-banner-cond"><?= htmlspecialchars($mc['name']) ?></span>
             <span class="missing-banner-dates"><?= format_missing_dates($mc['dates']) ?></span>
+            <?php if (in_array(date('Y-m-d'), $mc['dates'], true)): ?>
+                <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>">Fill today</a>
+            <?php endif; ?>
         </div>
     <?php endforeach; ?>
 </div>
@@ -193,7 +196,6 @@ require __DIR__ . '/includes/app_top.php';
                             <span class="cs-row-badge cs-row-badge-ok">Normal</span>
                         <?php endif; ?>
                         <a href="view_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn-sm">View &rarr;</a>
-                        <button type="button" class="cs-delete-btn" data-delete-type="painting" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($row['condition_name'] . ' · ' . date('d/m/Y', strtotime($g['tanggal']))) ?>">Delete</button>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -203,6 +205,5 @@ require __DIR__ . '/includes/app_top.php';
     <?php if (!$groups): ?><div class="empty-state">No checksheets found for this date range / filter.</div><?php endif; ?>
 </div>
 
-<script src="assets/js/delete-pin.js"></script>
 <script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

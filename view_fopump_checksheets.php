@@ -85,6 +85,9 @@ require __DIR__ . '/includes/app_top.php';
     <div class="missing-banner-row">
         <span class="missing-banner-cond">FO Pump Daily Report</span>
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
+        <?php if (in_array(date('Y-m-d'), $missingDates, true)): ?>
+            <a class="missing-banner-fill-btn" href="fopump_list.php?department_id=<?= $department_id ?>">Fill today</a>
+        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>
@@ -102,12 +105,10 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
         <a href="view_fopump_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
-        <button type="button" class="cs-delete-btn" data-delete-type="fopump" data-delete-id="<?= $row['id'] ?>" data-delete-label="FO Pump &middot; <?= htmlspecialchars(date('d/m/Y', strtotime($row['tanggal']))) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
     <?php if (!$results): ?><div class="empty-state">No FO Pump reports found for this month.</div><?php endif; ?>
 </div>
 
-<script src="assets/js/delete-pin.js"></script>
 <script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

@@ -202,7 +202,7 @@ function icon(string $name): string
         $config_children = array_column($config_items, 'key');
         if ($show_import) $config_children[] = 'config-import';
         $config_open = in_array($active_nav, $config_children, true);
-        $mgmt_children = ['mgmt-users', 'config-settings'];
+        $mgmt_children = ['mgmt-users'];
         $mgmt_open = in_array($active_nav, $mgmt_children, true);
         ?>
         <div class="nav-group-label">Master Data</div>
@@ -234,7 +234,6 @@ function icon(string $name): string
         </a>
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
-            <a class="nav-subitem <?= $active_nav === 'config-settings' ? 'active' : '' ?>" href="<?= $base_url ?>admin/settings.php">Settings</a>
         </div>
     </nav>
 

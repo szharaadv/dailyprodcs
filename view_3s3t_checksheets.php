@@ -100,12 +100,10 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <span class="cs-status <?= $row['ng_count'] > 0 ? 'cs-status-draft' : 'cs-status-submitted' ?>"><?= $row['ng_count'] > 0 ? 'Has NG' : 'All OK' ?></span>
         <a href="3s3t_list.php?department_id=<?= $department_id ?>&line=<?= urlencode($row['line']) ?>&month=<?= $row['month'] ?>&year=<?= $row['year'] ?>" class="cs-view-btn">Open &rarr;</a>
-        <button type="button" class="cs-delete-btn" data-delete-type="3s3t" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($row['line'] . ' · ' . $monthNames[$row['month']] . ' ' . $row['year']) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
     <?php if (!$results): ?><div class="empty-state">No 3S-3T records found for <?= $year ?>.</div><?php endif; ?>
 </div>
 
-<script src="assets/js/delete-pin.js"></script>
 <script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

@@ -55,12 +55,10 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
         <a href="view_fopump_reject_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
-        <button type="button" class="cs-delete-btn" data-delete-type="fopump_reject" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($monthNames[$row['month']] . ' ' . $row['year']) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
     <?php if (!$results): ?><div class="empty-state">No reject logs found for this year.</div><?php endif; ?>
 </div>
 
-<script src="assets/js/delete-pin.js"></script>
 <script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

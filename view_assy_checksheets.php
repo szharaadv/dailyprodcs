@@ -121,6 +121,9 @@ require __DIR__ . '/includes/app_top.php';
     <div class="missing-banner-title">&#9888; Missing checks this month</div>
     <div class="missing-banner-row">
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
+        <?php if (in_array(date('Y-m-d'), $missingDates, true)): ?>
+            <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>">Fill today</a>
+        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>
@@ -138,12 +141,10 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
         <a href="view_assy_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
-        <button type="button" class="cs-delete-btn" data-delete-type="assy" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($row['model_name'] . ' · ' . date('d/m/Y', strtotime($row['tanggal']))) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
     <?php if (!$results): ?><div class="empty-state">No checksheets found for this date range / filter.</div><?php endif; ?>
 </div>
 
-<script src="assets/js/delete-pin.js"></script>
 <script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>

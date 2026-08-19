@@ -57,12 +57,10 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
         <a href="washing_list.php?department_id=<?= $department_id ?>&month=<?= $row['month'] ?>&year=<?= $row['year'] ?>" class="cs-view-btn">Open &rarr;</a>
-        <button type="button" class="cs-delete-btn" data-delete-type="washing" data-delete-id="<?= $row['id'] ?>" data-delete-label="<?= htmlspecialchars($monthNames[$row['month']] . ' ' . $row['year']) ?>">Delete</button>
     </div>
     <?php endforeach; ?>
     <?php if (!$results): ?><div class="empty-state">No washing machine records found for <?= $year ?>.</div><?php endif; ?>
 </div>
 
-<script src="assets/js/delete-pin.js"></script>
 <script src="assets/js/filter-autosubmit.js"></script>
 <?php require __DIR__ . '/includes/app_bottom.php'; ?>
