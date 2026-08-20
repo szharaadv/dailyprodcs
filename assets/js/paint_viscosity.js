@@ -45,23 +45,23 @@ function standardLabel(item) {
     return `${min} ~ ${max} ${unit}`.trim();
 }
 
-function renderHead(days, month, year, holidays) {
+function renderHead(days, month, year, holidays, unlocked) {
     let html = FIXED_HEAD_HTML;
     for (let d = 1; d <= days; d++) {
-        const { cls, title } = getDayInfo(d, month, year, holidays, TODAY);
+        const { cls, title } = getDayInfo(d, month, year, holidays, unlocked ? null : TODAY);
         html += `<th class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${d}</th>`;
     }
     tableHeadRow.innerHTML = html;
 }
 
-function renderRows(items, details, day1Total, month, year, holidays) {
+function renderRows(items, details, day1Total, month, year, holidays, unlocked) {
     if (!items.length) {
         tbody.innerHTML = '<tr><td class="empty">No viscosity items set up yet.</td></tr>';
         return;
     }
     const blockedDays = new Set();
     for (let day = 1; day <= day1Total; day++) {
-        if (getDayInfo(day, month, year, holidays, TODAY).blocked) blockedDays.add(day);
+        if (getDayInfo(day, month, year, holidays, unlocked ? null : TODAY).blocked) blockedDays.add(day);
     }
 
     let html = '';
@@ -97,15 +97,19 @@ async function loadMonth() {
     ]);
     const data = await res.json();
     currentItems = data.items || [];
+    const unlocked = !!data.unlocked;
 
     const days = daysInMonth(Number(month), Number(year));
-    renderHead(days, Number(month), Number(year), holidays);
-    renderRows(currentItems, data.details || {}, days, Number(month), Number(year), holidays);
+    renderHead(days, Number(month), Number(year), holidays, unlocked);
+    renderRows(currentItems, data.details || {}, days, Number(month), Number(year), holidays, unlocked);
 
     const header = data.header;
     foremanSelect.value = header?.foreman_id ?? '';
     supervisorSelect.value = header?.supervisor_id ?? '';
     notesEl.value = header?.notes ?? '';
+
+    const banner = document.getElementById('unlock-banner');
+    if (banner) banner.style.display = unlocked ? '' : 'none';
 }
 
 async function saveResult(itemId, day, value) {

@@ -29,10 +29,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'admin
     }
 }
 
+// The User login is a single 4-digit PIN, set for each person by Admin in
+// Management > Users. Since PINs are unique, the PIN alone identifies who's
+// signing in — no separate "pick your name" step needed.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'user_login') {
-    $_SESSION['auth_user'] = ['name' => 'User', 'role' => 'user'];
-    header('Location: ' . $next);
-    exit;
+    $pin = trim($_POST['pin'] ?? '');
+    if (!preg_match('/^\d{4}$/', $pin)) {
+        $error = 'Enter your 4-digit PIN.';
+    } else {
+        $stmt = $pdo->prepare("SELECT * FROM m_user WHERE pin = ? AND is_active = 1 AND name <> 'Admin'");
+        $stmt->execute([$pin]);
+        $matchedUser = $stmt->fetch();
+        if (!$matchedUser) {
+            $error = 'Incorrect PIN.';
+        } else {
+            $_SESSION['auth_user'] = ['id' => (int)$matchedUser['id'], 'name' => $matchedUser['name'], 'role' => 'user'];
+            header('Location: ' . $next);
+            exit;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -77,6 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'user_
             <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
             <div class="dept-icon">US</div>
             <div class="dept-name">User</div>
+            <input type="password" name="pin" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4-digit PIN" required
+                   style="margin-top:10px; width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #d7dbe2; border-radius:6px; font-size:14px; text-align:center; letter-spacing:4px;">
             <button type="submit" class="dept-go" style="border:none; background:none; cursor:pointer; font:inherit; padding:8px 0 0; width:100%;">Continue &rarr;</button>
         </form>
     </div>

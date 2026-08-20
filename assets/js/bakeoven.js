@@ -32,23 +32,23 @@ function verdictClass(value, min, max) {
     return (v < min || v > max) ? 'temp-ng' : 'temp-ok';
 }
 
-function renderHead(days, month, year, holidays) {
+function renderHead(days, month, year, holidays, unlocked) {
     let html = '<th class="bo-corner-cell"><span class="bo-corner-text">Waktu<br>Pengecekan</span></th>';
     for (let d = 1; d <= days; d++) {
-        const { cls, title } = getDayInfo(d, month, year, holidays, TODAY);
+        const { cls, title } = getDayInfo(d, month, year, holidays, unlocked ? null : TODAY);
         html += `<th class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${d}</th>`;
     }
     tableHead.innerHTML = html;
 }
 
-function renderRows(times, details, paraf, day1Total, min, max, month, year, holidays) {
+function renderRows(times, details, paraf, day1Total, min, max, month, year, holidays, unlocked) {
     if (!times.length) {
         tbody.innerHTML = '<tr><td class="empty">No checking times set up for this oven yet.</td></tr>';
         return;
     }
     const blockedDays = new Set();
     for (let day = 1; day <= day1Total; day++) {
-        if (getDayInfo(day, month, year, holidays, TODAY).blocked) blockedDays.add(day);
+        if (getDayInfo(day, month, year, holidays, unlocked ? null : TODAY).blocked) blockedDays.add(day);
     }
 
     let html = '';
@@ -102,15 +102,19 @@ async function loadMonth() {
     ]);
     const data = await res.json();
     currentTimes = data.times || [];
+    const unlocked = !!data.unlocked;
 
     const days = daysInMonth(Number(month), Number(year));
-    renderHead(days, Number(month), Number(year), holidays);
-    renderRows(currentTimes, data.details || {}, data.paraf || {}, days, min, max, Number(month), Number(year), holidays);
+    renderHead(days, Number(month), Number(year), holidays, unlocked);
+    renderRows(currentTimes, data.details || {}, data.paraf || {}, days, min, max, Number(month), Number(year), holidays, unlocked);
 
     const header = data.header;
     foremanSelect.value = header?.foreman_id ?? '';
     supervisorSelect.value = header?.supervisor_id ?? '';
     notesEl.value = header?.notes ?? '';
+
+    const banner = document.getElementById('unlock-banner');
+    if (banner) banner.style.display = unlocked ? '' : 'none';
 }
 
 async function saveTemp(timeId, day, value) {

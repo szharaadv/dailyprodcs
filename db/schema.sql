@@ -34,11 +34,13 @@ CREATE TABLE `m_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(150) NOT NULL,
   `role` enum('superadmin','admin','user') NOT NULL DEFAULT 'user',
+  `pin` char(4) NULL DEFAULT NULL COMMENT '4-digit PIN this person uses to sign in via the User login flow (login.php) — set by Admin in Management > Users. Unique: the PIN alone identifies who is signing in, no name picker.',
   `title` varchar(50) NULL DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
+  UNIQUE KEY `name` (`name`),
+  UNIQUE KEY `uq_user_pin` (`pin`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Which check-sheet sections a user shows up in as "Checked by".
@@ -829,6 +831,33 @@ CREATE TABLE `t_3s3t_detail` (
   CONSTRAINT `fk_3s3tdetail_header` FOREIGN KEY (`header_id`) REFERENCES `t_3s3t_header` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_3s3tdetail_item` FOREIGN KEY (`item_id`) REFERENCES `m_3s3t_item` (`id`),
   CONSTRAINT `fk_3s3tdetail_pic` FOREIGN KEY (`pic_id`) REFERENCES `m_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Edit Request queue — every checksheet is locked after submit / after its
+-- date passes. If a mistake is found later, the checker requests an edit
+-- (naming the record + a reason); an Admin Accepts (opening a 48h unlock
+-- window on that exact record, checked by includes/edit_requests.php's
+-- has_active_unlock()) or Denies it. checksheet_type matches the same
+-- short type strings the app already used for the old delete feature
+-- (painting/assy/fopump/fopump_reject/jig/bakeoven/washing/paint_viscosity/3s3t).
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `t_edit_request` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `checksheet_type` varchar(30) NOT NULL,
+  `header_id` int(11) NOT NULL,
+  `label` varchar(255) NULL DEFAULT NULL,
+  `requested_by` int(11) NULL DEFAULT NULL,
+  `reason` varchar(500) NOT NULL,
+  `status` enum('pending','approved','denied') NOT NULL DEFAULT 'pending',
+  `admin_note` varchar(500) NULL DEFAULT NULL,
+  `unlock_expires_at` datetime NULL DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `resolved_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_type_header` (`checksheet_type`, `header_id`),
+  KEY `fk_editrequest_user` (`requested_by`),
+  CONSTRAINT `fk_editrequest_user` FOREIGN KEY (`requested_by`) REFERENCES `m_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

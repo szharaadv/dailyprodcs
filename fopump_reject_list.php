@@ -1,8 +1,25 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/edit_requests.php';
 require_login();
 $pdo = get_db();
+
+$edit_id = (int)($_GET['edit_id'] ?? 0);
+$editing_unlocked = false;
+$editing_month = null;
+$editing_year = null;
+if ($edit_id && has_active_unlock($pdo, 'fopump_reject', $edit_id)) {
+    $stmt = $pdo->prepare('SELECT department_id, month, year FROM t_fopump_reject_header WHERE id = ?');
+    $stmt->execute([$edit_id]);
+    $editRow = $stmt->fetch();
+    if ($editRow) {
+        $_SESSION['department_id'] = (int)$editRow['department_id'];
+        $editing_unlocked = true;
+        $editing_month = (int)$editRow['month'];
+        $editing_year = (int)$editRow['year'];
+    }
+}
 
 if (isset($_GET['department_id'])) {
     $_SESSION['department_id'] = (int)$_GET['department_id'];
@@ -36,9 +53,9 @@ if ($draft_id) {
 
 // No backdating, no future-dating — this log has no day, only month/year,
 // so entry is always scoped to the current month.
-$selected_month = (int) date('n');
-$selected_year = (int) date('Y');
-$month_label = date('F Y');
+$selected_month = $editing_unlocked ? $editing_month : (int) date('n');
+$selected_year = $editing_unlocked ? $editing_year : (int) date('Y');
+$month_label = date('F Y', mktime(0, 0, 0, $selected_month, 1, $selected_year));
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -51,6 +68,9 @@ require __DIR__ . '/includes/app_top.php';
 ?>
 
 <div class="checksheet-card">
+    <?php if ($editing_unlocked): ?>
+    <div class="alert alert-ok">Editing an approved past record (<?= htmlspecialchars($month_label) ?>). Changes save back to that same month.</div>
+    <?php endif; ?>
     <div class="form-grid-top">
         <div class="field-block">
             <label>Month</label>

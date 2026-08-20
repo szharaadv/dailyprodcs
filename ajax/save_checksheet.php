@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/calendar_lib.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -8,8 +9,17 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 $header_id      = (int)($input['header_id'] ?? 0);
 // No backdating, no future-dating — a checksheet can only ever be saved
-// for today. Any other value is simply overridden, not just clamped.
+// for today. Any other value is simply overridden, not just clamped — unless
+// this record has an Admin-approved edit-request unlock, in which case we
+// keep its original date instead (see includes/edit_requests.php).
 $tanggal        = date('Y-m-d');
+$unlockedEdit   = $header_id && has_active_unlock($pdo, 'painting', $header_id);
+if ($unlockedEdit) {
+    $stmt = $pdo->prepare('SELECT tanggal FROM t_checksheet_header WHERE id = ?');
+    $stmt->execute([$header_id]);
+    $origTanggal = $stmt->fetchColumn();
+    if ($origTanggal) $tanggal = $origTanggal;
+}
 $department_id  = (int)($input['department_id'] ?? 0);
 $condition_id   = (int)($input['condition_id'] ?? 0);
 $checker_id     = (int)($input['checker_id'] ?? 0);
@@ -29,11 +39,13 @@ try {
 
     if ($header_id) {
         // Once submitted, a record is locked — only a still-draft record
-        // can be updated (this is how a draft transitions to submitted).
+        // can be updated (this is how a draft transitions to submitted),
+        // unless an Admin has approved an edit request for this record.
+        $lockClause = $unlockedEdit ? '' : ' AND status = "draft"';
         $stmt = $pdo->prepare(
             'UPDATE t_checksheet_header
              SET tanggal = ?, department_id = ?, condition_id = ?, checker_id = ?, jam = ?, shift_id = ?, status = ?
-             WHERE id = ? AND status = "draft"'
+             WHERE id = ?' . $lockClause
         );
         $stmt->execute([$tanggal, $department_id, $condition_id, $checker_id, $jam, $shift_id, $status, $header_id]);
 

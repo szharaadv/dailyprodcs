@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/calendar_lib.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -25,6 +26,8 @@ if (!$header_id) {
     $ins->execute([$jig_id, $month, $year]);
     $header_id = (int)$pdo->lastInsertId();
 }
+$header_id = (int)$header_id;
+$unlocked = has_active_unlock($pdo, 'jig', $header_id);
 
 if (isset($input['field'])) {
     $allowed = ['supervisor_id' => true, 'foreman_id' => true, 'checker_id' => true];
@@ -34,7 +37,7 @@ if (isset($input['field'])) {
         echo json_encode(['error' => 'Invalid field.']);
         exit;
     }
-    if (!is_current_period($month, $year)) {
+    if (!$unlocked && !is_current_period($month, $year)) {
         http_response_code(409);
         echo json_encode(['error' => 'Bulan ini sudah lewat dan tidak bisa diubah lagi.']);
         exit;
@@ -56,7 +59,7 @@ if (!$jig_item_id || $day < 1 || $day > 31 || !in_array($result, ['OK', 'NG'], t
     echo json_encode(['error' => 'jig_item_id, day and a valid result (OK/NG) are required.']);
     exit;
 }
-if (!is_today_ymd($day, $month, $year)) {
+if (!$unlocked && !is_today_ymd($day, $month, $year)) {
     http_response_code(409);
     echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
     exit;

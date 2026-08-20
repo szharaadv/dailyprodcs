@@ -20,11 +20,11 @@ function peopleOptions(selected) {
     return html;
 }
 
-function renderRows(days, rows, month, year, holidays) {
+function renderRows(days, rows, month, year, holidays, unlocked) {
     let html = '';
     for (let day = 1; day <= days; day++) {
         const r = rows[day] || {};
-        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, TODAY);
+        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, unlocked ? null : TODAY);
         const dis = blocked ? 'disabled' : '';
         const rowCls = blocked ? 'washing-row-blocked' : '';
         html += `<tr class="${rowCls}">
@@ -50,9 +50,13 @@ async function loadMonth() {
         fetchHolidays(year),
     ]);
     const data = await dataRes.json();
+    const unlocked = !!data.unlocked;
 
     const days = daysInMonth(Number(month), Number(year));
-    renderRows(days, data.rows || {}, Number(month), Number(year), holidays || {});
+    renderRows(days, data.rows || {}, Number(month), Number(year), holidays || {}, unlocked);
+
+    const banner = document.getElementById('unlock-banner');
+    if (banner) banner.style.display = unlocked ? '' : 'none';
 }
 
 async function saveCell(day, field, value) {

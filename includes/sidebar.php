@@ -18,6 +18,7 @@ $active_nav = $active_nav ?? '';
 $section_route = $section_route ?? ($_SESSION['section_route'] ?? null);
 
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/edit_requests.php';
 $me = current_user();
 
 $pdo = get_db();
@@ -155,6 +156,9 @@ function icon(string $name): string
             <?php if ($draft_count > 0): ?><span class="nav-badge"><?= $draft_count ?></span><?php endif; ?>
         </a>
         <?php endif; ?>
+        <a class="nav-item <?= $active_nav === 'my-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>edit_request_status.php">
+            <?= icon('clock') ?> My Edit Requests
+        </a>
 
         <?php
         // Configuration links depend on the specific section (route) the user
@@ -202,8 +206,9 @@ function icon(string $name): string
         $config_children = array_column($config_items, 'key');
         if ($show_import) $config_children[] = 'config-import';
         $config_open = in_array($active_nav, $config_children, true);
-        $mgmt_children = ['mgmt-users'];
+        $mgmt_children = ['mgmt-users', 'mgmt-edit-requests'];
         $mgmt_open = in_array($active_nav, $mgmt_children, true);
+        $pending_edit_requests = is_admin() ? pending_edit_request_count($pdo) : 0;
         ?>
         <div class="nav-group-label">Master Data</div>
         <a class="nav-parent <?= $config_open ? 'active' : '' ?>" href="#" data-nav-toggle>
@@ -235,6 +240,7 @@ function icon(string $name): string
         </a>
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
+            <a class="nav-subitem <?= $active_nav === 'mgmt-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>admin/edit_requests.php">Edit Requests<?php if ($pending_edit_requests > 0): ?> <span class="badge badge-accent" style="margin-left:6px;"><?= $pending_edit_requests ?></span><?php endif; ?></a>
         </div>
         <?php else: ?>
         <!-- Visible but inert for non-admins: shows the nav exists without letting them click into it. -->
@@ -244,6 +250,7 @@ function icon(string $name): string
         </span>
         <div class="nav-submenu">
             <span class="nav-subitem disabled" aria-disabled="true">Users</span>
+            <span class="nav-subitem disabled" aria-disabled="true">Edit Requests</span>
         </div>
         <?php endif; ?>
     </nav>

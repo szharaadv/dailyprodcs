@@ -1,8 +1,27 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/edit_requests.php';
 require_login();
 $pdo = get_db();
+
+$edit_id = (int)($_GET['edit_id'] ?? 0);
+$editing_unlocked = false;
+$editing_line = null;
+$editing_month = null;
+$editing_year = null;
+if ($edit_id && has_active_unlock($pdo, '3s3t', $edit_id)) {
+    $stmt = $pdo->prepare('SELECT department_id, line, month, year FROM t_3s3t_header WHERE id = ?');
+    $stmt->execute([$edit_id]);
+    $editRow = $stmt->fetch();
+    if ($editRow) {
+        $_SESSION['department_id'] = (int)$editRow['department_id'];
+        $editing_unlocked = true;
+        $editing_line = $editRow['line'];
+        $editing_month = (int)$editRow['month'];
+        $editing_year = (int)$editRow['year'];
+    }
+}
 
 if (isset($_GET['department_id'])) {
     $_SESSION['department_id'] = (int)$_GET['department_id'];
@@ -34,9 +53,14 @@ $stmt = $pdo->prepare(
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
 
-$selected_line = trim((string)($_GET['line'] ?? ''));
-$selected_month = (int)($_GET['month'] ?? date('n'));
-$selected_year = (int)($_GET['year'] ?? date('Y'));
+$selected_line = $editing_unlocked ? $editing_line : trim((string)($_GET['line'] ?? ''));
+// Always open on today's month/year — editing is locked to the current
+// week anyway, so a stale month/year from a bookmark or browser-back would
+// just be dead weight. Prev/Next still lets you browse other months once
+// the page is open. (Unless we're reopening a specific approved edit-request
+// record — then we jump straight to that record's own month/year instead.)
+$selected_month = $editing_unlocked ? $editing_month : (int) date('n');
+$selected_year = $editing_unlocked ? $editing_year : (int) date('Y');
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -52,6 +76,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
 ?>
 
 <div class="checksheet-card">
+    <div class="alert alert-ok" id="unlock-banner" style="display:none;">Editing an approved past record. Every week this month is unlocked for editing while it stays active.</div>
     <div class="form-grid-top">
         <div class="field-block">
             <label>Line</label>

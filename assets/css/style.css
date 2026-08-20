@@ -726,6 +726,18 @@
     text-decoration: none;
 }
 .cs-delete-link:hover { text-decoration: underline; }
+.cs-request-edit-btn {
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4a5262;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}
+.cs-request-edit-btn:hover { color: #1f2430; }
 
 .actions {
     display: flex;

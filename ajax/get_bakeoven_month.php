@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -36,4 +37,6 @@ if ($header) {
     }
 }
 
-echo json_encode(['times' => $times, 'header' => $header, 'details' => $details, 'paraf' => $paraf]);
+$unlocked = $header && has_active_unlock($pdo, 'bakeoven', $header['id']);
+
+echo json_encode(['times' => $times, 'header' => $header, 'details' => $details, 'paraf' => $paraf, 'unlocked' => $unlocked]);

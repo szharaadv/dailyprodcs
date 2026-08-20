@@ -1,13 +1,23 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
 $input = json_decode(file_get_contents('php://input'), true);
 
 $header_id        = (int)($input['header_id'] ?? 0);
-// No backdating, no future-dating — always today, never the client's value.
+// No backdating, no future-dating — always today, never the client's value —
+// unless this record has an Admin-approved edit-request unlock, in which
+// case we keep its original date instead.
 $tanggal           = date('Y-m-d');
+$unlockedEdit      = $header_id && has_active_unlock($pdo, 'assy', $header_id);
+if ($unlockedEdit) {
+    $stmt = $pdo->prepare('SELECT tanggal FROM t_assy_header WHERE id = ?');
+    $stmt->execute([$header_id]);
+    $origTanggal = $stmt->fetchColumn();
+    if ($origTanggal) $tanggal = $origTanggal;
+}
 $department_id     = (int)($input['department_id'] ?? 0);
 $model_id          = (int)($input['model_id'] ?? 0);
 $checker_id        = (int)($input['checker_id'] ?? 0);
@@ -38,12 +48,14 @@ try {
 
     if ($header_id) {
         // Once submitted, a record is locked — only a still-draft record
-        // can be updated (this is how a draft transitions to submitted).
+        // can be updated (this is how a draft transitions to submitted),
+        // unless an Admin has approved an edit request for this record.
+        $lockClause = $unlockedEdit ? '' : ' AND status="draft"';
         $stmt = $pdo->prepare(
             'UPDATE t_assy_header
              SET tanggal=?, department_id=?, model_id=?, mark_crank_shaft=?, mark_conrod=?, mark_fo_pump=?,
                  no_cyl_block=?, no_engine=?, detail_model=?, checker_id=?, status=?
-             WHERE id=? AND status="draft"'
+             WHERE id=?' . $lockClause
         );
         $stmt->execute(array_merge($params, [$header_id]));
 

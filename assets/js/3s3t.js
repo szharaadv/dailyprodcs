@@ -18,13 +18,19 @@ function peopleOptions(selected, list) {
     return html;
 }
 
-/** Only the current week of the current month is ever editable. */
+let currentUnlocked = false;
+
+/** Only the current week of the current month is ever editable — unless this
+ * record has an Admin-approved edit-request unlock, in which case every
+ * week is open. */
 function isEditableWeek(weekNum) {
+    if (currentUnlocked) return true;
     return Number(monthSelect.value) === CURRENT_MONTH
         && Number(yearSelect.value) === CURRENT_YEAR
         && weekNum === CURRENT_WEEK;
 }
 function isEditablePeriod() {
+    if (currentUnlocked) return true;
     return Number(monthSelect.value) === CURRENT_MONTH && Number(yearSelect.value) === CURRENT_YEAR;
 }
 
@@ -97,12 +103,16 @@ async function loadMonth() {
 
     const res = await fetch(`ajax/get_3s3t_month.php?department_id=${DEPARTMENT_ID}&line=${encodeURIComponent(line)}&month=${monthSelect.value}&year=${yearSelect.value}`);
     const data = await res.json();
+    currentUnlocked = !!data.unlocked;
 
     renderRows(data.items || [], data.details || {});
 
     const header = data.header;
     operatorSelect.value = header?.operator_id ?? '';
     operatorSelect.disabled = !isEditablePeriod();
+
+    const banner = document.getElementById('unlock-banner');
+    if (banner) banner.style.display = currentUnlocked ? '' : 'none';
 }
 
 async function saveCell(itemId, field, value) {

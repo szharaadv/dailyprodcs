@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/calendar_lib.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -25,6 +26,8 @@ if (!$header_id) {
     $ins->execute([$department_id, $month, $year]);
     $header_id = (int)$pdo->lastInsertId();
 }
+$header_id = (int)$header_id;
+$unlocked = has_active_unlock($pdo, 'paint_viscosity', $header_id);
 
 // Header-level field (Checker / Foreman / Supervisor / Catatan).
 if (isset($input['field'])) {
@@ -35,7 +38,7 @@ if (isset($input['field'])) {
         echo json_encode(['error' => 'Invalid field.']);
         exit;
     }
-    if (!is_current_period($month, $year)) {
+    if (!$unlocked && !is_current_period($month, $year)) {
         http_response_code(409);
         echo json_encode(['error' => 'Bulan ini sudah lewat dan tidak bisa diubah lagi.']);
         exit;
@@ -62,7 +65,7 @@ if (!$item_id || $day < 1 || $day > 31) {
     echo json_encode(['error' => 'item_id and a valid day are required.']);
     exit;
 }
-if (!is_today_ymd($day, $month, $year)) {
+if (!$unlocked && !is_today_ymd($day, $month, $year)) {
     http_response_code(409);
     echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
     exit;

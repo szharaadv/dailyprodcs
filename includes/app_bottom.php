@@ -50,5 +50,6 @@
     });
 })();
 </script>
+<script src="<?= $base_url ?>assets/js/request-edit.js"></script>
 </body>
 </html>

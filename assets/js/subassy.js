@@ -23,7 +23,7 @@ function renderHead(items) {
     tableHead.innerHTML = '<th>Day</th>' + items.map((it) => `<th>${escapeHtml(it.checking_item)}</th>`).join('');
 }
 
-function renderRows(items, details, month, year, holidays) {
+function renderRows(items, details, month, year, holidays, unlocked) {
     const total = daysInMonth(month, year);
     if (!items.length) {
         tbody.innerHTML = '<tr><td class="empty">No checking items set up for this jig yet.</td></tr>';
@@ -31,7 +31,7 @@ function renderRows(items, details, month, year, holidays) {
     }
     let html = '';
     for (let day = 1; day <= total; day++) {
-        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, TODAY);
+        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, unlocked ? null : TODAY);
         html += `<tr><td class="jig-day ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>`;
         for (const item of items) {
             const value = details[`${item.id}_${day}`] ?? '';
@@ -66,14 +66,18 @@ async function loadMonth() {
     ]);
     const data = await res.json();
     currentItems = data.items || [];
+    const unlocked = !!data.unlocked;
 
     renderHead(currentItems);
-    renderRows(currentItems, data.details || {}, Number(month), Number(year), holidays);
+    renderRows(currentItems, data.details || {}, Number(month), Number(year), holidays, unlocked);
 
     const header = data.header;
     supervisorSelect.value = header?.supervisor_id ?? '';
     foremanSelect.value = header?.foreman_id ?? '';
     checkerSelect.value = header?.checker_id ?? '';
+
+    const banner = document.getElementById('unlock-banner');
+    if (banner) banner.style.display = unlocked ? '' : 'none';
 }
 
 async function saveCell(jigItemId, day, result) {

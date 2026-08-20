@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/calendar_lib.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -26,6 +27,8 @@ if (!$header_id) {
     $ins->execute([$department_id, $line, $month, $year]);
     $header_id = (int)$pdo->lastInsertId();
 }
+$header_id = (int)$header_id;
+$unlocked = has_active_unlock($pdo, '3s3t', $header_id);
 
 // Header-level field (Operator).
 if (isset($input['field'])) {
@@ -36,7 +39,7 @@ if (isset($input['field'])) {
         echo json_encode(['error' => 'Invalid field.']);
         exit;
     }
-    if (!is_current_period($month, $year)) {
+    if (!$unlocked && !is_current_period($month, $year)) {
         http_response_code(409);
         echo json_encode(['error' => 'Bulan ini sudah lewat dan tidak bisa diubah lagi.']);
         exit;
@@ -61,13 +64,15 @@ if (!$item_id || !in_array($field, $allowedCellFields, true)) {
 }
 
 // week1..week5 are only writable for the *current* week of the *current*
-// month; remarks/pic_id are writable for the whole current month.
-if (!is_current_period($month, $year)) {
+// month; remarks/pic_id are writable for the whole current month — unless
+// this record has an Admin-approved edit-request unlock, in which case the
+// whole thing is open.
+if (!$unlocked && !is_current_period($month, $year)) {
     http_response_code(409);
     echo json_encode(['error' => 'Bulan ini sudah lewat dan tidak bisa diubah lagi.']);
     exit;
 }
-if (preg_match('/^week([1-5])$/', $field, $m) && (int)$m[1] !== current_week_of_month()) {
+if (!$unlocked && preg_match('/^week([1-5])$/', $field, $m) && (int)$m[1] !== current_week_of_month()) {
     http_response_code(409);
     echo json_encode(['error' => 'Minggu ini bukan minggu berjalan dan tidak bisa diubah.']);
     exit;

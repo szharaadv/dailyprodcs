@@ -140,6 +140,7 @@ require __DIR__ . '/includes/app_top.php';
             <div class="cs-card-meta">Checked by <?= htmlspecialchars($row['checker_name']) ?><?php if ($row['no_engine']): ?> &middot; Engine <?= htmlspecialchars($row['no_engine']) ?><?php endif; ?></div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
+        <button type="button" class="cs-request-edit-btn" data-edit-type="assy" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['model_name'] . ' - ' . date('d M Y', strtotime($row['tanggal']))) ?>">Request Edit</button>
         <a href="view_assy_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
     </div>
     <?php endforeach; ?>

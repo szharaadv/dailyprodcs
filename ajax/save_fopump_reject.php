@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -8,9 +9,20 @@ $input = json_decode(file_get_contents('php://input'), true);
 $header_id     = (int)($input['header_id'] ?? 0);
 $department_id = (int)($input['department_id'] ?? 0);
 // No backdating, no future-dating — this log has no day, only month/year,
-// so the rule maps to "current month only".
+// so the rule maps to "current month only" — unless this record has an
+// Admin-approved edit-request unlock, in which case we keep its original
+// month/year instead.
 $month         = (int) date('n');
 $year          = (int) date('Y');
+$unlockedEdit  = $header_id && has_active_unlock($pdo, 'fopump_reject', $header_id);
+if ($unlockedEdit) {
+    $stmt = $pdo->prepare('SELECT month, year FROM t_fopump_reject_header WHERE id = ?');
+    $stmt->execute([$header_id]);
+    if ($orig = $stmt->fetch()) {
+        $month = (int)$orig['month'];
+        $year = (int)$orig['year'];
+    }
+}
 $target        = $input['target'] ?? null;
 $status        = ($input['status'] ?? 'submitted') === 'draft' ? 'draft' : 'submitted';
 $lines         = $input['lines'] ?? [];
@@ -33,8 +45,10 @@ try {
 
     if ($header_id) {
         // Once submitted, a record is locked — only a still-draft record
-        // can be updated (this is how a draft transitions to submitted).
-        $stmt = $pdo->prepare('UPDATE t_fopump_reject_header SET department_id=?, month=?, year=?, target=?, status=? WHERE id=? AND status="draft"');
+        // can be updated (this is how a draft transitions to submitted),
+        // unless an Admin has approved an edit request for this record.
+        $lockClause = $unlockedEdit ? '' : ' AND status="draft"';
+        $stmt = $pdo->prepare('UPDATE t_fopump_reject_header SET department_id=?, month=?, year=?, target=?, status=? WHERE id=?' . $lockClause);
         $stmt->execute(array_merge($params, [$header_id]));
 
         if ($stmt->rowCount() === 0) {

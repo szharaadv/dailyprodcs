@@ -171,7 +171,7 @@ require __DIR__ . '/includes/app_top.php';
                     <div class="cs-card-meta">
                         <?= count($g['items']) ?> condition<?= count($g['items']) > 1 ? 's' : '' ?> checked
                         <?php if ($g['uniform_checker']): ?> &middot; Checked by <?= htmlspecialchars($g['uniform_checker']) ?><?php endif; ?>
-                        <?php if ($g['uniform_shift']): ?> &middot; <?= htmlspecialchars($g['uniform_shift']) ?><?php endif; ?>
+                        <?php if ($g['uniform_shift']): ?> - <?= htmlspecialchars($g['uniform_shift']) ?><?php endif; ?>
                     </div>
                 </div>
                 <?php if ($g['abnormal_total'] > 0): ?>
@@ -187,7 +187,7 @@ require __DIR__ . '/includes/app_top.php';
                         <span class="cs-condition-meta">
                             <?= (int) $row['item_count'] ?> item<?= (int) $row['item_count'] !== 1 ? 's' : '' ?>
                             <?php if (!$g['uniform_checker'] || !$g['uniform_shift']): ?>
-                                &middot; <?= htmlspecialchars($row['checker_name']) ?> &middot; <?= htmlspecialchars($row['shift_name']) ?>
+                                - <?= htmlspecialchars($row['checker_name']) ?> - <?= htmlspecialchars($row['shift_name']) ?>
                             <?php endif; ?>
                         </span>
                         <?php if ((int) $row['abnormal_count'] > 0): ?>
@@ -195,6 +195,7 @@ require __DIR__ . '/includes/app_top.php';
                         <?php else: ?>
                             <span class="cs-row-badge cs-row-badge-ok">Normal</span>
                         <?php endif; ?>
+                        <button type="button" class="cs-request-edit-btn" data-edit-type="painting" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['condition_name'] . ' - ' . date('d M Y', strtotime($g['tanggal']))) ?>">Request Edit</button>
                         <a href="view_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn-sm">View &rarr;</a>
                     </div>
                 <?php endforeach; ?>

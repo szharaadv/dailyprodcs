@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/calendar_lib.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -20,15 +21,17 @@ if (!$department_id || $month < 1 || $month > 12 || !$year || $day < 1 || $day >
     echo json_encode(['error' => 'Invalid request.']);
     exit;
 }
-if (!is_today_ymd($day, $month, $year)) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
-    exit;
-}
 
 $stmt = $pdo->prepare('SELECT id FROM t_washing_header WHERE department_id = ? AND month = ? AND year = ?');
 $stmt->execute([$department_id, $month, $year]);
 $header_id = $stmt->fetchColumn();
+
+$unlocked = $header_id && has_active_unlock($pdo, 'washing', (int)$header_id);
+if (!$unlocked && !is_today_ymd($day, $month, $year)) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
+    exit;
+}
 
 if (!$header_id) {
     $ins = $pdo->prepare('INSERT INTO t_washing_header (department_id, month, year) VALUES (?, ?, ?)');

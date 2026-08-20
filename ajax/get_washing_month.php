@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../includes/edit_requests.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -32,4 +33,6 @@ if ($header_id) {
     }
 }
 
-echo json_encode(['rows' => $rows]);
+$unlocked = $header_id && has_active_unlock($pdo, 'washing', (int)$header_id);
+
+echo json_encode(['rows' => $rows, 'unlocked' => $unlocked]);

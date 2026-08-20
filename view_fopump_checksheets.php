@@ -104,6 +104,7 @@ require __DIR__ . '/includes/app_top.php';
             <div class="cs-card-meta"><?= htmlspecialchars($row['shift_label'] ?: 'No shift set') ?><?= $row['employee_count'] ? ' · ' . (int)$row['employee_count'] . ' employee(s)' : '' ?></div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
+        <button type="button" class="cs-request-edit-btn" data-edit-type="fopump" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars('FO Pump Daily Report - ' . date('d M Y', strtotime($row['tanggal']))) ?>">Request Edit</button>
         <a href="view_fopump_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
     </div>
     <?php endforeach; ?>

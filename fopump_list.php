@@ -1,8 +1,23 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/edit_requests.php';
 require_login();
 $pdo = get_db();
+
+$edit_id = (int)($_GET['edit_id'] ?? 0);
+$editing_unlocked = false;
+$editing_tanggal = null;
+if ($edit_id && has_active_unlock($pdo, 'fopump', $edit_id)) {
+    $stmt = $pdo->prepare('SELECT department_id, tanggal FROM t_fopump_header WHERE id = ?');
+    $stmt->execute([$edit_id]);
+    $editRow = $stmt->fetch();
+    if ($editRow) {
+        $_SESSION['department_id'] = (int)$editRow['department_id'];
+        $editing_unlocked = true;
+        $editing_tanggal = $editRow['tanggal'];
+    }
+}
 
 if (isset($_GET['department_id'])) {
     $_SESSION['department_id'] = (int)$_GET['department_id'];
@@ -44,7 +59,7 @@ if ($draft_id) {
     $draft = $stmt->fetch();
 }
 
-$selected_date = date('Y-m-d');
+$selected_date = $editing_unlocked ? $editing_tanggal : date('Y-m-d');
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -57,6 +72,9 @@ require __DIR__ . '/includes/app_top.php';
 ?>
 
 <div class="checksheet-card">
+    <?php if ($editing_unlocked): ?>
+    <div class="alert alert-ok">Editing an approved past record (<?= htmlspecialchars($selected_date) ?>). Changes save back to that same date.</div>
+    <?php endif; ?>
     <div class="form-grid-top">
         <div class="field-block">
             <label>Date</label>

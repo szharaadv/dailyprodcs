@@ -1,8 +1,23 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/edit_requests.php';
 require_login();
 $pdo = get_db();
+
+// An Admin-approved edit request lets us reopen one specific already-submitted
+// record outside the normal "today only" window — see includes/edit_requests.php.
+$edit_id = (int)($_GET['edit_id'] ?? 0);
+$editing_unlocked = false;
+if ($edit_id && has_active_unlock($pdo, 'painting', $edit_id)) {
+    $stmt = $pdo->prepare('SELECT department_id FROM t_checksheet_header WHERE id = ?');
+    $stmt->execute([$edit_id]);
+    $editRowDept = $stmt->fetchColumn();
+    if ($editRowDept) {
+        $_SESSION['department_id'] = (int)$editRowDept;
+        $editing_unlocked = true;
+    }
+}
 
 if (isset($_GET['department_id'])) {
     $_SESSION['department_id'] = (int)$_GET['department_id'];
@@ -47,13 +62,18 @@ if ($draft_id) {
     $stmt = $pdo->prepare("SELECT * FROM t_checksheet_header WHERE id = ? AND status = 'draft'");
     $stmt->execute([$draft_id]);
     $draft = $stmt->fetch();
+} elseif ($editing_unlocked) {
+    $stmt = $pdo->prepare('SELECT * FROM t_checksheet_header WHERE id = ?');
+    $stmt->execute([$edit_id]);
+    $draft = $stmt->fetch();
+    $draft_id = $edit_id;
+}
 
-    if ($draft) {
-        $stmt = $pdo->prepare('SELECT checklist_item_id, actual_result, category FROM t_checksheet_detail WHERE header_id = ?');
-        $stmt->execute([$draft_id]);
-        foreach ($stmt->fetchAll() as $d) {
-            $draft_values[$d['checklist_item_id']] = ['actual' => $d['actual_result'], 'category' => $d['category']];
-        }
+if ($draft) {
+    $stmt = $pdo->prepare('SELECT checklist_item_id, actual_result, category FROM t_checksheet_detail WHERE header_id = ?');
+    $stmt->execute([$draft_id]);
+    foreach ($stmt->fetchAll() as $d) {
+        $draft_values[$d['checklist_item_id']] = ['actual' => $d['actual_result'], 'category' => $d['category']];
     }
 }
 
@@ -70,10 +90,13 @@ require __DIR__ . '/includes/app_top.php';
 ?>
 
 <div class="checksheet-card">
+    <?php if ($editing_unlocked): ?>
+    <div class="alert alert-ok">Editing an approved past record (<?= htmlspecialchars($draft['tanggal']) ?>). Changes save back to that same date.</div>
+    <?php endif; ?>
     <div class="form-grid-top">
         <div class="field-block">
             <label>Date</label>
-            <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
+            <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= $editing_unlocked ? htmlspecialchars($draft['tanggal']) : date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
         </div>
 
         <div class="field-block">

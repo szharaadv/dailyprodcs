@@ -1,8 +1,27 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/edit_requests.php';
 require_login();
 $pdo = get_db();
+
+$edit_id = (int)($_GET['edit_id'] ?? 0);
+$editing_unlocked = false;
+$editing_oven_id = null;
+$editing_month = null;
+$editing_year = null;
+if ($edit_id && has_active_unlock($pdo, 'bakeoven', $edit_id)) {
+    $stmt = $pdo->prepare('SELECT h.*, o.department_id FROM t_bakeoven_header h JOIN m_bakeoven o ON o.id = h.bakeoven_id WHERE h.id = ?');
+    $stmt->execute([$edit_id]);
+    $editRow = $stmt->fetch();
+    if ($editRow) {
+        $_SESSION['department_id'] = (int)$editRow['department_id'];
+        $editing_unlocked = true;
+        $editing_oven_id = (int)$editRow['bakeoven_id'];
+        $editing_month = (int)$editRow['month'];
+        $editing_year = (int)$editRow['year'];
+    }
+}
 
 if (isset($_GET['department_id'])) {
     $_SESSION['department_id'] = (int)$_GET['department_id'];
@@ -38,9 +57,14 @@ $stmt = $pdo->prepare('SELECT * FROM m_bakeoven WHERE department_id = ? AND is_a
 $stmt->execute([$department['id']]);
 $ovens = $stmt->fetchAll();
 
-$selected_oven_id = (int)($_GET['bakeoven_id'] ?? ($ovens[0]['id'] ?? 0));
-$selected_month = (int)($_GET['month'] ?? date('n'));
-$selected_year = (int)($_GET['year'] ?? date('Y'));
+$selected_oven_id = $editing_unlocked ? $editing_oven_id : (int)($_GET['bakeoven_id'] ?? ($ovens[0]['id'] ?? 0));
+// Always open on today's month/year — editing is locked to today anyway,
+// so a stale month/year from a bookmark or browser-back would just be dead
+// weight. Prev/Next still lets you browse other months once the page is open.
+// (Unless we're reopening a specific approved edit-request record — then we
+// jump straight to that record's own month/year instead.)
+$selected_month = $editing_unlocked ? $editing_month : (int) date('n');
+$selected_year = $editing_unlocked ? $editing_year : (int) date('Y');
 
 $selectedOven = null;
 foreach ($ovens as $o) {
@@ -61,6 +85,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
 ?>
 
 <div class="checksheet-card">
+    <div class="alert alert-ok" id="unlock-banner" style="display:none;">Editing an approved past record. Every day this month is unlocked for editing while it stays active.</div>
     <div class="form-grid-top">
         <div class="field-block">
             <label>Oven</label>
