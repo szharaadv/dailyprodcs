@@ -50,6 +50,12 @@
     });
 })();
 </script>
+<script>
+    // Who's actually signed in right now (each User logs in with their own
+    // PIN — see login.php) — lets the Request Edit modal skip asking "who
+    // are you" when we already know. Null for the shared Admin identity.
+    const LOGGED_IN_USER_ID = <?= json_encode($me['id'] ?? null) ?>;
+</script>
 <script src="<?= $base_url ?>assets/js/request-edit.js"></script>
 </body>
 </html>

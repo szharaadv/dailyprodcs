@@ -54,6 +54,20 @@
         usersLoaded = true;
     }
 
+    // Already know who's asking (each User signs in with their own PIN now
+    // — see login.php) — fill it in and lock it so a request can't
+    // accidentally go out under someone else's name. Admin's session has no
+    // tied m_user id, so it still falls back to the manual picker.
+    function applyKnownIdentity() {
+        const select = modal.querySelector('#re-requester');
+        if (typeof LOGGED_IN_USER_ID !== 'undefined' && LOGGED_IN_USER_ID) {
+            select.value = String(LOGGED_IN_USER_ID);
+            select.disabled = true;
+        } else {
+            select.disabled = false;
+        }
+    }
+
     let currentType = null;
     let currentId = null;
 
@@ -72,6 +86,7 @@
         modal.querySelector('#re-requester').value = '';
         modal.style.display = 'flex';
         await loadUsersOnce();
+        applyKnownIdentity();
     }
 
     async function submitRequest() {
