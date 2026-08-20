@@ -87,6 +87,8 @@ require __DIR__ . '/includes/app_top.php';
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
         <?php if (in_array(date('Y-m-d'), $missingDates, true)): ?>
             <a class="missing-banner-fill-btn" href="fopump_list.php?department_id=<?= $department_id ?>">Fill today</a>
+        <?php elseif (in_array(date('Y-m-d', strtotime('-1 day')), $missingDates, true)): ?>
+            <a class="missing-banner-fill-btn" href="fopump_list.php?department_id=<?= $department_id ?>&tanggal=<?= date('Y-m-d', strtotime('-1 day')) ?>">Fill yesterday</a>
         <?php endif; ?>
     </div>
 </div>
@@ -104,7 +106,11 @@ require __DIR__ . '/includes/app_top.php';
             <div class="cs-card-meta"><?= htmlspecialchars($row['shift_label'] ?: 'No shift set') ?><?= $row['employee_count'] ? ' · ' . (int)$row['employee_count'] . ' employee(s)' : '' ?></div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
+        <?php if (is_admin()): ?>
+            <a class="cs-view-btn-sm" href="fopump_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+        <?php else: ?>
         <button type="button" class="cs-request-edit-btn" data-edit-type="fopump" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars('FO Pump Daily Report - ' . date('d M Y', strtotime($row['tanggal']))) ?>">Request Edit</button>
+        <?php endif; ?>
         <a href="view_fopump_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
     </div>
     <?php endforeach; ?>

@@ -24,17 +24,18 @@ function renderRows(days, rows, month, year, holidays, unlocked) {
     let html = '';
     for (let day = 1; day <= days; day++) {
         const r = rows[day] || {};
-        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, unlocked ? null : TODAY);
-        const dis = blocked ? 'disabled' : '';
-        const rowCls = blocked ? 'washing-row-blocked' : '';
+        const { cls, title, blocked: holidayBlocked } = getDayInfo(day, month, year, holidays, null);
+        const w = (val) => !holidayBlocked && isCellWritable(!val, day, month, year, TODAY, unlocked);
+        const dis = (val) => w(val) ? '' : 'disabled';
+        const rowCls = holidayBlocked ? 'washing-row-blocked' : '';
         html += `<tr class="${rowCls}">
             <td class="washing-date-col ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>
-            <td><input type="text" class="washing-input" data-day="${day}" data-field="ganti_air" value="${escapeHtml(r.ganti_air)}" ${dis}></td>
-            <td><input type="text" class="washing-input" data-day="${day}" data-field="temperatur_air" value="${escapeHtml(r.temperatur_air)}" ${dis}></td>
-            <td><input type="text" class="washing-input" data-day="${day}" data-field="penambahan_gildaon" value="${escapeHtml(r.penambahan_gildaon)}" ${dis}></td>
-            <td><input type="text" class="washing-input" data-day="${day}" data-field="total_acid" value="${escapeHtml(r.total_acid)}" ${dis}></td>
-            <td><select class="washing-select" data-day="${day}" data-field="checker_id" ${dis}>${peopleOptions(r.checker_id)}</select></td>
-            <td><select class="washing-select" data-day="${day}" data-field="control_id" ${dis}>${peopleOptions(r.control_id)}</select></td>
+            <td><input type="text" class="washing-input" data-day="${day}" data-field="ganti_air" value="${escapeHtml(r.ganti_air)}" ${dis(r.ganti_air)}></td>
+            <td><input type="text" class="washing-input" data-day="${day}" data-field="temperatur_air" value="${escapeHtml(r.temperatur_air)}" ${dis(r.temperatur_air)}></td>
+            <td><input type="text" class="washing-input" data-day="${day}" data-field="penambahan_gildaon" value="${escapeHtml(r.penambahan_gildaon)}" ${dis(r.penambahan_gildaon)}></td>
+            <td><input type="text" class="washing-input" data-day="${day}" data-field="total_acid" value="${escapeHtml(r.total_acid)}" ${dis(r.total_acid)}></td>
+            <td><select class="washing-select" data-day="${day}" data-field="checker_id" ${dis(r.checker_id)}>${peopleOptions(r.checker_id)}</select></td>
+            <td><select class="washing-select" data-day="${day}" data-field="control_id" ${dis(r.control_id)}>${peopleOptions(r.control_id)}</select></td>
         </tr>`;
     }
     tbody.innerHTML = html;

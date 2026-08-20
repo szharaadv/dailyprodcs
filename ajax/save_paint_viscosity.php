@@ -66,9 +66,15 @@ if (!$item_id || $day < 1 || $day > 31) {
     exit;
 }
 if (!$unlocked && !is_today_ymd($day, $month, $year)) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
-    exit;
+    $stmt = $pdo->prepare('SELECT actual_result FROM t_paint_viscosity_detail WHERE header_id = ? AND item_id = ? AND day = ?');
+    $stmt->execute([$header_id, $item_id, $day]);
+    $existing = $stmt->fetchColumn();
+    $isEmpty = $existing === false || $existing === null || $existing === '';
+    if (!is_catchup_writable($isEmpty, $day, $month, $year)) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
+        exit;
+    }
 }
 
 if ($actual_result === '') {

@@ -68,9 +68,14 @@ if (isset($input['paraf_day'])) {
         exit;
     }
     if (!$unlocked && !is_today_ymd($day, $month, $year)) {
-        http_response_code(409);
-        echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
-        exit;
+        $stmt = $pdo->prepare('SELECT 1 FROM t_bakeoven_paraf WHERE header_id = ? AND day = ?');
+        $stmt->execute([$header_id, $day]);
+        $isEmpty = !$stmt->fetchColumn();
+        if (!is_catchup_writable($isEmpty, $day, $month, $year)) {
+            http_response_code(409);
+            echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
+            exit;
+        }
     }
     if ($user_id === '') {
         $pdo->prepare('DELETE FROM t_bakeoven_paraf WHERE header_id = ? AND day = ?')->execute([$header_id, $day]);
@@ -96,9 +101,15 @@ if (!$time_id || $day < 1 || $day > 31) {
     exit;
 }
 if (!$unlocked && !is_today_ymd($day, $month, $year)) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
-    exit;
+    $stmt = $pdo->prepare('SELECT actual_temp FROM t_bakeoven_detail WHERE header_id = ? AND time_id = ? AND day = ?');
+    $stmt->execute([$header_id, $time_id, $day]);
+    $existingTemp = $stmt->fetchColumn();
+    $isEmpty = $existingTemp === false || $existingTemp === null || $existingTemp === '';
+    if (!is_catchup_writable($isEmpty, $day, $month, $year)) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
+        exit;
+    }
 }
 
 if ($actual_temp === '') {

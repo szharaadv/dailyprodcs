@@ -45,10 +45,10 @@ function standardLabel(item) {
     return `${min} ~ ${max} ${unit}`.trim();
 }
 
-function renderHead(days, month, year, holidays, unlocked) {
+function renderHead(days, month, year, holidays) {
     let html = FIXED_HEAD_HTML;
     for (let d = 1; d <= days; d++) {
-        const { cls, title } = getDayInfo(d, month, year, holidays, unlocked ? null : TODAY);
+        const { cls, title } = getDayInfo(d, month, year, holidays, null);
         html += `<th class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${d}</th>`;
     }
     tableHeadRow.innerHTML = html;
@@ -59,9 +59,9 @@ function renderRows(items, details, day1Total, month, year, holidays, unlocked) 
         tbody.innerHTML = '<tr><td class="empty">No viscosity items set up yet.</td></tr>';
         return;
     }
-    const blockedDays = new Set();
+    const holidayBlockedDays = new Set();
     for (let day = 1; day <= day1Total; day++) {
-        if (getDayInfo(day, month, year, holidays, unlocked ? null : TODAY).blocked) blockedDays.add(day);
+        if (getDayInfo(day, month, year, holidays, null).blocked) holidayBlockedDays.add(day);
     }
 
     let html = '';
@@ -76,7 +76,8 @@ function renderRows(items, details, day1Total, month, year, holidays, unlocked) 
         for (let day = 1; day <= day1Total; day++) {
             const value = details[`${item.id}_${day}`] ?? '';
             const cls = verdictClass(value, min, max);
-            const dis = blockedDays.has(day) ? 'disabled' : '';
+            const writable = !holidayBlockedDays.has(day) && isCellWritable(value === '', day, month, year, TODAY, unlocked);
+            const dis = writable ? '' : 'disabled';
             html += `<td><input type="text" inputmode="decimal" class="temp-input ${cls}" data-item-id="${item.id}" data-day="${day}" value="${escapeHtml(value)}" ${dis}></td>`;
         }
         html += '</tr>';
@@ -100,7 +101,7 @@ async function loadMonth() {
     const unlocked = !!data.unlocked;
 
     const days = daysInMonth(Number(month), Number(year));
-    renderHead(days, Number(month), Number(year), holidays, unlocked);
+    renderHead(days, Number(month), Number(year), holidays);
     renderRows(currentItems, data.details || {}, days, Number(month), Number(year), holidays, unlocked);
 
     const header = data.header;

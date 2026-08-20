@@ -19,6 +19,17 @@ if ($unlockedEdit) {
     if ($origTanggal) $tanggal = $origTanggal;
 }
 $department_id = (int)($input['department_id'] ?? 0);
+
+// Catch-up on a missed day: a brand-new record (no header_id yet) may be
+// dated yesterday instead of today — the "reuse existing / block if
+// submitted" lookup by department+date below already guarantees this can
+// never silently overwrite a day that was actually filled in.
+if (!$header_id && !$unlockedEdit) {
+    $requestedTanggal = $input['tanggal'] ?? null;
+    if ($requestedTanggal === date('Y-m-d', strtotime('-1 day'))) {
+        $tanggal = $requestedTanggal;
+    }
+}
 $employee = $input['employee_count'] ?? null;
 $workingMinutes = $input['working_minutes'] ?? null;
 $shift = trim((string)($input['shift_label'] ?? ''));

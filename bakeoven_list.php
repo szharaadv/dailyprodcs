@@ -85,7 +85,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
 ?>
 
 <div class="checksheet-card">
-    <div class="alert alert-ok" id="unlock-banner" style="display:none;">Editing an approved past record. Every day this month is unlocked for editing while it stays active.</div>
+    <div class="alert alert-ok" id="unlock-banner" style="display:none;">Editing a past record. Every day this month is unlocked for editing while it stays active.</div>
     <div class="form-grid-top">
         <div class="field-block">
             <label>Oven</label>

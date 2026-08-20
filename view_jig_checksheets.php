@@ -82,7 +82,11 @@ require __DIR__ . '/includes/app_top.php';
             </div>
         </div>
         <span class="cs-status <?= $row['ng_count'] > 0 ? 'cs-status-draft' : 'cs-status-submitted' ?>"><?= $row['ng_count'] > 0 ? 'Has NG' : 'All OK' ?></span>
+        <?php if (is_admin()): ?>
+            <a class="cs-view-btn-sm" href="sub_assembly_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+        <?php else: ?>
         <button type="button" class="cs-request-edit-btn" data-edit-type="jig" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['jig_name'] . ' - ' . $monthNames[$row['month']] . ' ' . $row['year']) ?>">Request Edit</button>
+        <?php endif; ?>
         <a href="sub_assembly_list.php?department_id=<?= $department_id ?>&jig_id=<?= $row['jig_id'] ?>&month=<?= $row['month'] ?>&year=<?= $row['year'] ?>" class="cs-view-btn">Open &rarr;</a>
     </div>
     <?php endforeach; ?>

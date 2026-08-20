@@ -59,7 +59,22 @@ if ($draft_id) {
     $draft = $stmt->fetch();
 }
 
-$selected_date = $editing_unlocked ? $editing_tanggal : date('Y-m-d');
+// Catch-up on a missed day: yesterday can be filled in (via a "Fill
+// yesterday" link) but only if the department genuinely has no submitted
+// report for that date yet (a real miss, not a backdate).
+$catchup_tanggal = null;
+if (!$editing_unlocked) {
+    $requestedTanggal = $_GET['tanggal'] ?? null;
+    if ($requestedTanggal === date('Y-m-d', strtotime('-1 day'))) {
+        $stmt = $pdo->prepare("SELECT 1 FROM t_fopump_header WHERE department_id = ? AND tanggal = ? AND status = 'submitted'");
+        $stmt->execute([$department['id'], $requestedTanggal]);
+        if (!$stmt->fetchColumn()) {
+            $catchup_tanggal = $requestedTanggal;
+        }
+    }
+}
+
+$selected_date = $editing_unlocked ? $editing_tanggal : ($catchup_tanggal ?: date('Y-m-d'));
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -73,7 +88,9 @@ require __DIR__ . '/includes/app_top.php';
 
 <div class="checksheet-card">
     <?php if ($editing_unlocked): ?>
-    <div class="alert alert-ok">Editing an approved past record (<?= htmlspecialchars($selected_date) ?>). Changes save back to that same date.</div>
+    <div class="alert alert-ok">Editing a past record (<?= htmlspecialchars($selected_date) ?>). Changes save back to that same date.</div>
+    <?php elseif ($catchup_tanggal): ?>
+    <div class="alert alert-ok">Catching up on a missed day (<?= htmlspecialchars($catchup_tanggal) ?>).  </div>
     <?php endif; ?>
     <div class="form-grid-top">
         <div class="field-block">

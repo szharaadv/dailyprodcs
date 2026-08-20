@@ -32,10 +32,10 @@ function verdictClass(value, min, max) {
     return (v < min || v > max) ? 'temp-ng' : 'temp-ok';
 }
 
-function renderHead(days, month, year, holidays, unlocked) {
+function renderHead(days, month, year, holidays) {
     let html = '<th class="bo-corner-cell"><span class="bo-corner-text">Waktu<br>Pengecekan</span></th>';
     for (let d = 1; d <= days; d++) {
-        const { cls, title } = getDayInfo(d, month, year, holidays, unlocked ? null : TODAY);
+        const { cls, title } = getDayInfo(d, month, year, holidays, null);
         html += `<th class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${d}</th>`;
     }
     tableHead.innerHTML = html;
@@ -46,9 +46,9 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
         tbody.innerHTML = '<tr><td class="empty">No checking times set up for this oven yet.</td></tr>';
         return;
     }
-    const blockedDays = new Set();
+    const holidayBlockedDays = new Set();
     for (let day = 1; day <= day1Total; day++) {
-        if (getDayInfo(day, month, year, holidays, unlocked ? null : TODAY).blocked) blockedDays.add(day);
+        if (getDayInfo(day, month, year, holidays, null).blocked) holidayBlockedDays.add(day);
     }
 
     let html = '';
@@ -57,7 +57,8 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
         for (let day = 1; day <= day1Total; day++) {
             const value = details[`${t.id}_${day}`] ?? '';
             const cls = verdictClass(value, min, max);
-            const dis = blockedDays.has(day) ? 'disabled' : '';
+            const writable = !holidayBlockedDays.has(day) && isCellWritable(value === "", day, month, year, TODAY, unlocked);
+            const dis = writable ? '' : 'disabled';
             html += `<td><input type="text" inputmode="decimal" class="temp-input ${cls}" data-time-id="${t.id}" data-day="${day}" value="${escapeHtml(value)}" ${dis}></td>`;
         }
         html += '</tr>';
@@ -66,7 +67,8 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
     html += '<tr><td class="row-label">PARAF</td>';
     for (let day = 1; day <= day1Total; day++) {
         const selectedUser = paraf[day] ?? '';
-        const dis = blockedDays.has(day) ? 'disabled' : '';
+        const writable = !holidayBlockedDays.has(day) && isCellWritable(!selectedUser, day, month, year, TODAY, unlocked);
+        const dis = writable ? '' : 'disabled';
         html += `<td><select class="paraf-select" data-day="${day}" ${dis}><option value="">-</option>`;
         for (const p of PEOPLE) {
             html += `<option value="${p.id}" ${String(p.id) === String(selectedUser) ? 'selected' : ''}>${escapeHtml(p.name.split(' ')[0])}</option>`;
@@ -105,7 +107,7 @@ async function loadMonth() {
     const unlocked = !!data.unlocked;
 
     const days = daysInMonth(Number(month), Number(year));
-    renderHead(days, Number(month), Number(year), holidays, unlocked);
+    renderHead(days, Number(month), Number(year), holidays);
     renderRows(currentTimes, data.details || {}, data.paraf || {}, days, min, max, Number(month), Number(year), holidays, unlocked);
 
     const header = data.header;

@@ -31,12 +31,13 @@ function renderRows(items, details, month, year, holidays, unlocked) {
     }
     let html = '';
     for (let day = 1; day <= total; day++) {
-        const { cls, title, blocked } = getDayInfo(day, month, year, holidays, unlocked ? null : TODAY);
+        const { cls, title, blocked: holidayBlocked } = getDayInfo(day, month, year, holidays, null);
         html += `<tr><td class="jig-day ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>`;
         for (const item of items) {
             const value = details[`${item.id}_${day}`] ?? '';
+            const writable = !holidayBlocked && isCellWritable(value === '', day, month, year, TODAY, unlocked);
             html += `<td>
-                <div class="cat-toggle jig-toggle ${blocked ? 'cal-blocked' : ''}" data-item-id="${item.id}" data-day="${day}">
+                <div class="cat-toggle jig-toggle ${writable ? '' : 'cal-blocked'}" data-item-id="${item.id}" data-day="${day}">
                     <span class="cat-btn cat-ok ${value === 'OK' ? 'active' : ''}" data-value="OK">OK</span>
                     <span class="cat-btn cat-ng ${value === 'NG' ? 'active' : ''}" data-value="NG">NG</span>
                 </div>

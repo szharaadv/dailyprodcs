@@ -49,6 +49,32 @@ function is_today_ymd(int $day, int $month, int $year): bool
     return sprintf('%04d-%02d-%02d', $year, $month, $day) === date('Y-m-d');
 }
 
+/**
+ * Whether day/month/year is exactly yesterday — used for the one-day "catch
+ * up on a miss" grace window: a cell/record for yesterday can still be
+ * filled in if it was never filled (still empty/missing), but never used to
+ * overwrite something that's already there (that's still backdating and
+ * still requires the Edit Request flow).
+ */
+function is_yesterday_ymd(int $day, int $month, int $year): bool
+{
+    return sprintf('%04d-%02d-%02d', $year, $month, $day) === date('Y-m-d', strtotime('-1 day'));
+}
+
+/**
+ * Whether a specific cell/record can still be written to: today always can;
+ * yesterday can too, but ONLY if it's still empty (a genuine miss, never
+ * filled) — never to overwrite something that's already there. Any other
+ * past day, or a non-empty yesterday, is not writable this way (needs an
+ * approved Edit Request instead). Caller supplies $isEmpty from its own
+ * table's current value.
+ */
+function is_catchup_writable(bool $isEmpty, int $day, int $month, int $year): bool
+{
+    if (is_today_ymd($day, $month, $year)) return true;
+    return $isEmpty && is_yesterday_ymd($day, $month, $year);
+}
+
 /** Current month/year, for checksheets keyed by period only (no day), e.g. FO Pump Daily Reject. */
 function is_current_period(int $month, int $year): bool
 {

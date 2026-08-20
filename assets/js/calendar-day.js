@@ -32,6 +32,23 @@ function getDayInfo(day, month, year, holidays, todayStr) {
     return info;
 }
 
+/**
+ * Per-cell "catch up on a miss" writability, mirroring
+ * includes/calendar_lib.php's is_catchup_writable(): a cell is writable if
+ * the whole record is unlocked (approved edit request), it's today, or it's
+ * yesterday AND still empty — a genuine miss, never an overwrite of
+ * something already filled in. Compares against the server-provided
+ * `todayStr` (the page's TODAY constant), never a client clock.
+ */
+function isCellWritable(isEmpty, day, month, year, todayStr, unlocked) {
+    if (unlocked) return true;
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (dateStr === todayStr) return true;
+    const yest = new Date(`${todayStr}T00:00:00`);
+    yest.setDate(yest.getDate() - 1);
+    return isEmpty && dateStr === yest.toISOString().slice(0, 10);
+}
+
 async function fetchHolidays(year) {
     try {
         const res = await fetch(`ajax/get_holidays.php?year=${year}`);

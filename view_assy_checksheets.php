@@ -123,6 +123,8 @@ require __DIR__ . '/includes/app_top.php';
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
         <?php if (in_array(date('Y-m-d'), $missingDates, true)): ?>
             <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>">Fill today</a>
+        <?php elseif (in_array(date('Y-m-d', strtotime('-1 day')), $missingDates, true)): ?>
+            <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>&tanggal=<?= date('Y-m-d', strtotime('-1 day')) ?>">Fill yesterday</a>
         <?php endif; ?>
     </div>
 </div>
@@ -140,7 +142,11 @@ require __DIR__ . '/includes/app_top.php';
             <div class="cs-card-meta">Checked by <?= htmlspecialchars($row['checker_name']) ?><?php if ($row['no_engine']): ?> &middot; Engine <?= htmlspecialchars($row['no_engine']) ?><?php endif; ?></div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
+        <?php if (is_admin()): ?>
+            <a class="cs-view-btn-sm" href="assembly_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+        <?php else: ?>
         <button type="button" class="cs-request-edit-btn" data-edit-type="assy" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['model_name'] . ' - ' . date('d M Y', strtotime($row['tanggal']))) ?>">Request Edit</button>
+        <?php endif; ?>
         <a href="view_assy_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn">View &rarr;</a>
     </div>
     <?php endforeach; ?>

@@ -56,7 +56,11 @@ require __DIR__ . '/includes/app_top.php';
             <div class="cs-card-meta"><?= (int)$row['filled_count'] ?> of <?= $daysInThisMonth ?> days filled</div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
+        <?php if (is_admin()): ?>
+            <a class="cs-view-btn-sm" href="washing_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+        <?php else: ?>
         <button type="button" class="cs-request-edit-btn" data-edit-type="washing" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars('Washing Machine - ' . $monthNames[$row['month']] . ' ' . $row['year']) ?>">Request Edit</button>
+        <?php endif; ?>
         <a href="washing_list.php?department_id=<?= $department_id ?>&month=<?= $row['month'] ?>&year=<?= $row['year'] ?>" class="cs-view-btn">Open &rarr;</a>
     </div>
     <?php endforeach; ?>

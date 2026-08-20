@@ -28,9 +28,18 @@ $header_id = $stmt->fetchColumn();
 
 $unlocked = $header_id && has_active_unlock($pdo, 'washing', (int)$header_id);
 if (!$unlocked && !is_today_ymd($day, $month, $year)) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
-    exit;
+    $isEmpty = true;
+    if ($header_id) {
+        $stmt = $pdo->prepare("SELECT `$field` FROM t_washing_detail WHERE header_id = ? AND day = ?");
+        $stmt->execute([$header_id, $day]);
+        $existing = $stmt->fetchColumn();
+        $isEmpty = $existing === false || $existing === null || $existing === '';
+    }
+    if (!is_catchup_writable($isEmpty, $day, $month, $year)) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
+        exit;
+    }
 }
 
 if (!$header_id) {

@@ -60,9 +60,14 @@ if (!$jig_item_id || $day < 1 || $day > 31 || !in_array($result, ['OK', 'NG'], t
     exit;
 }
 if (!$unlocked && !is_today_ymd($day, $month, $year)) {
-    http_response_code(409);
-    echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
-    exit;
+    $stmt = $pdo->prepare('SELECT 1 FROM t_jig_detail WHERE header_id = ? AND jig_item_id = ? AND day = ?');
+    $stmt->execute([$header_id, $jig_item_id, $day]);
+    $isEmpty = !$stmt->fetchColumn();
+    if (!is_catchup_writable($isEmpty, $day, $month, $year)) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Tanggal ini sudah lewat/belum terjadi dan tidak bisa diubah.']);
+        exit;
+    }
 }
 
 $stmt = $pdo->prepare(

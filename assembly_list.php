@@ -51,6 +51,21 @@ $stmt = $pdo->prepare('SELECT * FROM m_assy_model WHERE department_id = ? AND is
 $stmt->execute([$department['id']]);
 $models = $stmt->fetchAll();
 
+// Catch-up on a missed day: yesterday can be filled in (via a "Fill
+// yesterday" link) but only if the department genuinely has zero submitted
+// records for that date yet — Torque only needs one engine checked per day,
+// so any existing submission for that date already counts as "not missed".
+$catchup_tanggal = null;
+$requestedTanggal = $_GET['tanggal'] ?? null;
+if ($requestedTanggal === date('Y-m-d', strtotime('-1 day'))) {
+    $stmt = $pdo->prepare("SELECT 1 FROM t_assy_header WHERE department_id = ? AND tanggal = ? AND status = 'submitted'");
+    $stmt->execute([$department['id'], $requestedTanggal]);
+    if (!$stmt->fetchColumn()) {
+        $catchup_tanggal = $requestedTanggal;
+    }
+}
+$selected_date = $catchup_tanggal ?: date('Y-m-d');
+
 $draft = null;
 $draft_values = [];
 $draft_id = (int)($_GET['draft_id'] ?? 0);
@@ -91,13 +106,15 @@ require __DIR__ . '/includes/app_top.php';
 
 <div class="checksheet-card">
     <?php if ($editing_unlocked): ?>
-    <div class="alert alert-ok">Editing an approved past record (<?= htmlspecialchars($draft['tanggal']) ?>). Changes save back to that same date.</div>
+    <div class="alert alert-ok">Editing a past record (<?= htmlspecialchars($draft['tanggal']) ?>). Changes save back to that same date.</div>
+    <?php elseif ($catchup_tanggal): ?>
+    <div class="alert alert-ok">Catching up on a missed day (<?= htmlspecialchars($catchup_tanggal) ?>).  </div>
     <?php endif; ?>
     <div class="form-grid-top">
         <div class="field-block">
             <label>Date</label>
             <input type="text" id="f_tanggal" class="holiday-date-input" readonly
-                   value="<?= $editing_unlocked ? htmlspecialchars($draft['tanggal']) : date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
+                   value="<?= $editing_unlocked ? htmlspecialchars($draft['tanggal']) : htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
         </div>
 
         <div class="field-block">

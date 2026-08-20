@@ -69,7 +69,7 @@ require __DIR__ . '/includes/app_top.php';
 
 <div class="checksheet-card">
     <?php if ($editing_unlocked): ?>
-    <div class="alert alert-ok">Editing an approved past record (<?= htmlspecialchars($month_label) ?>). Changes save back to that same month.</div>
+    <div class="alert alert-ok">Editing a past record (<?= htmlspecialchars($month_label) ?>). Changes save back to that same month.</div>
     <?php endif; ?>
     <div class="form-grid-top">
         <div class="field-block">

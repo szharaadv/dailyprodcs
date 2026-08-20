@@ -22,6 +22,23 @@ if ($unlockedEdit) {
 }
 $department_id  = (int)($input['department_id'] ?? 0);
 $condition_id   = (int)($input['condition_id'] ?? 0);
+
+// Catch-up on a missed day: a brand-new record (no header_id yet) may be
+// dated yesterday instead of today, but ONLY if that exact
+// department+condition+date combo genuinely has no submitted record yet —
+// this fills a miss, it never overwrites/backdates an existing one.
+if (!$header_id && !$unlockedEdit) {
+    $requestedTanggal = $input['tanggal'] ?? null;
+    if ($requestedTanggal === date('Y-m-d', strtotime('-1 day')) && $department_id && $condition_id) {
+        $stmt = $pdo->prepare(
+            "SELECT 1 FROM t_checksheet_header WHERE department_id = ? AND condition_id = ? AND tanggal = ? AND status = 'submitted'"
+        );
+        $stmt->execute([$department_id, $condition_id, $requestedTanggal]);
+        if (!$stmt->fetchColumn()) {
+            $tanggal = $requestedTanggal;
+        }
+    }
+}
 $checker_id     = (int)($input['checker_id'] ?? 0);
 $jam            = $input['jam'] ?? null;
 $shift_id       = (int)($input['shift_id'] ?? 0);

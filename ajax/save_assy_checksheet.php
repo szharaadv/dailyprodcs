@@ -19,6 +19,20 @@ if ($unlockedEdit) {
     if ($origTanggal) $tanggal = $origTanggal;
 }
 $department_id     = (int)($input['department_id'] ?? 0);
+
+// Catch-up on a missed day: a brand-new record (no header_id yet) may be
+// dated yesterday instead of today, but only if the department genuinely
+// has zero submitted records for that date yet (a real miss, not a backdate).
+if (!$header_id && !$unlockedEdit) {
+    $requestedTanggal = $input['tanggal'] ?? null;
+    if ($requestedTanggal === date('Y-m-d', strtotime('-1 day')) && $department_id) {
+        $stmt = $pdo->prepare("SELECT 1 FROM t_assy_header WHERE department_id = ? AND tanggal = ? AND status = 'submitted'");
+        $stmt->execute([$department_id, $requestedTanggal]);
+        if (!$stmt->fetchColumn()) {
+            $tanggal = $requestedTanggal;
+        }
+    }
+}
 $model_id          = (int)($input['model_id'] ?? 0);
 $checker_id        = (int)($input['checker_id'] ?? 0);
 $mark_crank_shaft  = $input['mark_crank_shaft'] ?? null;

@@ -91,7 +91,11 @@ require __DIR__ . '/includes/app_top.php';
             </div>
         </div>
         <span class="cs-status <?= $row['ng_count'] > 0 ? 'cs-status-draft' : 'cs-status-submitted' ?>"><?= $row['ng_count'] > 0 ? 'Out of Range' : 'All OK' ?></span>
+        <?php if (is_admin()): ?>
+            <a class="cs-view-btn-sm" href="bakeoven_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+        <?php else: ?>
         <button type="button" class="cs-request-edit-btn" data-edit-type="bakeoven" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['oven_name'] . ' - ' . $monthNames[$row['month']] . ' ' . $row['year']) ?>">Request Edit</button>
+        <?php endif; ?>
         <a href="bakeoven_list.php?department_id=<?= $department_id ?>&bakeoven_id=<?= $row['bakeoven_id'] ?>&month=<?= $row['month'] ?>&year=<?= $row['year'] ?>" class="cs-view-btn">Open &rarr;</a>
     </div>
     <?php endforeach; ?>

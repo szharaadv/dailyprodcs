@@ -151,6 +151,8 @@ require __DIR__ . '/includes/app_top.php';
             <span class="missing-banner-dates"><?= format_missing_dates($mc['dates']) ?></span>
             <?php if (in_array(date('Y-m-d'), $mc['dates'], true)): ?>
                 <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>">Fill today</a>
+            <?php elseif (in_array(date('Y-m-d', strtotime('-1 day')), $mc['dates'], true)): ?>
+                <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>&tanggal=<?= date('Y-m-d', strtotime('-1 day')) ?>">Fill yesterday</a>
             <?php endif; ?>
         </div>
     <?php endforeach; ?>
@@ -195,7 +197,11 @@ require __DIR__ . '/includes/app_top.php';
                         <?php else: ?>
                             <span class="cs-row-badge cs-row-badge-ok">Normal</span>
                         <?php endif; ?>
+                        <?php if (is_admin()): ?>
+                            <a class="cs-view-btn-sm" href="painting_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+                        <?php else: ?>
                         <button type="button" class="cs-request-edit-btn" data-edit-type="painting" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['condition_name'] . ' - ' . date('d M Y', strtotime($g['tanggal']))) ?>">Request Edit</button>
+                        <?php endif; ?>
                         <a href="view_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn-sm">View &rarr;</a>
                     </div>
                 <?php endforeach; ?>
