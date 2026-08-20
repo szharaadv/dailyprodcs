@@ -11,6 +11,7 @@ const statusLabel = document.getElementById('fopump-status-label');
 
 let currentHeaderId = typeof DRAFT_ID !== 'undefined' ? DRAFT_ID : null;
 let priorAccum = { production: 0, assembly: 0, export: 0 };
+let rowCount = 9;
 const modelOptions = (typeof MODEL_NAMES !== 'undefined' ? MODEL_NAMES : []).map(n => ({ value: n, label: n }));
 
 function escapeHtml(str) {
@@ -19,25 +20,39 @@ function escapeHtml(str) {
     }[c]));
 }
 
+function rowHtml(no, l) {
+    l = l || {};
+    return `<tr>
+        <td class="fopump-no">${no}</td>
+        <td><input type="text" class="fopump-model" data-cat="production" data-field="model" data-no="${no}" value="${escapeHtml(l.production_model ?? '')}"></td>
+        <td><input type="number" class="fopump-qty" min="0" data-cat="production" data-field="qty" data-no="${no}" value="${escapeHtml(l.production_qty ?? '')}"></td>
+        <td><input type="text" class="fopump-model" data-cat="assembly" data-field="model" data-no="${no}" value="${escapeHtml(l.assembly_model ?? '')}"></td>
+        <td><input type="number" class="fopump-qty" min="0" data-cat="assembly" data-field="qty" data-no="${no}" value="${escapeHtml(l.assembly_qty ?? '')}"></td>
+        <td><input type="text" class="fopump-model" data-cat="export" data-field="model" data-no="${no}" value="${escapeHtml(l.export_model ?? '')}"></td>
+        <td><input type="number" class="fopump-qty" min="0" data-cat="export" data-field="qty" data-no="${no}" value="${escapeHtml(l.export_qty ?? '')}"></td>
+    </tr>`;
+}
+
 function renderRows(lines) {
     const byNo = {};
     (lines || []).forEach((l) => { byNo[l.line_no] = l; });
 
+    // Always show at least 9 rows, but grow to fit any saved data that
+    // already goes past row 9 (e.g. a report edited on a bigger screen).
+    const maxSavedNo = Math.max(0, ...Object.keys(byNo).map(Number));
+    rowCount = Math.max(9, maxSavedNo);
+
     let html = '';
-    for (let no = 1; no <= 9; no++) {
-        const l = byNo[no] || {};
-        html += `<tr>
-            <td class="fopump-no">${no}</td>
-            <td><input type="text" class="fopump-model" data-cat="production" data-field="model" data-no="${no}" value="${escapeHtml(l.production_model ?? '')}"></td>
-            <td><input type="number" class="fopump-qty" min="0" data-cat="production" data-field="qty" data-no="${no}" value="${escapeHtml(l.production_qty ?? '')}"></td>
-            <td><input type="text" class="fopump-model" data-cat="assembly" data-field="model" data-no="${no}" value="${escapeHtml(l.assembly_model ?? '')}"></td>
-            <td><input type="number" class="fopump-qty" min="0" data-cat="assembly" data-field="qty" data-no="${no}" value="${escapeHtml(l.assembly_qty ?? '')}"></td>
-            <td><input type="text" class="fopump-model" data-cat="export" data-field="model" data-no="${no}" value="${escapeHtml(l.export_model ?? '')}"></td>
-            <td><input type="number" class="fopump-qty" min="0" data-cat="export" data-field="qty" data-no="${no}" value="${escapeHtml(l.export_qty ?? '')}"></td>
-        </tr>`;
-    }
+    for (let no = 1; no <= rowCount; no++) html += rowHtml(no, byNo[no]);
     tbody.innerHTML = html;
     tbody.querySelectorAll('.fopump-model').forEach((el) => turnIntoCombo(el, modelOptions, { allowCustom: true }));
+}
+
+function addRow() {
+    rowCount += 1;
+    tbody.insertAdjacentHTML('beforeend', rowHtml(rowCount, null));
+    const newRow = tbody.lastElementChild;
+    newRow.querySelectorAll('.fopump-model').forEach((el) => turnIntoCombo(el, modelOptions, { allowCustom: true }));
 }
 
 function renderFoot(header) {
@@ -120,7 +135,7 @@ tanggalInput.addEventListener('change', loadContext);
 
 function buildPayload(status) {
     const lines = [];
-    for (let no = 1; no <= 9; no++) {
+    for (let no = 1; no <= rowCount; no++) {
         lines.push({
             line_no: no,
             production_model: tbody.querySelector(`[data-cat="production"][data-field="model"][data-no="${no}"]`).value.trim(),
@@ -165,6 +180,8 @@ async function save(status) {
     currentHeaderId = data.header_id;
     window.location.href = `view_fopump_checksheets.php?saved=1`;
 }
+
+document.getElementById('btn-add-row').addEventListener('click', addRow);
 
 document.getElementById('btn-draft').addEventListener('click', () => save('draft'));
 document.getElementById('btn-submit').addEventListener('click', () => {

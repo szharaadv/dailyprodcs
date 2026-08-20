@@ -138,6 +138,10 @@ require __DIR__ . '/includes/app_top.php';
         </div>
     </div>
 
+    <div class="fopump-check-toolbar">
+        <button type="button" class="btn btn-secondary" id="btn-add-row">+ Add Row</button>
+    </div>
+
     <div class="table-wrap">
         <table id="fopump-table" class="fopump-table">
             <colgroup>
