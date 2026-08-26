@@ -25,7 +25,11 @@ $department_id     = (int)($input['department_id'] ?? 0);
 // has zero submitted records for that date yet (a real miss, not a backdate).
 if (!$header_id && !$unlockedEdit) {
     $requestedTanggal = $input['tanggal'] ?? null;
-    if ($requestedTanggal === date('Y-m-d', strtotime('-1 day')) && $department_id) {
+    $yesterday = date('Y-m-d', strtotime('-1 day'));
+    $allowPast = $requestedTanggal && $department_id && $requestedTanggal < date('Y-m-d')
+        && ($requestedTanggal === $yesterday
+            || has_active_fill_unlock($pdo, 'assy', $department_id, null, $requestedTanggal));
+    if ($allowPast) {
         $stmt = $pdo->prepare("SELECT 1 FROM t_assy_header WHERE department_id = ? AND tanggal = ? AND status = 'submitted'");
         $stmt->execute([$department_id, $requestedTanggal]);
         if (!$stmt->fetchColumn()) {

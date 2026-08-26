@@ -915,6 +915,10 @@
     text-decoration: none;
 }
 .missing-banner-fill-btn:hover { background: #9b3b32; color: #fff; border-color: #9b3b32; }
+/* Request button for dates older than yesterday (needs Admin approval). */
+button.missing-banner-fill-btn { cursor: pointer; font-family: inherit; line-height: 1.2; }
+.missing-banner-req-btn { background: #fff; border-style: dashed; }
+.missing-banner-req-btn::before { content: "\21BB\00a0"; }
 
 .dest-badge {
     display: inline-block;

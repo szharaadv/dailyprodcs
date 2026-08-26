@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/calendar_lib.php';
+require_once __DIR__ . '/includes/edit_requests.php';
 require_login();
 $pdo = get_db();
 
@@ -117,15 +118,30 @@ require __DIR__ . '/includes/app_top.php';
 </form>
 
 <?php if ($missingDates): ?>
+<?php $fillUnlockSet = active_fill_unlock_set($pdo, 'assy', (int)$selected_department_id); ?>
 <div class="missing-banner">
     <div class="missing-banner-title">&#9888; Missing checks this month</div>
     <div class="missing-banner-row">
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
-        <?php if (in_array(date('Y-m-d'), $missingDates, true)): ?>
-            <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>">Fill today</a>
-        <?php elseif (in_array(date('Y-m-d', strtotime('-1 day')), $missingDates, true)): ?>
+        <?php if (in_array(date('Y-m-d', strtotime('-1 day')), $missingDates, true)): ?>
             <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>&tanggal=<?= date('Y-m-d', strtotime('-1 day')) ?>">Fill yesterday</a>
+        <?php elseif (in_array(date('Y-m-d'), $missingDates, true)): ?>
+            <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>">Fill today</a>
         <?php endif; ?>
+        <?php
+        // Dates older than yesterday need Admin approval (no-backdating rule).
+        $oldMissing = array_values(array_filter($missingDates, fn($d) => $d < date('Y-m-d', strtotime('-1 day'))));
+        foreach ($oldMissing as $d): ?>
+            <?php if (!empty($fillUnlockSet['|' . $d])): ?>
+                <a class="missing-banner-fill-btn" href="assembly_list.php?department_id=<?= $selected_department_id ?>&fill_date=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?> &check;</a>
+            <?php else: ?>
+                <button type="button" class="missing-banner-fill-btn missing-banner-req-btn cs-request-fill-btn"
+                        data-fill-type="assy"
+                        data-fill-date="<?= htmlspecialchars($d) ?>"
+                        data-department-id="<?= $selected_department_id ?>"
+                        data-fill-label="<?= htmlspecialchars('Torque (Assembling) — ' . date('d/m/Y', strtotime($d))) ?>">Request <?= htmlspecialchars(date('d/m', strtotime($d))) ?></button>
+            <?php endif; ?>
+        <?php endforeach; ?>
     </div>
 </div>
 <?php endif; ?>

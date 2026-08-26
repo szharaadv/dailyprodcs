@@ -29,7 +29,15 @@ $condition_id   = (int)($input['condition_id'] ?? 0);
 // this fills a miss, it never overwrites/backdates an existing one.
 if (!$header_id && !$unlockedEdit) {
     $requestedTanggal = $input['tanggal'] ?? null;
-    if ($requestedTanggal === date('Y-m-d', strtotime('-1 day')) && $department_id && $condition_id) {
+    $yesterday = date('Y-m-d', strtotime('-1 day'));
+    // Either the one-day "yesterday" grace window, or an Admin-approved fill
+    // request for an older missed day — both create a record for a past date,
+    // but never over an existing submitted one.
+    $allowPast = $requestedTanggal && $department_id && $condition_id
+        && $requestedTanggal < date('Y-m-d')
+        && ($requestedTanggal === $yesterday
+            || has_active_fill_unlock($pdo, 'painting', $department_id, $condition_id, $requestedTanggal));
+    if ($allowPast) {
         $stmt = $pdo->prepare(
             "SELECT 1 FROM t_checksheet_header WHERE department_id = ? AND condition_id = ? AND tanggal = ? AND status = 'submitted'"
         );

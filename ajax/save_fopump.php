@@ -26,7 +26,11 @@ $department_id = (int)($input['department_id'] ?? 0);
 // never silently overwrite a day that was actually filled in.
 if (!$header_id && !$unlockedEdit) {
     $requestedTanggal = $input['tanggal'] ?? null;
-    if ($requestedTanggal === date('Y-m-d', strtotime('-1 day'))) {
+    $yesterday = date('Y-m-d', strtotime('-1 day'));
+    if ($requestedTanggal && $requestedTanggal < date('Y-m-d')
+        && ($requestedTanggal === $yesterday
+            || ($department_id && has_active_fill_unlock($pdo, 'fopump', $department_id, null, $requestedTanggal)))) {
+        // The department+date lookup below still blocks overwriting a submitted day.
         $tanggal = $requestedTanggal;
     }
 }

@@ -64,6 +64,17 @@ if ($requestedTanggal === date('Y-m-d', strtotime('-1 day'))) {
         $catchup_tanggal = $requestedTanggal;
     }
 }
+
+// Approved fill request: a missed day older than yesterday, once Admin-approved.
+$fillDate = $_GET['fill_date'] ?? null;
+if (!$catchup_tanggal && $fillDate && $fillDate < date('Y-m-d')
+    && has_active_fill_unlock($pdo, 'assy', (int)$department['id'], null, $fillDate)) {
+    $stmt = $pdo->prepare("SELECT 1 FROM t_assy_header WHERE department_id = ? AND tanggal = ? AND status = 'submitted'");
+    $stmt->execute([$department['id'], $fillDate]);
+    if (!$stmt->fetchColumn()) {
+        $catchup_tanggal = $fillDate;
+    }
+}
 $selected_date = $catchup_tanggal ?: date('Y-m-d');
 
 $draft = null;

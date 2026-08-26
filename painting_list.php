@@ -71,6 +71,21 @@ if ($requestedTanggal === date('Y-m-d', strtotime('-1 day')) && $requestedCondit
         $catchup_tanggal = $requestedTanggal;
     }
 }
+
+// Approved fill request: a missed day older than yesterday can be filled once
+// an Admin has approved it (has_active_fill_unlock). Never overwrite an
+// existing submitted record.
+$fillDate = $_GET['fill_date'] ?? null;
+if (!$catchup_tanggal && $fillDate && $requestedConditionId && $fillDate < date('Y-m-d')
+    && has_active_fill_unlock($pdo, 'painting', (int)$department['id'], $requestedConditionId, $fillDate)) {
+    $stmt = $pdo->prepare(
+        "SELECT 1 FROM t_checksheet_header WHERE department_id = ? AND condition_id = ? AND tanggal = ? AND status = 'submitted'"
+    );
+    $stmt->execute([$department['id'], $requestedConditionId, $fillDate]);
+    if (!$stmt->fetchColumn()) {
+        $catchup_tanggal = $fillDate;
+    }
+}
 $selected_date = $catchup_tanggal ?: date('Y-m-d');
 
 $draft = null;

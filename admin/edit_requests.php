@@ -87,7 +87,15 @@ require __DIR__ . '/../includes/app_top.php';
             <td><?= htmlspecialchars(date('d M Y H:i', strtotime($row['created_at']))) ?></td>
             <td><?= htmlspecialchars($row['requester_name'] ?? '—') ?></td>
             <td><?= htmlspecialchars($typeLabels[$row['checksheet_type']] ?? $row['checksheet_type']) ?></td>
-            <td><?= htmlspecialchars($row['label'] ?? ('#' . $row['header_id'])) ?></td>
+            <?php $isFill = ($row['header_id'] === null); ?>
+            <td>
+                <?php if ($isFill): ?>
+                    <span class="badge badge-off" style="background:#eef2ff;color:#3949ab;">Isi tgl <?= htmlspecialchars(date('d/m/Y', strtotime($row['target_date']))) ?></span>
+                    <?php if ($row['label']): ?><div class="import-hint"><?= htmlspecialchars($row['label']) ?></div><?php endif; ?>
+                <?php else: ?>
+                    <?= htmlspecialchars($row['label'] ?? ('#' . $row['header_id'])) ?>
+                <?php endif; ?>
+            </td>
             <td><?= nl2br(htmlspecialchars($row['reason'])) ?></td>
             <td>
                 <?php if ($row['status'] === 'pending'): ?>
@@ -109,7 +117,15 @@ require __DIR__ . '/../includes/app_top.php';
                     <button type="submit" name="action" value="deny" class="btn btn-secondary" style="padding:6px 12px;font-size:12px;" onclick="return confirm('Deny this edit request?')">Deny</button>
                 </form>
                 <?php elseif ($row['status'] === 'approved' && strtotime($row['unlock_expires_at']) > time() && isset($typeRoutes[$row['checksheet_type']])): ?>
-                    <a class="cs-view-btn-sm" href="../<?= $typeRoutes[$row['checksheet_type']] ?>?edit_id=<?= $row['header_id'] ?>">Edit Now &rarr;</a>
+                    <?php if ($isFill):
+                        $fillUrl = '../' . $typeRoutes[$row['checksheet_type']]
+                            . '?department_id=' . (int)$row['department_id']
+                            . ($row['condition_id'] ? '&condition_id=' . (int)$row['condition_id'] : '')
+                            . '&fill_date=' . htmlspecialchars($row['target_date']); ?>
+                        <a class="cs-view-btn-sm" href="<?= $fillUrl ?>">Fill Now &rarr;</a>
+                    <?php else: ?>
+                        <a class="cs-view-btn-sm" href="../<?= $typeRoutes[$row['checksheet_type']] ?>?edit_id=<?= $row['header_id'] ?>">Edit Now &rarr;</a>
+                    <?php endif; ?>
                 <?php else: ?>
                     &mdash;
                 <?php endif; ?>

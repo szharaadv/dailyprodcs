@@ -9,14 +9,27 @@ $stmt = $pdo->prepare('SELECT id, name, fop_code, part_no FROM m_fopump_check_mo
 $stmt->execute([$model_id]);
 $model = $stmt->fetch();
 
+// Checking items are a single GLOBAL master list (model_id IS NULL), shared by
+// every model. The two "Label check" rows carry their value from the selected
+// model itself (standard_source), so each model shows its own Part No / Model
+// code without any per-model item setup.
 $stmt = $pdo->prepare(
-    'SELECT id, checking_item, standard, result_type, expected_value
+    'SELECT id, checking_item, standard, standard_source, result_type, expected_value
      FROM m_fopump_check_item
-     WHERE model_id = ? AND is_active = 1
+     WHERE model_id IS NULL AND is_active = 1
      ORDER BY sort_order, id'
 );
-$stmt->execute([$model_id]);
+$stmt->execute();
 $items = $stmt->fetchAll();
+
+foreach ($items as &$it) {
+    if ($it['standard_source'] === 'part_no') {
+        $it['standard'] = $model['part_no'] ?? null;
+    } elseif ($it['standard_source'] === 'fop_code') {
+        $it['standard'] = $model['fop_code'] ?? null;
+    }
+}
+unset($it);
 
 $header = null;
 $samples = [];

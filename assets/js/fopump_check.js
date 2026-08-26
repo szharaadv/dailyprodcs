@@ -26,21 +26,13 @@ function nextSampleNo() {
     return isNaN(last) ? String(samples.length + 1) : String(last + 10);
 }
 
-/** The conforming default an item's actual result should start at. */
-function defaultValueFor(item) {
-    if (item.expected_value !== null && item.expected_value !== undefined && item.expected_value !== '') {
-        return item.expected_value;
-    }
-    return item.result_type === 'boolean' ? 'TRUE' : '';
-}
-
-/** Adds a new sample column, pre-filling every item's cell with its conforming default. */
+/** Adds a new sample column. Cells start empty so the checker fills them in. */
 function addSampleColumn(sampleNo) {
     samples.push({ sample_no: sampleNo });
     const idx = samples.length - 1;
     currentItems.forEach(item => {
         if (!values[item.id]) values[item.id] = [];
-        values[item.id][idx] = defaultValueFor(item);
+        values[item.id][idx] = '';
     });
 }
 
@@ -72,7 +64,8 @@ function render() {
                 const val = rowValues[idx] ?? '';
                 if (item.result_type === 'boolean') {
                     return `<td><select class="fopump-check-input ${val === 'FALSE' ? 'val-ng' : ''}" data-item-id="${item.id}" data-sample-idx="${idx}">
-                        <option value="TRUE" ${val !== 'FALSE' ? 'selected' : ''}>TRUE</option>
+                        <option value="" ${val === '' ? 'selected' : ''}>—</option>
+                        <option value="TRUE" ${val === 'TRUE' ? 'selected' : ''}>TRUE</option>
                         <option value="FALSE" ${val === 'FALSE' ? 'selected' : ''}>FALSE</option>
                     </select></td>`;
                 }

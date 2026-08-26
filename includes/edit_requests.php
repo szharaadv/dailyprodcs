@@ -28,6 +28,56 @@ function has_active_unlock(PDO $pdo, string $checksheetType, int $headerId): boo
     return (bool) $stmt->fetchColumn();
 }
 
+/**
+ * Whether an Admin-approved, still-active FILL request exists for a missed
+ * day — i.e. permission to create a brand-new record for a specific past
+ * date that was never submitted. This is the missed-date counterpart of
+ * has_active_unlock() (which reopens an existing record). Admin always has it.
+ * Pass $conditionId = null for checksheet types without conditions (Torque,
+ * FO Pump).
+ */
+function has_active_fill_unlock(PDO $pdo, string $checksheetType, int $departmentId, ?int $conditionId, string $date): bool
+{
+    if (is_admin()) return true;
+
+    $sql = "SELECT 1 FROM t_edit_request
+            WHERE checksheet_type = ? AND header_id IS NULL AND target_date = ?
+              AND department_id = ? AND status = 'approved' AND unlock_expires_at > NOW()";
+    $params = [$checksheetType, $date, $departmentId];
+    if ($conditionId) {
+        $sql .= ' AND condition_id = ?';
+        $params[] = $conditionId;
+    } else {
+        $sql .= ' AND condition_id IS NULL';
+    }
+    $sql .= ' LIMIT 1';
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return (bool) $stmt->fetchColumn();
+}
+
+/**
+ * All currently-approved (still-unlocked) fill requests for a department, as a
+ * lookup set the missing-date banner uses to turn a "Request" button into a
+ * direct "Fill" link once Admin has approved. Key: "conditionId|date" (empty
+ * conditionId for types without conditions).
+ */
+function active_fill_unlock_set(PDO $pdo, string $checksheetType, int $departmentId): array
+{
+    $stmt = $pdo->prepare(
+        "SELECT target_date, condition_id FROM t_edit_request
+         WHERE checksheet_type = ? AND header_id IS NULL AND department_id = ?
+           AND status = 'approved' AND unlock_expires_at > NOW()"
+    );
+    $stmt->execute([$checksheetType, $departmentId]);
+    $set = [];
+    foreach ($stmt->fetchAll() as $r) {
+        $set[($r['condition_id'] ?? '') . '|' . $r['target_date']] = true;
+    }
+    return $set;
+}
+
 /** Count of requests awaiting Admin action — for the sidebar badge. */
 function pending_edit_request_count(PDO $pdo): int
 {

@@ -72,6 +72,17 @@ if (!$editing_unlocked) {
             $catchup_tanggal = $requestedTanggal;
         }
     }
+
+    // Approved fill request: a missed day older than yesterday, once Admin-approved.
+    $fillDate = $_GET['fill_date'] ?? null;
+    if (!$catchup_tanggal && $fillDate && $fillDate < date('Y-m-d')
+        && has_active_fill_unlock($pdo, 'fopump', (int)$department['id'], null, $fillDate)) {
+        $stmt = $pdo->prepare("SELECT 1 FROM t_fopump_header WHERE department_id = ? AND tanggal = ? AND status = 'submitted'");
+        $stmt->execute([$department['id'], $fillDate]);
+        if (!$stmt->fetchColumn()) {
+            $catchup_tanggal = $fillDate;
+        }
+    }
 }
 
 $selected_date = $editing_unlocked ? $editing_tanggal : ($catchup_tanggal ?: date('Y-m-d'));

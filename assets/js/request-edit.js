@@ -68,25 +68,46 @@
         }
     }
 
+    // 'edit' → reopen an existing record (currentId = header_id).
+    // 'fill' → create a record for a missed past day (currentFill set).
+    let currentMode = 'edit';
     let currentType = null;
     let currentId = null;
+    let currentFill = null;
 
     function closeModal() {
         modal.style.display = 'none';
+        currentMode = 'edit';
         currentType = null;
         currentId = null;
+        currentFill = null;
     }
 
-    async function openModal(type, id, label) {
+    async function openModalCommon(title, label) {
         ensureModal();
-        currentType = type;
-        currentId = id;
+        modal.querySelector('.modal-card-header h3').textContent = title;
         modal.querySelector('#re-record-label').textContent = label || '';
         modal.querySelector('#re-reason').value = '';
         modal.querySelector('#re-requester').value = '';
         modal.style.display = 'flex';
         await loadUsersOnce();
         applyKnownIdentity();
+    }
+
+    async function openModal(type, id, label) {
+        currentMode = 'edit';
+        currentType = type;
+        currentId = id;
+        currentFill = null;
+        await openModalCommon('Request Edit', label);
+    }
+
+    async function openFillModal(fill) {
+        currentMode = 'fill';
+        currentType = fill.type;
+        currentId = null;
+        currentFill = fill;
+        await openModalCommon('Request isi tanggal terlewat', fill.label);
     }
 
     async function submitRequest() {
@@ -96,29 +117,52 @@
             alert('Pilih nama kamu dan isi alasannya dulu.');
             return;
         }
+        const payload = {
+            mode: currentMode,
+            checksheet_type: currentType,
+            label: modal.querySelector('#re-record-label').textContent,
+            requested_by: requester,
+            reason,
+        };
+        if (currentMode === 'fill') {
+            payload.target_date = currentFill.date;
+            payload.department_id = currentFill.departmentId;
+            payload.condition_id = currentFill.conditionId || null;
+        } else {
+            payload.header_id = currentId;
+        }
         const res = await fetch('ajax/request_edit.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                checksheet_type: currentType,
-                header_id: currentId,
-                label: modal.querySelector('#re-record-label').textContent,
-                requested_by: requester,
-                reason,
-            }),
+            body: JSON.stringify(payload),
         });
         const data = await res.json();
         if (!data.success) {
             alert(data.error || 'Gagal mengirim request.');
             return;
         }
-        alert('Request edit terkirim. Menunggu persetujuan Admin.');
+        alert(currentMode === 'fill'
+            ? 'Request untuk mengisi tanggal terlewat terkirim. Menunggu persetujuan Admin.'
+            : 'Request edit terkirim. Menunggu persetujuan Admin.');
         closeModal();
     }
 
     document.addEventListener('click', (e) => {
-        const btn = e.target.closest('.cs-request-edit-btn');
-        if (!btn) return;
-        openModal(btn.dataset.editType, btn.dataset.editId, btn.dataset.editLabel);
+        const editBtn = e.target.closest('.cs-request-edit-btn');
+        if (editBtn) {
+            openModal(editBtn.dataset.editType, editBtn.dataset.editId, editBtn.dataset.editLabel);
+            return;
+        }
+        const fillBtn = e.target.closest('.cs-request-fill-btn');
+        if (fillBtn) {
+            e.preventDefault();
+            openFillModal({
+                type: fillBtn.dataset.fillType,
+                date: fillBtn.dataset.fillDate,
+                departmentId: fillBtn.dataset.departmentId,
+                conditionId: fillBtn.dataset.conditionId || null,
+                label: fillBtn.dataset.fillLabel,
+            });
+        }
     });
 })();

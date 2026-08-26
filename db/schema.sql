@@ -514,9 +514,16 @@ CREATE TABLE `m_fopump_check_model` (
 DROP TABLE IF EXISTS `m_fopump_check_item`;
 CREATE TABLE `m_fopump_check_item` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `model_id` int(11) NOT NULL,
+  -- One GLOBAL master list shared by every model: model_id is NULL for the
+  -- shared items. (Kept nullable-with-FK so a per-model override could be
+  -- reintroduced later if ever needed.)
+  `model_id` int(11) NULL DEFAULT NULL,
   `checking_item` varchar(255) NOT NULL,
   `standard` varchar(255) NULL DEFAULT NULL,
+  -- Where the displayed Standard comes from: 'static' = the standard column;
+  -- 'part_no'/'fop_code' = pulled from the selected model at display time so
+  -- the two "Label check" rows show that model's own values.
+  `standard_source` enum('static','part_no','fop_code') NOT NULL DEFAULT 'static',
   `result_type` enum('boolean','value') NOT NULL DEFAULT 'value',
   `expected_value` varchar(50) NULL DEFAULT NULL,
   `sort_order` int(11) NOT NULL DEFAULT 0,
@@ -845,7 +852,13 @@ CREATE TABLE `t_3s3t_detail` (
 CREATE TABLE IF NOT EXISTS `t_edit_request` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `checksheet_type` varchar(30) NOT NULL,
-  `header_id` int(11) NOT NULL,
+  -- Set for an EDIT request (reopen an existing submitted record).
+  -- NULL for a FILL request (create a record for a missed past day) —
+  -- in that case target_date/department_id/condition_id locate the day.
+  `header_id` int(11) NULL DEFAULT NULL,
+  `target_date` date NULL DEFAULT NULL,
+  `department_id` int(11) NULL DEFAULT NULL,
+  `condition_id` int(11) NULL DEFAULT NULL,
   `label` varchar(255) NULL DEFAULT NULL,
   `requested_by` int(11) NULL DEFAULT NULL,
   `reason` varchar(500) NOT NULL,
@@ -856,6 +869,7 @@ CREATE TABLE IF NOT EXISTS `t_edit_request` (
   `resolved_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_type_header` (`checksheet_type`, `header_id`),
+  KEY `idx_fill_lookup` (`checksheet_type`, `department_id`, `condition_id`, `target_date`, `status`),
   KEY `fk_editrequest_user` (`requested_by`),
   CONSTRAINT `fk_editrequest_user` FOREIGN KEY (`requested_by`) REFERENCES `m_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

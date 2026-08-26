@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/calendar_lib.php';
+require_once __DIR__ . '/includes/edit_requests.php';
 require_login();
 $pdo = get_db();
 
@@ -143,17 +144,34 @@ require __DIR__ . '/includes/app_top.php';
 </form>
 
 <?php if ($missingByCondition): ?>
+<?php $fillUnlockSet = active_fill_unlock_set($pdo, 'painting', $selected_department_id); ?>
 <div class="missing-banner">
     <div class="missing-banner-title">&#9888; Missing checks this month</div>
     <?php foreach ($missingByCondition as $mc): ?>
         <div class="missing-banner-row">
             <span class="missing-banner-cond"><?= htmlspecialchars($mc['name']) ?></span>
             <span class="missing-banner-dates"><?= format_missing_dates($mc['dates']) ?></span>
-            <?php if (in_array(date('Y-m-d'), $mc['dates'], true)): ?>
-                <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>">Fill today</a>
-            <?php elseif (in_array(date('Y-m-d', strtotime('-1 day')), $mc['dates'], true)): ?>
+            <?php if (in_array(date('Y-m-d', strtotime('-1 day')), $mc['dates'], true)): ?>
                 <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>&tanggal=<?= date('Y-m-d', strtotime('-1 day')) ?>">Fill yesterday</a>
+            <?php elseif (in_array(date('Y-m-d'), $mc['dates'], true)): ?>
+                <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>">Fill today</a>
             <?php endif; ?>
+            <?php
+            // Dates older than yesterday can't be filled directly (no-backdating
+            // rule). Each gets a "Request" button → Admin-approval flow.
+            $oldMissing = array_values(array_filter($mc['dates'], fn($d) => $d < date('Y-m-d', strtotime('-1 day'))));
+            foreach ($oldMissing as $d): ?>
+                <?php if (!empty($fillUnlockSet[$mc['id'] . '|' . $d])): ?>
+                    <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>&fill_date=<?= htmlspecialchars($d) ?>">Fill <?= htmlspecialchars(date('d/m', strtotime($d))) ?> &check;</a>
+                <?php else: ?>
+                    <button type="button" class="missing-banner-fill-btn missing-banner-req-btn cs-request-fill-btn"
+                            data-fill-type="painting"
+                            data-fill-date="<?= htmlspecialchars($d) ?>"
+                            data-department-id="<?= $selected_department_id ?>"
+                            data-condition-id="<?= $mc['id'] ?>"
+                            data-fill-label="<?= htmlspecialchars($mc['name'] . ' — ' . date('d/m/Y', strtotime($d))) ?>">Request <?= htmlspecialchars(date('d/m', strtotime($d))) ?></button>
+                <?php endif; ?>
+            <?php endforeach; ?>
         </div>
     <?php endforeach; ?>
 </div>
