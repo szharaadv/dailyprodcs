@@ -28,6 +28,7 @@ $section_route = 'fopump_reject_list.php';
 $page_title = 'View Checksheets';
 $page_subtitle = 'Search & view FO Pump monthly reject logs';
 require __DIR__ . '/includes/app_top.php';
+$export_route = 'fopump_reject_list.php'; $export_dept = $department_id; require __DIR__ . '/includes/export_button.php';
 ?>
 
 <form method="get" class="admin-form filter-bar">

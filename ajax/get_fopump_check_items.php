@@ -35,7 +35,14 @@ $header = null;
 $samples = [];
 $values = [];
 if ($model_id) {
-    $stmt = $pdo->prepare('SELECT * FROM t_fopump_check_header WHERE model_id = ?');
+    $stmt = $pdo->prepare(
+        'SELECT h.*, c.name AS checker_name, f.name AS foreman_name, s.name AS supervisor_name
+         FROM t_fopump_check_header h
+         LEFT JOIN m_user c ON c.id = h.checker_id
+         LEFT JOIN m_user f ON f.id = h.foreman_id
+         LEFT JOIN m_user s ON s.id = h.supervisor_id
+         WHERE h.model_id = ? AND h.tanggal = CURDATE()'
+    );
     $stmt->execute([$model_id]);
     $header = $stmt->fetch() ?: null;
 

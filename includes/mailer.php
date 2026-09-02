@@ -52,17 +52,17 @@ function _mail_log(string $to, string $subject, string $body, string $note): voi
 }
 
 /**
- * Send a notification email to the configured Admin address.
- * Never throws — logs and returns false on any problem.
+ * Send an email to a specific address. Never throws — logs and returns false
+ * on any problem (including email being disabled or PHPMailer not installed).
  */
-function send_admin_notification(string $subject, string $htmlBody, string $textBody = ''): bool
+function send_notification(string $toEmail, string $toName, string $subject, string $htmlBody, string $textBody = ''): bool
 {
     $cfg = _mail_config();
-    $to = $cfg['admin_email'] ?? '';
-    if ($to === '') { _mail_log('(none)', $subject, $textBody ?: strip_tags($htmlBody), 'no-admin-email'); return false; }
+    $toEmail = trim($toEmail);
+    if ($toEmail === '') { return false; }
 
     if (empty($cfg['enabled']) || !_load_phpmailer()) {
-        _mail_log($to, $subject, $textBody ?: strip_tags($htmlBody), empty($cfg['enabled']) ? 'disabled' : 'phpmailer-missing');
+        _mail_log($toEmail, $subject, $textBody ?: strip_tags($htmlBody), empty($cfg['enabled']) ? 'disabled' : 'phpmailer-missing');
         return false;
     }
 
@@ -78,7 +78,7 @@ function send_admin_notification(string $subject, string $htmlBody, string $text
         $mail->CharSet    = 'UTF-8';
 
         $mail->setFrom($cfg['from_email'] ?? 'no-reply@localhost', $cfg['from_name'] ?? 'Checksheet');
-        $mail->addAddress($to, $cfg['admin_name'] ?? '');
+        $mail->addAddress($toEmail, $toName);
         $mail->Subject = $subject;
         $mail->isHTML(true);
         $mail->Body    = $htmlBody;
@@ -87,7 +87,19 @@ function send_admin_notification(string $subject, string $htmlBody, string $text
         $mail->send();
         return true;
     } catch (Throwable $e) {
-        _mail_log($to, $subject, ($textBody ?: strip_tags($htmlBody)) . "\nSMTP error: " . $e->getMessage(), 'send-failed');
+        _mail_log($toEmail, $subject, ($textBody ?: strip_tags($htmlBody)) . "\nSMTP error: " . $e->getMessage(), 'send-failed');
         return false;
     }
+}
+
+/**
+ * Send a notification email to the configured Admin address.
+ * Never throws — logs and returns false on any problem.
+ */
+function send_admin_notification(string $subject, string $htmlBody, string $textBody = ''): bool
+{
+    $cfg = _mail_config();
+    $to = $cfg['admin_email'] ?? '';
+    if ($to === '') { _mail_log('(none)', $subject, $textBody ?: strip_tags($htmlBody), 'no-admin-email'); return false; }
+    return send_notification($to, $cfg['admin_name'] ?? '', $subject, $htmlBody, $textBody);
 }

@@ -26,6 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
             $stmt = $pdo->prepare('INSERT INTO m_assy_checklist_item (model_id, checking_item, standard, standard_min, standard_max, sort_order) VALUES (?,?,?,?,?,?)');
             $stmt->execute([$model_id, $checking_item, import_nz($standard), import_nz($standard_min), import_nz($standard_max), $sort_order]);
         }
+        // Editing a checking item means the model's standards are being adjusted,
+        // so the model counts as configured (clears its "Baru · belum diset" badge).
+        $pdo->prepare('UPDATE m_assy_model SET configured = 1 WHERE id = ?')->execute([$model_id]);
         header('Location: assy_checklist_items.php?model_id=' . $model_id . '&saved=1');
         exit;
     }
@@ -116,7 +119,7 @@ require __DIR__ . '/../includes/app_top.php';
             <h3><?= $editRow ? 'Edit Checking Item' : 'Add Checking Item' ?></h3>
             <a class="modal-close" href="assy_checklist_items.php?model_id=<?= $selected_model_id ?>">&times;</a>
         </div>
-        <form method="post">
+        <form method="post" id="checkitem-form">
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="id" value="<?= htmlspecialchars($editRow['id'] ?? '') ?>">
 
@@ -164,6 +167,7 @@ require __DIR__ . '/../includes/app_top.php';
 <table class="admin-table">
     <thead>
         <tr>
+            <th style="width:44px;">No</th>
             <th>Checking Item</th>
             <th>Standard</th>
             <th>Std Min</th>
@@ -174,8 +178,9 @@ require __DIR__ . '/../includes/app_top.php';
         </tr>
     </thead>
     <tbody>
-        <?php foreach ($rows as $row): ?>
+        <?php $rowNo = 0; foreach ($rows as $row): $rowNo++; ?>
         <tr>
+            <td><?= $rowNo ?></td>
             <td><?= htmlspecialchars($row['checking_item']) ?></td>
             <td><?= htmlspecialchars($row['standard'] ?? '') ?></td>
             <td><?= htmlspecialchars($row['standard_min'] ?? '') ?></td>
@@ -189,7 +194,7 @@ require __DIR__ . '/../includes/app_top.php';
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$rows): ?><tr><td colspan="7" class="empty">No checking items for this model yet.</td></tr><?php endif; ?>
+        <?php if (!$rows): ?><tr><td colspan="8" class="empty">No checking items for this model yet.</td></tr><?php endif; ?>
     </tbody>
 </table>
 </div>
@@ -197,4 +202,39 @@ require __DIR__ . '/../includes/app_top.php';
     <div class="empty">No models found — add a Model first.</div>
 <?php endif; ?>
 
+<?php if ($showModal): ?>
+<script>
+(function () {
+    const form = document.getElementById('checkitem-form');
+    if (!form) return;
+    // Ordered list of editable fields (columns) in the modal.
+    const fields = Array.from(form.querySelectorAll('select, input:not([type=hidden])'));
+
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+        // Enter = Update (submit).
+        if (e.key === 'Enter') {
+            const t = e.target;
+            if (t && t.tagName === 'TEXTAREA') return;
+            e.preventDefault();
+            if (form.requestSubmit) form.requestSubmit(); else form.submit();
+            return;
+        }
+        // End = next field, Home = previous field (wraps around).
+        if (e.key === 'End' || e.key === 'Home') {
+            if (!fields.length) return;
+            e.preventDefault();
+            let i = fields.indexOf(document.activeElement);
+            if (i === -1) i = e.key === 'End' ? -1 : 0;
+            const next = e.key === 'End'
+                ? (i + 1) % fields.length
+                : (i - 1 + fields.length) % fields.length;
+            const el = fields[next];
+            el.focus();
+            if (el.select) el.select();
+        }
+    });
+})();
+</script>
+<?php endif; ?>
 <?php require __DIR__ . '/../includes/app_bottom.php'; ?>

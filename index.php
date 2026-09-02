@@ -31,6 +31,9 @@ $departments = $pdo->query('SELECT * FROM m_department WHERE is_active = 1 ORDER
         </div>
     </div>
 
+    <?php if (isset($_GET['denied'])): ?>
+        <p class="landing-hint" style="color:#9b3b32;font-weight:600;">Anda tidak punya akses ke halaman itu. Hubungi Admin jika ini keliru.</p>
+    <?php endif; ?>
     <h1>Select Department</h1>
     <p class="landing-hint">Choose a department to start filling in a check sheet.</p>
     <p class="landing-hint">Logged in as <strong><?= htmlspecialchars($_SESSION['auth_user']['name']) ?></strong> &middot; <a href="logout.php" class="dept-switch-link">Logout</a></p>

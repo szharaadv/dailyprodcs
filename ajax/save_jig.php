@@ -54,7 +54,8 @@ $jig_item_id = (int)($input['jig_item_id'] ?? 0);
 $day = (int)($input['day'] ?? 0);
 $result = $input['result'] ?? '';
 
-if (!$jig_item_id || $day < 1 || $day > 31 || !in_array($result, ['OK', 'NG'], true)) {
+// '' = clear/cancel an accidental tap (removes the cell's value).
+if (!$jig_item_id || $day < 1 || $day > 31 || !in_array($result, ['OK', 'NG', ''], true)) {
     http_response_code(400);
     echo json_encode(['error' => 'jig_item_id, day and a valid result (OK/NG) are required.']);
     exit;
@@ -70,10 +71,15 @@ if (!$unlocked && !is_today_ymd($day, $month, $year)) {
     }
 }
 
-$stmt = $pdo->prepare(
-    'INSERT INTO t_jig_detail (header_id, jig_item_id, day, result) VALUES (?, ?, ?, ?)
-     ON DUPLICATE KEY UPDATE result = VALUES(result)'
-);
-$stmt->execute([$header_id, $jig_item_id, $day, $result]);
+if ($result === '') {
+    $stmt = $pdo->prepare('DELETE FROM t_jig_detail WHERE header_id = ? AND jig_item_id = ? AND day = ?');
+    $stmt->execute([$header_id, $jig_item_id, $day]);
+} else {
+    $stmt = $pdo->prepare(
+        'INSERT INTO t_jig_detail (header_id, jig_item_id, day, result) VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE result = VALUES(result)'
+    );
+    $stmt->execute([$header_id, $jig_item_id, $day, $result]);
+}
 
 echo json_encode(['ok' => true, 'header_id' => $header_id]);

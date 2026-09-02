@@ -57,11 +57,16 @@ if (!$tanggal || !$department_id || !$model_id || !$checker_id || empty($rows)) 
 try {
     $pdo->beginTransaction();
 
+    // Checker sign-off: the checker line is "signed" the moment the sheet is
+    // submitted (stamped now); a draft leaves it unsigned. Foreman/Supervisor
+    // sign later from "Persetujuan Saya" (see includes/signoff.php).
+    $checker_at = $status === 'submitted' ? date('Y-m-d H:i:s') : null;
+
     $params = [
         $tanggal, $department_id, $model_id,
         $mark_crank_shaft ?: null, $mark_conrod ?: null, $mark_fo_pump ?: null,
         $no_cyl_block ?: null, $no_engine ?: null, $detail_model ?: null,
-        $checker_id, $status,
+        $checker_id, $checker_at, $status,
     ];
 
     if ($header_id) {
@@ -72,7 +77,7 @@ try {
         $stmt = $pdo->prepare(
             'UPDATE t_assy_header
              SET tanggal=?, department_id=?, model_id=?, mark_crank_shaft=?, mark_conrod=?, mark_fo_pump=?,
-                 no_cyl_block=?, no_engine=?, detail_model=?, checker_id=?, status=?
+                 no_cyl_block=?, no_engine=?, detail_model=?, checker_id=?, checker_at=?, status=?
              WHERE id=?' . $lockClause
         );
         $stmt->execute(array_merge($params, [$header_id]));
@@ -89,8 +94,8 @@ try {
         $stmt = $pdo->prepare(
             'INSERT INTO t_assy_header
              (tanggal, department_id, model_id, mark_crank_shaft, mark_conrod, mark_fo_pump,
-              no_cyl_block, no_engine, detail_model, checker_id, status)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+              no_cyl_block, no_engine, detail_model, checker_id, checker_at, status)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute($params);
         $header_id = $pdo->lastInsertId();

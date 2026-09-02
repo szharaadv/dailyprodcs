@@ -16,6 +16,53 @@ function current_user(): ?array
     return null;
 }
 
+/**
+ * The current user's FO Pump Check sign-off role, derived from their m_user
+ * `title`: Operator/Staff → 'checker', Foreman → 'foreman', Supervisor →
+ * 'supervisor'. Admin → 'admin' (can act at any level). Anyone else → null
+ * (not part of the sign-off flow). Falls back to a DB lookup for sessions that
+ * signed in before `title` was stored in the session.
+ */
+/**
+ * The current user's raw job title (Operator/Staff/Foreman/Supervisor/…), or
+ * null. Falls back to a DB lookup + caches it, for sessions that signed in
+ * before `title` was stored in the session.
+ */
+function current_user_title(): ?string
+{
+    $u = current_user();
+    if ($u === null) return null;
+    if (array_key_exists('title', $u)) return $u['title'];
+
+    $title = null;
+    if (!empty($u['id'])) {
+        $stmt = get_db()->prepare('SELECT title FROM m_user WHERE id = ?');
+        $stmt->execute([$u['id']]);
+        $title = $stmt->fetchColumn() ?: null;
+    }
+    $_SESSION['auth_user']['title'] = $title; // cache for next time
+    return $title;
+}
+
+function user_signoff_role(): ?string
+{
+    $u = current_user();
+    if ($u === null) return null;
+    if (($u['role'] ?? '') === 'admin') return 'admin';
+
+    switch (current_user_title()) {
+        case 'Operator':
+        case 'Staff':
+            return 'checker';
+        case 'Foreman':
+            return 'foreman';
+        case 'Supervisor':
+            return 'supervisor';
+        default:
+            return null;
+    }
+}
+
 /** Redirect to login if nobody is authenticated. */
 function require_login(): void
 {

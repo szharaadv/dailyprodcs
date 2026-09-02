@@ -20,13 +20,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
         if ($id !== '') {
             $stmt = $pdo->prepare('UPDATE m_assy_model SET name = ?, sort_order = ? WHERE id = ?');
             $stmt->execute([$name, $sort_order, (int)$id]);
-        } else {
-            $stmt = $pdo->prepare('INSERT INTO m_assy_model (department_id, name, sort_order) VALUES (?, ?, ?)');
-            $stmt->execute([$department_id, $name, $sort_order]);
+            header('Location: assy_models.php?saved=1');
+            exit;
         }
+
+        // New model starts EMPTY (no auto-seeded checking items). The admin
+        // builds its checking items incrementally via "Bulk Checking Item" or
+        // "Checking Item". It shows the "Baru · belum diset" badge until items
+        // are added (configured stays 0).
+        $stmt = $pdo->prepare('INSERT INTO m_assy_model (department_id, name, sort_order) VALUES (?, ?, ?)');
+        $stmt->execute([$department_id, $name, $sort_order]);
         header('Location: assy_models.php?saved=1');
         exit;
     }
+}
+
+if (($_GET['action'] ?? '') === 'configure' && isset($_GET['id'])) {
+    $pdo->prepare('UPDATE m_assy_model SET configured = 1 WHERE id = ?')->execute([(int)$_GET['id']]);
+    header('Location: assy_models.php?saved=1');
+    exit;
 }
 
 if (($_GET['action'] ?? '') === 'toggle' && isset($_GET['id'])) {
@@ -37,13 +49,27 @@ if (($_GET['action'] ?? '') === 'toggle' && isset($_GET['id'])) {
 }
 
 if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
-    try {
-        $stmt = $pdo->prepare('DELETE FROM m_assy_model WHERE id = ?');
-        $stmt->execute([(int)$_GET['id']]);
-        header('Location: assy_models.php?deleted=1');
-        exit;
-    } catch (PDOException $e) {
-        $error = 'Cannot delete, this model is already used by checking items / checksheets. Deactivate it instead.';
+    $mid = (int)$_GET['id'];
+    // A new model is auto-seeded with checking items, so it always "has" items —
+    // that alone shouldn't block deletion. Only real usage (an actual checksheet
+    // referencing this model) does. If none, remove its checking items first,
+    // then the model.
+    $used = $pdo->prepare('SELECT COUNT(*) FROM t_assy_header WHERE model_id = ?');
+    $used->execute([$mid]);
+    if ((int)$used->fetchColumn() > 0) {
+        $error = 'Tidak bisa dihapus: model ini sudah dipakai di checksheet. Nonaktifkan (Deactivate) saja.';
+    } else {
+        try {
+            $pdo->beginTransaction();
+            $pdo->prepare('DELETE FROM m_assy_checklist_item WHERE model_id = ?')->execute([$mid]);
+            $pdo->prepare('DELETE FROM m_assy_model WHERE id = ?')->execute([$mid]);
+            $pdo->commit();
+            header('Location: assy_models.php?deleted=1');
+            exit;
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $error = 'Tidak bisa dihapus: model ini masih dipakai. Nonaktifkan (Deactivate) saja.';
+        }
     }
 }
 
@@ -106,10 +132,19 @@ require __DIR__ . '/../includes/app_top.php';
     <tbody>
         <?php foreach ($rows as $row): ?>
         <tr>
-            <td><?= htmlspecialchars($row['name']) ?></td>
+            <td>
+                <a class="model-link" href="assy_checklist_items.php?model_id=<?= (int)$row['id'] ?>" title="Lihat Checking Item model ini"><?= htmlspecialchars($row['name']) ?></a>
+                <?php if (empty($row['configured'])): ?>
+                    <span class="badge badge-new" title="Model baru — checking item masih default, belum disesuaikan ke standar">Baru · belum diset</span>
+                <?php endif; ?>
+            </td>
             <td><?= (int)$row['sort_order'] ?></td>
             <td><?= $row['is_active'] ? '<span class="badge badge-ok">Active</span>' : '<span class="badge badge-off">Inactive</span>' ?></td>
             <td class="row-actions">
+                <a href="assy_checklist_items.php?model_id=<?= (int)$row['id'] ?>">Setting Item</a>
+                <?php if (empty($row['configured'])): ?>
+                    <a href="assy_models.php?action=configure&id=<?= $row['id'] ?>" title="Tandai model ini sudah disesuaikan ke standar">Tandai sudah diset</a>
+                <?php endif; ?>
                 <a href="assy_models.php?action=edit&id=<?= $row['id'] ?>">Edit</a>
                 <a href="assy_models.php?action=toggle&id=<?= $row['id'] ?>"><?= $row['is_active'] ? 'Deactivate' : 'Activate' ?></a>
                 <a href="assy_models.php?action=delete&id=<?= $row['id'] ?>" onclick="return confirm('Delete this model?')" class="danger">Delete</a>
@@ -121,6 +156,12 @@ require __DIR__ . '/../includes/app_top.php';
 </table>
 </div>
 
+<style>
+    .model-link { color: #9a342c; font-weight: 600; text-decoration: none; }
+    .model-link:hover { text-decoration: underline; }
+    .badge-new { background: #fff4e5; color: #b25e09; border: 1px solid #f4c988; font-weight: 600;
+        font-size: 11px; padding: 1px 8px; border-radius: 20px; margin-left: 8px; white-space: nowrap; }
+</style>
 <script>
     const ENGINE_MODELS = <?= json_encode($engineModels) ?>;
 </script>

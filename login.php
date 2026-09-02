@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'user_
         if (!$matchedUser) {
             $error = 'Incorrect PIN.';
         } else {
-            $_SESSION['auth_user'] = ['id' => (int)$matchedUser['id'], 'name' => $matchedUser['name'], 'role' => 'user'];
+            $_SESSION['auth_user'] = ['id' => (int)$matchedUser['id'], 'name' => $matchedUser['name'], 'role' => 'user', 'title' => $matchedUser['title'] ?? null];
             header('Location: ' . $next);
             exit;
         }

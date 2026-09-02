@@ -52,6 +52,7 @@ $page_subtitle = $department['name'] . ' · F-FIP-02 FOP tester data · one ongo
 require_once __DIR__ . '/includes/breadcrumb.php';
 $breadcrumb = build_checksheet_breadcrumb($pdo, $department, 'fopump_test_list.php');
 require __DIR__ . '/includes/app_top.php';
+$export_route = 'fopump_test_list.php'; $export_dept = (int)$department['id']; require __DIR__ . '/includes/export_button.php';
 ?>
 
 <div class="checksheet-card">

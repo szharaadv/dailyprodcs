@@ -52,9 +52,15 @@ function has_active_fill_unlock(PDO $pdo, string $checksheetType, int $departmen
     }
     $sql .= ' LIMIT 1';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return (bool) $stmt->fetchColumn();
+    // Degrade gracefully if the fill-request migration hasn't been applied yet
+    // (missing columns) — the feature is simply inert, the page still works.
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return (bool) $stmt->fetchColumn();
+    } catch (Throwable $e) {
+        return false;
+    }
 }
 
 /**
@@ -65,12 +71,18 @@ function has_active_fill_unlock(PDO $pdo, string $checksheetType, int $departmen
  */
 function active_fill_unlock_set(PDO $pdo, string $checksheetType, int $departmentId): array
 {
-    $stmt = $pdo->prepare(
-        "SELECT target_date, condition_id FROM t_edit_request
-         WHERE checksheet_type = ? AND header_id IS NULL AND department_id = ?
-           AND status = 'approved' AND unlock_expires_at > NOW()"
-    );
-    $stmt->execute([$checksheetType, $departmentId]);
+    // Degrade gracefully if the fill-request migration hasn't been applied yet
+    // (missing columns) — return an empty set so the page still renders.
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT target_date, condition_id FROM t_edit_request
+             WHERE checksheet_type = ? AND header_id IS NULL AND department_id = ?
+               AND status = 'approved' AND unlock_expires_at > NOW()"
+        );
+        $stmt->execute([$checksheetType, $departmentId]);
+    } catch (Throwable $e) {
+        return [];
+    }
     $set = [];
     foreach ($stmt->fetchAll() as $r) {
         $set[($r['condition_id'] ?? '') . '|' . $r['target_date']] = true;

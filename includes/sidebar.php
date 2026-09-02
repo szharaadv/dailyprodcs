@@ -19,6 +19,7 @@ $section_route = $section_route ?? ($_SESSION['section_route'] ?? null);
 
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/edit_requests.php';
+require_once __DIR__ . '/signoff.php';
 $me = current_user();
 
 $pdo = get_db();
@@ -127,6 +128,7 @@ function icon(string $name): string
         'chevron'  => '<path d="M9 6l6 6-6 6"/>',
         'users'    => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         'clock'    => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+        'check'    => '<path d="M20 6L9 17l-5-5"/>',
     ];
     return '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . ($icons[$name] ?? '') . '</svg>';
 }
@@ -156,9 +158,32 @@ function icon(string $name): string
             <?php if ($draft_count > 0): ?><span class="nav-badge"><?= $draft_count ?></span><?php endif; ?>
         </a>
         <?php endif; ?>
+        <?php if ($section_route === 'fopump_check_list.php'): ?>
+        <a class="nav-item <?= $active_nav === 'fopump-check-status' ? 'active' : '' ?>" href="<?= $base_url ?>fopump_check_status.php">
+            <?= icon('folder') ?> Status Approval
+        </a>
+        <?php endif; ?>
+        <?php if ($section_route === 'assembly_list.php'): ?>
+        <a class="nav-item <?= $active_nav === 'assy-engine-revision' ? 'active' : '' ?>" href="<?= $base_url ?>assy_engine_revision.php">
+            <?= icon('sliders') ?> Engine Revision
+        </a>
+        <?php endif; ?>
         <a class="nav-item <?= $active_nav === 'my-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>edit_request_status.php">
             <?= icon('clock') ?> My Edit Requests
         </a>
+        <?php
+        // Scoped to the section currently open: the approval queue only shows
+        // for a section that has a sign-off flow, and counts only that section.
+        $signoff_role = user_signoff_role();
+        $signoff_type = signoff_type_for_route($section_route);
+        if ($signoff_type && in_array($signoff_role, ['foreman', 'supervisor', 'admin'], true)):
+            $signoff_pending = signoff_pending_count($pdo, $signoff_role, $signoff_type);
+        ?>
+        <a class="nav-item <?= $active_nav === 'my-approvals' ? 'active' : '' ?>" href="<?= $base_url ?>my_approvals.php?type=<?= urlencode($signoff_type) ?>">
+            <?= icon('check') ?> Persetujuan Saya
+            <?php if ($signoff_pending > 0): ?><span class="nav-badge"><?= $signoff_pending ?></span><?php endif; ?>
+        </a>
+        <?php endif; ?>
 
         <?php
         // Configuration links depend on the specific section (route) the user
@@ -173,6 +198,7 @@ function icon(string $name): string
             'assembly_list.php' => [
                 ['key' => 'config-assy-model', 'label' => 'Model', 'href' => 'admin/assy_models.php'],
                 ['key' => 'config-assy-checklist-item', 'label' => 'Checking Item', 'href' => 'admin/assy_checklist_items.php'],
+                ['key' => 'config-assy-checklist-bulk', 'label' => 'Bulk Checking Item', 'href' => 'admin/assy_checklist_bulk.php'],
             ],
             'sub_assembly_list.php' => [
                 ['key' => 'config-jig', 'label' => 'Jig', 'href' => 'admin/jigs.php'],
@@ -206,7 +232,7 @@ function icon(string $name): string
         $config_children = array_column($config_items, 'key');
         if ($show_import) $config_children[] = 'config-import';
         $config_open = in_array($active_nav, $config_children, true);
-        $mgmt_children = ['mgmt-users', 'mgmt-edit-requests'];
+        $mgmt_children = ['mgmt-users', 'mgmt-edit-requests', 'mgmt-section-docs'];
         $mgmt_open = in_array($active_nav, $mgmt_children, true);
         $pending_edit_requests = is_admin() ? pending_edit_request_count($pdo) : 0;
         ?>
@@ -241,6 +267,7 @@ function icon(string $name): string
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>admin/edit_requests.php">Edit Requests<?php if ($pending_edit_requests > 0): ?> <span class="badge badge-accent" style="margin-left:6px;"><?= $pending_edit_requests ?></span><?php endif; ?></a>
+            <a class="nav-subitem <?= $active_nav === 'mgmt-section-docs' ? 'active' : '' ?>" href="<?= $base_url ?>admin/section_docs.php">Nomor Dokumen</a>
         </div>
         <?php else: ?>
         <!-- Visible but inert for non-admins: shows the nav exists without letting them click into it. -->

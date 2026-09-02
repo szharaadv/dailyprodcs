@@ -4,9 +4,69 @@ const fopCodeEl = document.getElementById('f_fop_code');
 const partNoEl = document.getElementById('f_part_no');
 const statusLabel = document.getElementById('fopump-check-status-label');
 const prodDateCodeEl = document.getElementById('f_prod_date_code');
-const checkerEl = document.getElementById('f_checker');
-const foremanEl = document.getElementById('f_foreman');
-const supervisorEl = document.getElementById('f_supervisor');
+const stepperEl = document.getElementById('signoff-stepper');
+const badgeEl = document.getElementById('signoff-badge');
+
+function fmtSignTime(at) {
+    if (!at) return '';
+    const d = new Date(at.replace(' ', 'T'));
+    if (isNaN(d)) return '';
+    const p = n => String(n).padStart(2, '0');
+    return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+}
+
+/** First unsigned step in order — the one whose "turn" it is. */
+function nextRole(h) {
+    if (!h || !h.checker_at) return 'checker';
+    if (!h.foreman_at) return 'foreman';
+    if (!h.supervisor_at) return 'supervisor';
+    return null;
+}
+
+/** Overall status label + css class. */
+function overallStatus(h) {
+    if (!h) return { label: 'Belum diisi', cls: 'empty' };
+    if (h.supervisor_at) return { label: 'Selesai', cls: 'done' };
+    if (h.foreman_at) return { label: 'Menunggu Supervisor', cls: 'waiting' };
+    if (h.checker_at) return { label: 'Menunggu Foreman', cls: 'waiting' };
+    return { label: 'Belum diisi', cls: 'empty' };
+}
+
+// Build the sign-off stepper: Checker → Foreman → Supervisor, each showing the
+// signer + time when done, "Giliran Anda" on the viewer's own pending line.
+function renderSignoff(header) {
+    const steps = [
+        { role: 'checker', label: 'Checker', name: header && header.checker_name, at: header && header.checker_at },
+        { role: 'foreman', label: 'Foreman', name: header && header.foreman_name, at: header && header.foreman_at },
+        { role: 'supervisor', label: 'Supervisor', name: header && header.supervisor_name, at: header && header.supervisor_at },
+    ];
+    const nr = nextRole(header);
+    stepperEl.innerHTML = steps.map((s, i) => {
+        const signed = !!s.at;
+        let cls = 'signoff-step', dot = String(i + 1), body;
+        if (signed) {
+            cls += ' done'; dot = '&#10003;';
+            body = `<div class="signoff-name">${esc(s.name || '—')}</div><div class="signoff-time">${esc(fmtSignTime(s.at))}</div>`;
+        } else if (CURRENT_USER.role === s.role) {
+            cls += ' you';
+            body = `<div class="signoff-hint">Giliran Anda — isi saat Submit</div>`;
+        } else {
+            if (nr === s.role) cls += ' next';
+            body = `<div class="signoff-name" style="color:#9aa1ab;">belum</div>`;
+        }
+        return `<div class="${cls}"><span class="signoff-dot">${dot}</span><div class="signoff-role">${esc(s.label)}</div>${body}</div>`;
+    }).join('');
+
+    const ov = overallStatus(header);
+    badgeEl.textContent = ov.label;
+    badgeEl.className = 'signoff-badge ' + ov.cls;
+}
 
 let currentItems = [];
 let currentModel = null;
@@ -117,7 +177,7 @@ document.getElementById('btn-add-sample').addEventListener('click', () => {
 
 async function loadItems() {
     tbody.innerHTML = '<tr><td colspan="2" class="empty">Loading data...</td></tr>';
-    const modelId = modelResolver.getValue();
+    const modelId = modelEl.value;
     currentHeaderId = null;
     samples = [];
     values = {};
@@ -141,10 +201,8 @@ async function loadItems() {
 
     const header = data.header;
     currentHeaderId = header ? header.id : null;
-    prodDateCodeEl.value = header?.prod_date_code ?? '';
-    checkerEl.value = header?.checker_id ?? '';
-    foremanEl.value = header?.foreman_id ?? '';
-    supervisorEl.value = header?.supervisor_id ?? '';
+    prodDateCodeEl.value = header ? (header.prod_date_code ?? '') : '';
+    renderSignoff(header);
 
     const loadedSamples = data.samples || [];
     if (loadedSamples.length) {
@@ -159,16 +217,20 @@ async function loadItems() {
 
     render();
 
-    statusLabel.textContent = header
-        ? (header.status === 'draft' ? 'Editing a saved draft for this model.' : 'This model already has a submitted record — saving will update it.')
-        : 'New record for this model.';
+    // Clear, trace-friendly status line: where this record stands now.
+    if (!header) {
+        statusLabel.textContent = 'Record baru untuk model ini.';
+    } else if (header.status === 'draft') {
+        statusLabel.textContent = 'Masih draft untuk model ini.';
+    } else {
+        const nr = nextRole(header);
+        const nrLabel = { checker: 'Checker', foreman: 'Foreman', supervisor: 'Supervisor' }[nr];
+        statusLabel.textContent = nr ? ('Sudah disubmit — menunggu tanda tangan ' + nrLabel + '.') : 'Sign-off lengkap. Selesai ✓';
+    }
 }
 
-const modelOptions = (typeof MODELS !== 'undefined' ? MODELS : []).map(m => ({ value: m.id, label: m.name }));
-const modelResolver = turnIntoCombo(document.getElementById('f_model'), modelOptions, {
-    allowCustom: false,
-    onSelect: loadItems,
-});
+const modelEl = document.getElementById('f_model');
+modelEl.addEventListener('change', loadItems);
 
 function buildPayload(status) {
     const rows = currentItems.map(item => ({
@@ -176,15 +238,14 @@ function buildPayload(status) {
         actuals: samples.map((s, idx) => (values[item.id] || [])[idx] ?? ''),
     }));
 
+    // Note: checker/foreman/supervisor identity is NOT sent from the client —
+    // the server stamps the signature line for whoever is logged in, by role.
     return {
         header_id: currentHeaderId,
         status,
         department_id: DEPARTMENT_ID,
-        model_id: modelResolver.getValue(),
+        model_id: modelEl.value,
         prod_date_code: prodDateCodeEl.value,
-        checker_id: checkerEl.value,
-        foreman_id: foremanEl.value,
-        supervisor_id: supervisorEl.value,
         samples: samples.map(s => s.sample_no),
         rows,
     };
@@ -208,13 +269,11 @@ async function saveChecksheet(status) {
     }
 
     currentHeaderId = data.header_id;
-    if (status === 'draft') {
-        statusLabel.textContent = 'Editing a saved draft for this model.';
-        alert('Saved as draft.');
-    } else {
-        statusLabel.textContent = 'This model already has a submitted record — saving will update it.';
-        alert('Checksheet submitted successfully.');
-    }
+    alert(status === 'draft'
+        ? 'Tersimpan sebagai draft.'
+        : 'Tersimpan. Tanda tangan Anda tercatat — lihat progres sign-off di atas.');
+    // Reload so the sign-off stepper shows your just-saved signature + time.
+    loadItems();
 }
 
 document.getElementById('btn-draft').addEventListener('click', () => saveChecksheet('draft'));

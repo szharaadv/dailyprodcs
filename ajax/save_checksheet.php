@@ -59,6 +59,10 @@ if (!$tanggal || !$department_id || !$condition_id || !$checker_id || !$jam || !
     exit;
 }
 
+// Checker sign-off: stamped the moment the sheet is submitted; a draft leaves
+// it unsigned. Foreman/Supervisor sign later from "Persetujuan Saya".
+$checker_at = $status === 'submitted' ? date('Y-m-d H:i:s') : null;
+
 try {
     $pdo->beginTransaction();
 
@@ -69,10 +73,10 @@ try {
         $lockClause = $unlockedEdit ? '' : ' AND status = "draft"';
         $stmt = $pdo->prepare(
             'UPDATE t_checksheet_header
-             SET tanggal = ?, department_id = ?, condition_id = ?, checker_id = ?, jam = ?, shift_id = ?, status = ?
+             SET tanggal = ?, department_id = ?, condition_id = ?, checker_id = ?, checker_at = ?, jam = ?, shift_id = ?, status = ?
              WHERE id = ?' . $lockClause
         );
-        $stmt->execute([$tanggal, $department_id, $condition_id, $checker_id, $jam, $shift_id, $status, $header_id]);
+        $stmt->execute([$tanggal, $department_id, $condition_id, $checker_id, $checker_at, $jam, $shift_id, $status, $header_id]);
 
         if ($stmt->rowCount() === 0) {
             $pdo->rollBack();
@@ -84,10 +88,10 @@ try {
         $pdo->prepare('DELETE FROM t_checksheet_detail WHERE header_id = ?')->execute([$header_id]);
     } else {
         $stmt = $pdo->prepare(
-            'INSERT INTO t_checksheet_header (tanggal, department_id, condition_id, checker_id, jam, shift_id, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO t_checksheet_header (tanggal, department_id, condition_id, checker_id, checker_at, jam, shift_id, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$tanggal, $department_id, $condition_id, $checker_id, $jam, $shift_id, $status]);
+        $stmt->execute([$tanggal, $department_id, $condition_id, $checker_id, $checker_at, $jam, $shift_id, $status]);
         $header_id = $pdo->lastInsertId();
     }
 

@@ -47,6 +47,7 @@ $section_route = 'bakeoven_list.php';
 $page_title = 'View Checksheets';
 $page_subtitle = 'Search & view Bake Oven temperature records';
 require __DIR__ . '/includes/app_top.php';
+$export_route = 'bakeoven_list.php'; $export_dept = $department_id; require __DIR__ . '/includes/export_button.php';
 ?>
 
 <form method="get" class="admin-form filter-bar">

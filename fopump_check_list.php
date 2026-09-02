@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/access.php';
 require_login();
+// EXAMPLE: only titles allowed for this route may open it (see includes/access.php).
+require_route_access('fopump_check_list.php');
 $pdo = get_db();
 
 if (isset($_GET['department_id'])) {
@@ -62,7 +65,12 @@ require __DIR__ . '/includes/app_top.php';
     <div class="form-grid-top" id="form-grid-top">
         <div class="field-block">
             <label>Model</label>
-            <input type="text" id="f_model" placeholder="Search model..." value="<?= htmlspecialchars($selected_model_name) ?>">
+            <select id="f_model">
+                <?php foreach ($models as $m): ?>
+                    <option value="<?= $m['id'] ?>" <?= $m['id'] == $selected_model_id ? 'selected' : '' ?>><?= htmlspecialchars($m['name']) ?></option>
+                <?php endforeach; ?>
+                <?php if (!$models): ?><option value="">No models</option><?php endif; ?>
+            </select>
         </div>
         <div class="field-block">
             <label>FOP Code</label>
@@ -76,32 +84,9 @@ require __DIR__ . '/includes/app_top.php';
             <label>Prod. Date Code</label>
             <input type="text" id="f_prod_date_code" placeholder="e.g. 2024/10">
         </div>
-        <div class="field-block">
-            <label>Checker</label>
-            <select id="f_checker">
-                <option value="">—</option>
-                <?php foreach ($people as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="field-block">
-            <label>Foreman</label>
-            <select id="f_foreman">
-                <option value="">—</option>
-                <?php foreach ($people as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="field-block">
-            <label>Supervisor</label>
-            <select id="f_supervisor">
-                <option value="">—</option>
-                <?php foreach ($people as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
+        <div class="field-block" style="grid-column:1/-1;">
+            <label>Sign-off &nbsp;<span class="signoff-badge empty" id="signoff-badge">Belum diisi</span></label>
+            <div id="signoff-stepper"></div>
         </div>
     </div>
 
@@ -134,8 +119,9 @@ require __DIR__ . '/includes/app_top.php';
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const MODELS = <?= json_encode(array_map(fn($m) => ['id' => $m['id'], 'name' => $m['name']], $models)) ?>;
+    <?php $me = current_user(); ?>
+    const CURRENT_USER = <?= json_encode(['id' => $me['id'] ?? null, 'name' => $me['name'] ?? '', 'role' => user_signoff_role()]) ?>;
 </script>
-<script src="assets/js/combo-select.js"></script>
 <script src="assets/js/fopump_check.js?v=<?= @filemtime(__DIR__ . '/assets/js/fopump_check.js') ?: 1 ?>"></script>
 <script>
 (function () {

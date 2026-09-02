@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
     $id = $_POST['id'] ?? '';
     $name = trim($_POST['name'] ?? '');
     $title = trim($_POST['title'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $role = in_array($_POST['role'] ?? '', ['superadmin', 'admin'], true) ? $_POST['role'] : 'user';
     $pin = trim($_POST['pin'] ?? '');
     $section_ids = array_map('intval', $_POST['section_ids'] ?? []);
@@ -29,6 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
 
     if ($name === '') {
         $error = 'Name is required.';
+    } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Email format is not valid.';
     } elseif ($pin !== '' && !preg_match('/^\d{4}$/', $pin)) {
         $error = 'PIN must be exactly 4 digits.';
     } elseif ($pinTaken) {
@@ -37,12 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
         try {
             $pdo->beginTransaction();
             if ($id !== '') {
-                $stmt = $pdo->prepare('UPDATE m_user SET name = ?, title = ?, role = ?, pin = ? WHERE id = ?');
-                $stmt->execute([$name, $title !== '' ? $title : null, $role, $pin !== '' ? $pin : null, (int)$id]);
+                $stmt = $pdo->prepare('UPDATE m_user SET name = ?, title = ?, email = ?, role = ?, pin = ? WHERE id = ?');
+                $stmt->execute([$name, $title !== '' ? $title : null, $email !== '' ? $email : null, $role, $pin !== '' ? $pin : null, (int)$id]);
                 $user_id = (int)$id;
             } else {
-                $stmt = $pdo->prepare('INSERT INTO m_user (name, title, role, pin) VALUES (?, ?, ?, ?)');
-                $stmt->execute([$name, $title !== '' ? $title : null, $role, $pin !== '' ? $pin : null]);
+                $stmt = $pdo->prepare('INSERT INTO m_user (name, title, email, role, pin) VALUES (?, ?, ?, ?, ?)');
+                $stmt->execute([$name, $title !== '' ? $title : null, $email !== '' ? $email : null, $role, $pin !== '' ? $pin : null]);
                 $user_id = (int)$pdo->lastInsertId();
             }
             $pdo->prepare('DELETE FROM m_user_section WHERE user_id = ?')->execute([$user_id]);
@@ -134,8 +137,20 @@ require __DIR__ . '/../includes/app_top.php';
                     <input type="text" name="name" value="<?= htmlspecialchars($editRow['name'] ?? '') ?>" required>
                 </div>
                 <div class="form-row">
-                    <label>Title (optional)</label>
-                    <input type="text" name="title" value="<?= htmlspecialchars($editRow['title'] ?? '') ?>" placeholder="e.g. Foreman, Supervisor">
+                    <label>Title (role)</label>
+                    <input type="text" name="title" list="title-options" value="<?= htmlspecialchars($editRow['title'] ?? '') ?>" placeholder="e.g. Operator, Foreman, Supervisor">
+                    <datalist id="title-options">
+                        <option value="Operator"></option>
+                        <option value="Staff"></option>
+                        <option value="Foreman"></option>
+                        <option value="Supervisor"></option>
+                    </datalist>
+                    <p class="import-hint">Untuk sign-off FO Pump Check, gunakan tepat: <b>Operator</b>/<b>Staff</b> (Checker), <b>Foreman</b>, atau <b>Supervisor</b>.</p>
+                </div>
+                <div class="form-row">
+                    <label>Email (optional)</label>
+                    <input type="email" name="email" value="<?= htmlspecialchars($editRow['email'] ?? '') ?>" placeholder="nama@yanmar.com">
+                    <p class="import-hint">Hanya untuk notifikasi saat checksheet sampai ke level sign-off orang ini. Kosongkan = notifikasi di aplikasi saja.</p>
                 </div>
                 <div class="form-row">
                     <label>App Role</label>
@@ -190,6 +205,7 @@ require __DIR__ . '/../includes/app_top.php';
         <tr>
             <th>Name</th>
             <th>Title</th>
+            <th>Email</th>
             <th>App Role</th>
             <th>PIN</th>
             <th>Visible On</th>
@@ -202,6 +218,7 @@ require __DIR__ . '/../includes/app_top.php';
         <tr>
             <td><?= htmlspecialchars($row['name']) ?></td>
             <td><?= htmlspecialchars($row['title'] ?? '') ?></td>
+            <td><?= $row['email'] ? htmlspecialchars($row['email']) : '<span class="import-hint">—</span>' ?></td>
             <?php $roleBadge = ['superadmin' => 'badge-accent', 'admin' => 'badge-ok', 'user' => 'badge-off'][$row['role']] ?? 'badge-off'; ?>
             <td><span class="badge <?= $roleBadge ?>"><?= $row['role'] === 'superadmin' ? 'Super Admin' : ucfirst($row['role']) ?></span></td>
             <td><?= $row['pin'] ? '<span class="badge badge-ok">Set</span>' : '<span class="badge badge-off">Not set</span>' ?></td>
@@ -214,7 +231,7 @@ require __DIR__ . '/../includes/app_top.php';
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$rows): ?><tr><td colspan="7" class="empty">No users yet.</td></tr><?php endif; ?>
+        <?php if (!$rows): ?><tr><td colspan="8" class="empty">No users yet.</td></tr><?php endif; ?>
     </tbody>
 </table>
 </div>

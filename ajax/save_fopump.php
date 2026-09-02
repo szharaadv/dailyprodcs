@@ -75,12 +75,17 @@ try {
         $header_id = $existing ? (int)$existing['id'] : 0;
     }
 
+    // Checker (operator) sign-off: stamped on submit; Foreman/Supervisor sign
+    // later from "Persetujuan Saya" (see includes/signoff.php).
+    $checker_at = $status === 'submitted' ? date('Y-m-d H:i:s') : null;
+
     $params = [
         $tanggal, $department_id,
         nz($employee) !== null ? (int)$employee : null,
         nz($workingMinutes) !== null ? (int)$workingMinutes : null,
         $shift !== '' ? $shift : null,
         nz($operator) !== null ? (int)$operator : null,
+        $checker_at,
         nz($foreman) !== null ? (int)$foreman : null,
         nz($supervisor) !== null ? (int)$supervisor : null,
         nz($convProd) !== null ? (int)$convProd : null,
@@ -96,7 +101,7 @@ try {
         $lockClause = $unlockedEdit ? '' : ' AND status="draft"';
         $stmt = $pdo->prepare(
             'UPDATE t_fopump_header SET tanggal=?, department_id=?, employee_count=?, working_minutes=?, shift_label=?,
-                operator_id=?, foreman_id=?, supervisor_id=?, convert_production=?, convert_assembly=?, convert_export=?, status=?
+                operator_id=?, checker_at=?, foreman_id=?, supervisor_id=?, convert_production=?, convert_assembly=?, convert_export=?, status=?
              WHERE id=?' . $lockClause
         );
         $stmt->execute(array_merge($params, [$header_id]));
@@ -111,8 +116,8 @@ try {
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO t_fopump_header (tanggal, department_id, employee_count, working_minutes, shift_label,
-                operator_id, foreman_id, supervisor_id, convert_production, convert_assembly, convert_export, status)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+                operator_id, checker_at, foreman_id, supervisor_id, convert_production, convert_assembly, convert_export, status)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute($params);
         $header_id = (int)$pdo->lastInsertId();

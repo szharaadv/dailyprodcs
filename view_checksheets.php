@@ -143,6 +143,8 @@ require __DIR__ . '/includes/app_top.php';
     </div>
 </form>
 
+<?php $export_route = 'painting_list.php'; $export_dept = $selected_department_id; require __DIR__ . '/includes/export_button.php'; ?>
+
 <?php if ($missingByCondition): ?>
 <?php $fillUnlockSet = active_fill_unlock_set($pdo, 'painting', $selected_department_id); ?>
 <div class="missing-banner">

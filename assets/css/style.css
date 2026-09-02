@@ -920,6 +920,45 @@ button.missing-banner-fill-btn { cursor: pointer; font-family: inherit; line-hei
 .missing-banner-req-btn { background: #fff; border-style: dashed; }
 .missing-banner-req-btn::before { content: "\21BB\00a0"; }
 
+/* FO Pump Check role-based sign-off slots */
+.signoff-slot.signoff-done { color: #1f7a3d; font-weight: 600; }
+.signoff-slot.signoff-you { color: #9b3b32; font-weight: 600; font-style: italic; }
+
+/* Sign-off stepper (Checker → Foreman → Supervisor) — shared by the form,
+   the approval cards and the status dashboard. */
+.signoff-stepper { display: flex; flex-wrap: wrap; gap: 0; align-items: stretch; margin: 4px 0; }
+.signoff-step {
+    flex: 1 1 0; min-width: 150px; position: relative;
+    padding: 10px 12px 10px 40px; background: #f6f7f9;
+    border: 1px solid #e4e7ec; border-right: none;
+}
+.signoff-step:first-child { border-radius: 8px 0 0 8px; }
+.signoff-step:last-child { border-radius: 0 8px 8px 0; border-right: 1px solid #e4e7ec; }
+.signoff-step .signoff-dot {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; font-weight: 700; color: #fff; background: #c2c7d0;
+}
+.signoff-step .signoff-role { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; font-weight: 700; }
+.signoff-step .signoff-name { font-size: 13px; font-weight: 600; color: #1f2430; }
+.signoff-step .signoff-time { font-size: 11px; color: #6b7280; }
+/* done */
+.signoff-step.done { background: #eafaf0; border-color: #b7e3c6; }
+.signoff-step.done .signoff-dot { background: #1f7a3d; }
+/* the step whose turn it is now */
+.signoff-step.next { background: #fff4e6; border-color: #f0c48a; }
+.signoff-step.next .signoff-dot { background: #d98324; }
+/* the current viewer's own line, still to sign */
+.signoff-step.you { background: #fdecea; border-color: #e3a39b; }
+.signoff-step.you .signoff-dot { background: #9b3b32; }
+.signoff-step .signoff-hint { font-size: 11px; color: #9b3b32; font-style: italic; }
+
+/* Overall status badge */
+.signoff-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.signoff-badge.done { background: #eafaf0; color: #1f7a3d; }
+.signoff-badge.waiting { background: #fff4e6; color: #b3660f; }
+.signoff-badge.empty { background: #eef0f3; color: #6b7280; }
+
 .dest-badge {
     display: inline-block;
     font-size: 11px;
@@ -1153,6 +1192,24 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     background-position: right 10px center;
     padding-right: 34px;
 }
+
+/* Standalone date filter (e.g. Status Approval) — a clean, self-contained
+   control so it looks right outside a .field-block form. */
+.date-filter-input {
+    border: 1px solid #d7dbe2;
+    border-radius: 8px;
+    height: 38px;
+    padding: 0 36px 0 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2430;
+    background-color: #fff;
+    min-width: 155px;
+    box-sizing: border-box;
+    transition: border-color .15s, box-shadow .15s;
+}
+.date-filter-input:hover { border-color: #b9c0cc; }
+.date-filter-input:focus { outline: none; border-color: #9b3b32; box-shadow: 0 0 0 3px rgba(155, 59, 50, .12); }
 
 .hc-popup {
     position: absolute;

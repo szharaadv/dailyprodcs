@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/access.php';
 require_login();
 $pdo = get_db();
 
@@ -19,6 +20,9 @@ if (!$department || $group === '') {
 $stmt = $pdo->prepare('SELECT * FROM m_checksheet_section WHERE department_id = ? AND group_label = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department_id, $group]);
 $sections = $stmt->fetchAll();
+
+// Hide sections this user's role isn't allowed to open (see includes/access.php).
+$sections = array_values(array_filter($sections, fn($s) => can_access_route($s['route'])));
 
 if (count($sections) <= 1) {
     $target = $sections[0]['route'] ?? 'select_section.php';

@@ -33,17 +33,23 @@ try {
     $stmt->execute([$model_id]);
     $header_id = $stmt->fetchColumn() ?: null;
 
+    // Checker signs on submit. Foreman/Supervisor are NOT set here — they sign
+    // later from "Persetujuan Saya" (see includes/signoff.php); a resubmit by
+    // the checker clears their sign so it always reflects the current data.
+    $checker_at = $status === 'submitted' ? date('Y-m-d H:i:s') : null;
+
     $params = [
         $department_id, $model_id, $destination,
         $oil_pressure ?: null, $oil_temp ?: null, $room_temp ?: null, $start_test_time ?: null,
-        $checker_id, $foreman_id, $supervisor_id, $status,
+        $checker_id, $checker_at, $status,
     ];
 
     if ($header_id) {
         $stmt = $pdo->prepare(
             'UPDATE t_fopump_test_header
              SET department_id=?, model_id=?, destination=?, oil_pressure=?, oil_temp=?, room_temp=?, start_test_time=?,
-                 checker_id=?, foreman_id=?, supervisor_id=?, status=?
+                 checker_id=?, checker_at=?, status=?,
+                 foreman_id=NULL, foreman_at=NULL, supervisor_id=NULL, supervisor_at=NULL
              WHERE id=?'
         );
         $stmt->execute(array_merge($params, [$header_id]));
@@ -52,8 +58,8 @@ try {
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO t_fopump_test_header
-             (department_id, model_id, destination, oil_pressure, oil_temp, room_temp, start_test_time, checker_id, foreman_id, supervisor_id, status)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?)'
+             (department_id, model_id, destination, oil_pressure, oil_temp, room_temp, start_test_time, checker_id, checker_at, status)
+             VALUES (?,?,?,?,?,?,?,?,?,?)'
         );
         $stmt->execute($params);
         $header_id = $pdo->lastInsertId();

@@ -169,11 +169,16 @@ tbody.addEventListener('click', (e) => {
     if (wrapper.classList.contains('cal-blocked')) return;
     const itemId = wrapper.dataset.itemId;
     const week = wrapper.dataset.week;
-    const value = btn.dataset.value;
 
-    wrapper.querySelectorAll('.cat-btn').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    saveCell(itemId, week, value);
+    if (btn.classList.contains('active')) {
+        // Tap the already-selected button again → cancel (clear the cell).
+        btn.classList.remove('active');
+        saveCell(itemId, week, '');
+    } else {
+        wrapper.querySelectorAll('.cat-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        saveCell(itemId, week, btn.dataset.value);
+    }
 });
 
 tbody.addEventListener('change', (e) => {

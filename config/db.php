@@ -4,6 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// App runs in Indonesia (WIB). The server's php.ini defaults to Europe/Berlin,
+// which made every PHP date() display ~5 hours behind the wall clock (and out of
+// step with MySQL NOW(), which follows the system = WIB). Pin it here so all
+// pages agree with the local clock.
+date_default_timezone_set('Asia/Jakarta');
+
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'dailyprod');
 define('DB_USER', 'root');
