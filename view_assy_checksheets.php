@@ -34,7 +34,10 @@ if ($selected_model_id) {
     $params[] = $selected_model_id;
 }
 
-$sql = 'SELECT h.*, d.name AS department_name, m.name AS model_name, ck.name AS checker_name
+$sql = 'SELECT h.*, d.name AS department_name, m.name AS model_name, ck.name AS checker_name,
+               (SELECT COUNT(*) FROM t_assy_detail ad WHERE ad.header_id = h.id) AS detail_rows,
+               (SELECT COUNT(DISTINCT ad.checklist_item_id) FROM t_assy_detail ad WHERE ad.header_id = h.id) AS detail_items,
+               (SELECT COUNT(*) FROM m_assy_checklist_item ci WHERE ci.model_id = h.model_id) AS expected_items
         FROM t_assy_header h
         JOIN m_department d ON d.id = h.department_id
         JOIN m_assy_model m ON m.id = h.model_id
@@ -76,6 +79,14 @@ $page_title = 'View Checksheets';
 $page_subtitle = 'Search & view submitted Torque checksheet results';
 require __DIR__ . '/includes/app_top.php';
 ?>
+
+<style>
+.cs-item-badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:10px;line-height:1.6;}
+.cs-item-ok{background:#e6f4ea;color:#1e7e34;}
+.cs-item-warn{background:#fff3cd;color:#8a6d00;}
+.cs-item-bad{background:#fdecea;color:#c0392b;}
+.cs-item-muted{background:#eef0f2;color:#6b7280;cursor:help;}
+</style>
 
 <form method="get" class="admin-form filter-bar">
     <div class="form-grid">
@@ -158,6 +169,30 @@ require __DIR__ . '/includes/app_top.php';
         <div class="cs-card-body">
             <div class="cs-card-title"><?= htmlspecialchars($row['model_name']) ?><?php if ($row['detail_model']): ?> &middot; <?= htmlspecialchars($row['detail_model']) ?><?php endif; ?></div>
             <div class="cs-card-meta">Checked by <?= htmlspecialchars($row['checker_name']) ?><?php if ($row['no_engine']): ?> &middot; Engine <?= htmlspecialchars($row['no_engine']) ?><?php endif; ?></div>
+            <?php
+                $vRows = (int)$row['detail_rows'];
+                $vItems = (int)$row['detail_items'];
+                $vExp = (int)$row['expected_items'];
+                $vTitle = '';
+                if ($vRows > $vItems) {
+                    // Real problem: physical duplicate rows in the DB.
+                    $vClass = 'cs-item-badge cs-item-bad';
+                    $vText = "&#9888; {$vItems} item ({$vRows} baris — duplikat)";
+                } elseif ($vExp && $vItems < $vExp) {
+                    // Fewer items than the current model config — normal for older
+                    // sheets submitted before an item was added. Not an error.
+                    $vClass = 'cs-item-badge cs-item-muted';
+                    $vText = "{$vItems} / {$vExp} item";
+                    $vTitle = 'Checksheet lama: dibuat sebelum item ke-' . $vExp . ' ditambahkan ke model (bukan error).';
+                } elseif ($vExp && $vItems > $vExp) {
+                    $vClass = 'cs-item-badge cs-item-warn';
+                    $vText = "&#9888; {$vItems} / {$vExp} item (lebih)";
+                } else {
+                    $vClass = 'cs-item-badge cs-item-ok';
+                    $vText = "&#10003; {$vItems} item";
+                }
+            ?>
+            <div class="cs-card-meta"><span class="<?= $vClass ?>"<?php if ($vTitle): ?> title="<?= htmlspecialchars($vTitle) ?>"<?php endif; ?>><?= $vText ?></span></div>
         </div>
         <span class="cs-status cs-status-submitted">Submitted</span>
         <?php if (is_admin()): ?>

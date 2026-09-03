@@ -108,6 +108,7 @@ require __DIR__ . '/includes/app_top.php';
         <table class="assy-table">
             <thead>
                 <tr>
+                    <th>No</th>
                     <th>Checking Item</th>
                     <th>Standard</th>
                     <th>Standard Min.</th>
@@ -118,7 +119,7 @@ require __DIR__ . '/includes/app_top.php';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($details as $d):
+                <?php $rowNo = 0; foreach ($details as $d): $rowNo++;
                     $verdict = std_verdict($d['standard_min'], $d['standard_max'], $d['actual_result']);
                     $isNg = $verdict === 'NG';
                     $rv = $revById[(int)$d['item_id']] ?? null;
@@ -127,6 +128,7 @@ require __DIR__ . '/includes/app_top.php';
                         . ($rv['at'] ? ' · ' . date('d/m/Y H:i', strtotime($rv['at'])) : '')) : '';
                 ?>
                 <tr class="<?= $isNg ? 'row-ng' : '' ?>">
+                    <td><?= $rowNo ?></td>
                     <td><?= htmlspecialchars($d['checking_item']) ?></td>
                     <td><?= htmlspecialchars($d['standard'] ?: '-') ?></td>
                     <td><?= htmlspecialchars($d['standard_min'] ?? '-') ?></td>
@@ -139,7 +141,7 @@ require __DIR__ . '/includes/app_top.php';
                     <td><?= htmlspecialchars($d['consumable_item'] ?: '-') ?></td>
                 </tr>
                 <?php endforeach; ?>
-                <?php if (!$details): ?><tr><td colspan="7" class="empty">No data.</td></tr><?php endif; ?>
+                <?php if (!$details): ?><tr><td colspan="8" class="empty">No data.</td></tr><?php endif; ?>
             </tbody>
         </table>
     </div>
