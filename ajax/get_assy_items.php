@@ -6,7 +6,7 @@ $pdo = get_db();
 $model_id = (int)($_GET['model_id'] ?? 0);
 
 $stmt = $pdo->prepare(
-    'SELECT id, checking_item, standard, standard_min, standard_max
+    'SELECT id, checking_item, standard, standard_min, standard_max, blocked
      FROM m_assy_checklist_item
      WHERE model_id = ? AND is_active = 1
      ORDER BY sort_order, id'

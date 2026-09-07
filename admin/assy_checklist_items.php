@@ -41,6 +41,14 @@ if (($_GET['action'] ?? '') === 'toggle' && isset($_GET['id'])) {
     exit;
 }
 
+// Toggle "blocked" — item yg tidak perlu diisi (kolomnya terkunci di form isi).
+if (($_GET['action'] ?? '') === 'toggleblock' && isset($_GET['id'])) {
+    $stmt = $pdo->prepare('UPDATE m_assy_checklist_item SET blocked = NOT blocked WHERE id = ?');
+    $stmt->execute([(int)$_GET['id']]);
+    header('Location: assy_checklist_items.php?model_id=' . (int)($_GET['model_id'] ?? 0));
+    exit;
+}
+
 if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     try {
         $stmt = $pdo->prepare('DELETE FROM m_assy_checklist_item WHERE id = ?');
@@ -173,6 +181,7 @@ require __DIR__ . '/../includes/app_top.php';
             <th>Std Min</th>
             <th>Std Max</th>
             <th>Order</th>
+            <th>Isian</th>
             <th>Status</th>
             <th>Action</th>
         </tr>
@@ -186,15 +195,17 @@ require __DIR__ . '/../includes/app_top.php';
             <td><?= htmlspecialchars($row['standard_min'] ?? '') ?></td>
             <td><?= htmlspecialchars($row['standard_max'] ?? '') ?></td>
             <td><?= (int)$row['sort_order'] ?></td>
+            <td><?= !empty($row['blocked']) ? '<span class="badge badge-off">Tidak perlu</span>' : '<span class="badge badge-ok">Wajib</span>' ?></td>
             <td><?= $row['is_active'] ? '<span class="badge badge-ok">Active</span>' : '<span class="badge badge-off">Inactive</span>' ?></td>
             <td class="row-actions">
                 <a href="assy_checklist_items.php?model_id=<?= $selected_model_id ?>&action=edit&id=<?= $row['id'] ?>">Edit</a>
+                <a href="assy_checklist_items.php?model_id=<?= $selected_model_id ?>&action=toggleblock&id=<?= $row['id'] ?>"><?= !empty($row['blocked']) ? 'Wajibkan' : 'Blokir' ?></a>
                 <a href="assy_checklist_items.php?model_id=<?= $selected_model_id ?>&action=toggle&id=<?= $row['id'] ?>"><?= $row['is_active'] ? 'Deactivate' : 'Activate' ?></a>
                 <a href="assy_checklist_items.php?model_id=<?= $selected_model_id ?>&action=delete&id=<?= $row['id'] ?>" onclick="return confirm('Delete this checking item?')" class="danger">Delete</a>
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$rows): ?><tr><td colspan="8" class="empty">No checking items for this model yet.</td></tr><?php endif; ?>
+        <?php if (!$rows): ?><tr><td colspan="9" class="empty">No checking items for this model yet.</td></tr><?php endif; ?>
     </tbody>
 </table>
 </div>

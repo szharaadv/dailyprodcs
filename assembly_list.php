@@ -197,6 +197,14 @@ require __DIR__ . '/includes/app_top.php';
     </div>
 </div>
 
+<style>
+    .assy-table tr.row-blocked { background: #f2f3f5; }
+    .assy-table tr.row-blocked td:first-child { color: #9aa0a6; }
+    .actual-input.blocked-input {
+        background: #e9ebee; color: #9aa0a6; cursor: not-allowed;
+        border-style: dashed; text-align: center;
+    }
+</style>
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const DRAFT_ID = <?= json_encode($draft_id ?: null) ?>;

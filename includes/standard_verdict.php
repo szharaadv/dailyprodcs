@@ -22,7 +22,9 @@ if (!function_exists('std_verdict')) {
     function std_verdict($minRaw, $maxRaw, $actualRaw): ?string
     {
         $actual = trim((string)$actualRaw);
-        if ($actual === '') return null;
+        // Empty or a bare "-" means the item does not apply to this model /
+        // nothing to measure — treat as neutral (no verdict), never NG.
+        if ($actual === '' || $actual === '-') return null;
         $minRaw = trim((string)$minRaw);
         $maxRaw = trim((string)$maxRaw);
         $hasMin = $minRaw !== '' && $minRaw !== '-';

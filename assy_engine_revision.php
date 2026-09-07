@@ -85,7 +85,7 @@ $where = ['h.department_id = ?'];
 $params = [$department_id];
 if ($f_date !== '')  { $where[] = 'h.tanggal = ?'; $params[] = $f_date; }
 if ($f_model)        { $where[] = 'h.model_id = ?'; $params[] = $f_model; }
-$sql = "SELECT h.id, h.tanggal, h.no_engine, h.no_cyl_block, h.model_id, m.name AS model_name
+$sql = "SELECT h.id, h.tanggal, h.no_engine, h.no_cyl_block, h.model_id, h.detail_model, m.name AS model_name
         FROM t_assy_header h JOIN m_assy_model m ON m.id = h.model_id
         WHERE " . implode(' AND ', $where) . "
         ORDER BY h.tanggal DESC, h.id DESC";
@@ -200,7 +200,7 @@ require __DIR__ . '/includes/app_top.php';
                 <?php foreach ($engines as $e): ?>
                 <tr class="<?= $e['id'] == $selected_header ? 'row-selected' : '' ?>">
                     <td><?= htmlspecialchars(date('d/m/Y', strtotime($e['tanggal']))) ?></td>
-                    <td><?= htmlspecialchars($e['model_name']) ?></td>
+                    <td><?= htmlspecialchars($e['model_name']) ?><?php if (!empty($e['detail_model'])): ?> <span style="color:#6b7280;">&middot; <?= htmlspecialchars($e['detail_model']) ?></span><?php endif; ?></td>
                     <td><?= htmlspecialchars($e['no_engine'] ?: '-') ?></td>
                     <td><?= $e['ng_count'] > 0 ? '<span class="badge badge-off">' . $e['ng_count'] . ' NG</span>' : '<span class="badge badge-ok">OK</span>' ?></td>
                     <td><?= $e['rev_count'] > 0 ? (int)$e['rev_count'] : '-' ?></td>

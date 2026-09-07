@@ -11,6 +11,18 @@ function renderRows(items) {
 
     tbody.innerHTML = items.map(item => {
         const saved = draftValues[item.id] || null;
+        // Blocked = checking item tidak berlaku untuk model/varian ini.
+        // Kolom isian dikunci (readonly, tidak bisa diisi), otomatis N/A.
+        if (Number(item.blocked) === 1) {
+            return `<tr class="row-blocked">
+                <td>${escapeHtml(item.checking_item)}</td>
+                <td>${escapeHtml(item.standard ?? '-')}</td>
+                <td>${escapeHtml(item.standard_min ?? '-')}</td>
+                <td>${escapeHtml(item.standard_max ?? '-')}</td>
+                <td><input type="text" class="actual-input blocked-input" data-item-id="${item.id}" data-field="actual" value="" placeholder="N/A" readonly tabindex="-1"></td>
+                <td><input type="text" class="actual-input blocked-input" data-item-id="${item.id}" data-field="consumable" value="" placeholder="N/A" readonly tabindex="-1"></td>
+            </tr>`;
+        }
         return `<tr>
             <td>${escapeHtml(item.checking_item)}</td>
             <td>${escapeHtml(item.standard ?? '-')}</td>
@@ -35,7 +47,9 @@ function toNum(v) {
 /** 'OK' | 'NG' | null (null = no standard / empty → no colour). */
 function actualVerdict(item, actualRaw) {
     const actual = (actualRaw ?? '').toString().trim();
-    if (actual === '') return null;
+    // Empty or a bare "-" means the item does not apply / nothing to measure —
+    // treat as neutral (no colour), never NG.
+    if (actual === '' || actual === '-') return null;
     const minRaw = (item.standard_min ?? '').toString().trim();
     const maxRaw = (item.standard_max ?? '').toString().trim();
     const hasMin = minRaw !== '' && minRaw !== '-';
@@ -55,6 +69,7 @@ function evaluateActual(itemId) {
     const item = currentItems.find(i => String(i.id) === String(itemId));
     const el = document.querySelector(`.actual-input[data-item-id="${itemId}"][data-field="actual"]`);
     if (!item || !el) return;
+    if (Number(item.blocked) === 1) return; // blocked item: no OK/NG
     const verdict = actualVerdict(item, el.value);
     el.classList.toggle('val-ng', verdict === 'NG');
     el.classList.toggle('val-ok', verdict === 'OK');
@@ -89,6 +104,10 @@ const modelResolver = turnIntoCombo(document.getElementById('f_model'), modelOpt
 
 function buildPayload(status) {
     const rows = currentItems.map(item => {
+        // Blocked items are N/A — always saved empty, never the operator's input.
+        if (Number(item.blocked) === 1) {
+            return { checklist_item_id: item.id, actual_result: null, consumable_item: null };
+        }
         const actualEl = document.querySelector(`[data-item-id="${item.id}"][data-field="actual"]`);
         const consumableEl = document.querySelector(`[data-item-id="${item.id}"][data-field="consumable"]`);
         return {
