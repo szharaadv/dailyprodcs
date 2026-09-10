@@ -53,6 +53,11 @@ $stmt = $pdo->prepare(
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
 
+// The "OP (Operator)" dropdown lists only people whose job title is Operator.
+// $people itself stays the full section roster — the PIC selects and the PEOPLE
+// JS constant still need it.
+$operators = users_by_title($people, 'Operator');
+
 $selected_line = $editing_unlocked ? $editing_line : trim((string)($_GET['line'] ?? ''));
 // Always open on today's month/year — editing is locked to the current
 // week anyway, so a stale month/year from a bookmark or browser-back would
@@ -109,7 +114,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>OP (Operator)</label>
             <select id="f_operator">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($operators as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>

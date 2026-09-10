@@ -52,6 +52,11 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
+// Foreman / Supervisor dropdowns list only people whose job title matches.
+// (The per-day Paraf grid is stamped automatically with the logged-in user —
+// see CURRENT_USER below — so it needs no people list.)
+$foremen     = users_by_title($people, 'Foreman');
+$supervisors = users_by_title($people, 'Supervisor');
 
 $stmt = $pdo->prepare('SELECT * FROM m_bakeoven WHERE department_id = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department['id']]);
@@ -143,7 +148,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>Foreman</label>
             <select id="f_foreman">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($foremen as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -152,7 +157,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>Supervisor</label>
             <select id="f_supervisor">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($supervisors as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -162,12 +167,16 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <textarea id="f_notes" rows="2"></textarea>
         </div>
     </div>
-    <p class="import-hint">Type a temperature and click away to save — no submit button needed. Paraf picks who checked that day.</p>
+    <p class="import-hint">Type a temperature and click away to save — no submit button needed. Klik sel Paraf untuk menandai dengan akun Anda.</p>
 </div>
 
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const STANDARDS = <?= json_encode(array_column($ovens, null, 'id')) ?>;
+    <?php $me = current_user(); ?>
+    const CURRENT_USER = <?= json_encode(['id' => (int)($me['id'] ?? 0), 'name' => $me['name'] ?? '']) ?>;
+    // Full section roster — used only for the Admin fallback picker, since Admin
+    // has no personal account to stamp the Paraf with.
     const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $people)) ?>;
     const TODAY = <?= json_encode(date('Y-m-d')) ?>;
 </script>

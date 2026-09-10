@@ -50,6 +50,9 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
+// Each person dropdown lists only people whose job title matches its role.
+$foremen     = users_by_title($people, 'Foreman');
+$supervisors = users_by_title($people, 'Supervisor');
 
 // Always open on today's month/year — editing is locked to today anyway,
 // so a stale month/year from a bookmark or browser-back would just be dead
@@ -119,7 +122,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>Foreman</label>
             <select id="f_foreman">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($foremen as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -128,7 +131,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>Supervisor</label>
             <select id="f_supervisor">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($supervisors as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>

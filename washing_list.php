@@ -50,6 +50,9 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
+// The per-day Checker/Control grid is filled by operators, so the picker
+// (PEOPLE, below) lists only people whose job title is Operator.
+$operators = users_by_title($people, 'Operator');
 
 // Always open on today's month/year — editing is locked to today anyway,
 // so a stale month/year from a bookmark or browser-back would just be dead
@@ -121,7 +124,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
 
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
-    const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $people)) ?>;
+    const PEOPLE = <?= json_encode(array_map(fn($p) => ['id' => $p['id'], 'name' => $p['name']], $operators)) ?>;
     const TODAY = <?= json_encode(date('Y-m-d')) ?>;
 </script>
 <script src="assets/js/calendar-day.js"></script>

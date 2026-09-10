@@ -30,10 +30,18 @@ if ($header) {
         $details->{$d['time_id'] . '_' . $d['day']} = $d['actual_temp'];
     }
 
-    $stmt = $pdo->prepare('SELECT day, user_id FROM t_bakeoven_paraf WHERE header_id = ?');
+    // Include the signer's name so the grid can render any saved paraf, even a
+    // user who isn't in the page's people list (the paraf is stamped with
+    // whoever was logged in, regardless of their job title).
+    $stmt = $pdo->prepare(
+        'SELECT p.day, p.user_id, u.name
+         FROM t_bakeoven_paraf p
+         LEFT JOIN m_user u ON u.id = p.user_id
+         WHERE p.header_id = ?'
+    );
     $stmt->execute([$header['id']]);
     foreach ($stmt->fetchAll() as $p) {
-        $paraf->{$p['day']} = $p['user_id'];
+        $paraf->{$p['day']} = ['id' => (int)$p['user_id'], 'name' => $p['name']];
     }
 }
 

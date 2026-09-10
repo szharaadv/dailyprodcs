@@ -52,6 +52,10 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
+// Each person dropdown lists only people whose job title matches its role.
+$operators   = users_by_title($people, 'Operator');
+$foremen     = users_by_title($people, 'Foreman');
+$supervisors = users_by_title($people, 'Supervisor');
 
 $stmt = $pdo->prepare('SELECT * FROM m_jig WHERE department_id = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department['id']]);
@@ -128,7 +132,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>Supervisor</label>
             <select id="f_supervisor">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($supervisors as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -137,7 +141,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>Foreman</label>
             <select id="f_foreman">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($foremen as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -146,7 +150,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             <label>Checker</label>
             <select id="f_checker">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($operators as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>

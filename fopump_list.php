@@ -48,6 +48,10 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
+// Each person dropdown lists only people whose job title matches its role.
+$operators   = users_by_title($people, 'Operator');
+$foremen     = users_by_title($people, 'Foreman');
+$supervisors = users_by_title($people, 'Supervisor');
 
 $models = $pdo->query('SELECT model FROM m_engine WHERE is_active = 1 ORDER BY sort_order, model')->fetchAll(PDO::FETCH_COLUMN);
 
@@ -124,7 +128,7 @@ require __DIR__ . '/includes/app_top.php';
             <label>Operator</label>
             <select id="f_operator">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($operators as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -133,7 +137,7 @@ require __DIR__ . '/includes/app_top.php';
             <label>Foreman</label>
             <select id="f_foreman">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($foremen as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -142,7 +146,7 @@ require __DIR__ . '/includes/app_top.php';
             <label>Supervisor</label>
             <select id="f_supervisor">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($supervisors as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>

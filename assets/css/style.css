@@ -860,6 +860,34 @@
     border-color: #e6e8ec;
 }
 
+/* Bake Oven Paraf cell — a per-day one-click signature stamped with the
+ * logged-in account (see assets/js/bakeoven.js). Buttons are writable cells;
+ * read-only spans (.paraf-ro) are past/locked days that only display a name. */
+.paraf-cell {
+    display: inline-block;
+    width: 100%;
+    min-width: 40px;
+    box-sizing: border-box;
+    padding: 6px 4px;
+    border: 1px solid #cdd2da;
+    border-radius: 5px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2a3140;
+    text-align: center;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+button.paraf-cell { cursor: pointer; }
+button.paraf-cell:hover { background: #f5f6f8; border-color: #c3c8d1; }
+.paraf-cell.filled { background: #e3f5e6; color: #2a6b2a; border-color: #b7e0bf; }
+.paraf-cell .paraf-plus { color: #9aa1ab; font-weight: 500; }
+.paraf-cell.paraf-ro { cursor: default; color: #b7bcc4; background: #f0f1f3; border-color: #e6e8ec; }
+.paraf-cell.paraf-ro.filled { color: #2a6b2a; background: #eef7f0; border-color: #cfe8d5; }
+
 /* Sub Assembly's OK/NG toggle is built from <span> buttons, which have no
  * native disabled state — this class fakes it visually and via pointer-events. */
 .cat-toggle.cal-blocked {

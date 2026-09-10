@@ -48,6 +48,8 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $checkers = $stmt->fetchAll();
+// "Checked by" dropdown lists only people whose job title is Foreman or Supervisor.
+$checked_by = users_by_title($checkers, 'Foreman', 'Supervisor');
 
 $shifts = $pdo->query('SELECT * FROM m_shift WHERE is_active = 1 ORDER BY sort_order')->fetchAll();
 
@@ -148,7 +150,7 @@ require __DIR__ . '/includes/app_top.php';
         <div class="field-block">
             <label>Checked by</label>
             <select id="f_checker">
-                <?php foreach ($checkers as $ch): ?>
+                <?php foreach ($checked_by as $ch): ?>
                     <option value="<?= $ch['id'] ?>" <?= $draft && $ch['id'] == $draft['checker_id'] ? 'selected' : '' ?>><?= htmlspecialchars($ch['name']) ?></option>
                 <?php endforeach; ?>
             </select>

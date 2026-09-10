@@ -33,6 +33,10 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
+// Each person dropdown lists only people whose job title matches its role.
+$operators   = users_by_title($people, 'Operator');
+$foremen     = users_by_title($people, 'Foreman');
+$supervisors = users_by_title($people, 'Supervisor');
 
 $stmt = $pdo->prepare('SELECT * FROM m_fopump_test_model WHERE department_id = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department['id']]);
@@ -96,7 +100,7 @@ $export_route = 'fopump_test_list.php'; $export_dept = (int)$department['id']; r
             <label>Checker</label>
             <select id="f_checker">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($operators as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -105,7 +109,7 @@ $export_route = 'fopump_test_list.php'; $export_dept = (int)$department['id']; r
             <label>Foreman</label>
             <select id="f_foreman">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($foremen as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -114,7 +118,7 @@ $export_route = 'fopump_test_list.php'; $export_dept = (int)$department['id']; r
             <label>Supervisor</label>
             <select id="f_supervisor">
                 <option value="">—</option>
-                <?php foreach ($people as $p): ?>
+                <?php foreach ($supervisors as $p): ?>
                     <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
                 <?php endforeach; ?>
             </select>

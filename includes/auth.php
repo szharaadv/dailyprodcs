@@ -63,6 +63,22 @@ function user_signoff_role(): ?string
     }
 }
 
+/**
+ * Filter a roster (rows with a `title` column) down to the given job title(s),
+ * matched case-insensitively. Used so a checksheet's person picker only lists
+ * people who actually hold that role — e.g. the "Operator" / "Checker" dropdown
+ * shows Operators, the "Foreman" dropdown shows Foremen. Pass one or more
+ * titles: users_by_title($people, 'Operator') or (..., 'Operator', 'Staff').
+ */
+function users_by_title(array $rows, string ...$titles): array
+{
+    $want = array_map(fn($t) => strtolower(trim($t)), $titles);
+    return array_values(array_filter(
+        $rows,
+        fn($r) => in_array(strtolower(trim((string)($r['title'] ?? ''))), $want, true)
+    ));
+}
+
 /** Redirect to login if nobody is authenticated. */
 function require_login(): void
 {

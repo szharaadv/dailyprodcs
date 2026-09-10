@@ -64,16 +64,28 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
         html += '</tr>';
     }
 
+    // A real logged-in user (Operator/Foreman/…) stamps their own account with
+    // one click. Admin has no personal account, so falls back to a picker.
+    const canStamp = !!CURRENT_USER.id;
     html += '<tr><td class="row-label">PARAF</td>';
     for (let day = 1; day <= day1Total; day++) {
-        const selectedUser = paraf[day] ?? '';
-        const writable = !holidayBlockedDays.has(day) && isCellWritable(!selectedUser, day, month, year, TODAY, unlocked);
-        const dis = writable ? '' : 'disabled';
-        html += `<td><select class="paraf-select" data-day="${day}" ${dis}><option value="">-</option>`;
-        for (const p of PEOPLE) {
-            html += `<option value="${p.id}" ${String(p.id) === String(selectedUser) ? 'selected' : ''}>${escapeHtml(p.name.split(' ')[0])}</option>`;
+        const pf = paraf[day];
+        const filled = !!(pf && pf.id);
+        const firstName = filled ? (String(pf.name ?? '').split(' ')[0] || '—') : '';
+        const writable = !holidayBlockedDays.has(day) && isCellWritable(!filled, day, month, year, TODAY, unlocked);
+        if (!writable) {
+            html += `<td><span class="paraf-cell paraf-ro${filled ? ' filled' : ''}">${filled ? escapeHtml(firstName) : '–'}</span></td>`;
+        } else if (canStamp) {
+            const inner = filled ? escapeHtml(firstName) : '<span class="paraf-plus">+</span>';
+            html += `<td><button type="button" class="paraf-cell${filled ? ' filled' : ''}" data-day="${day}" data-filled="${filled ? '1' : '0'}">${inner}</button></td>`;
+        } else {
+            const selId = filled ? String(pf.id) : '';
+            let opts = '<option value="">-</option>';
+            for (const p of PEOPLE) {
+                opts += `<option value="${p.id}" ${String(p.id) === selId ? 'selected' : ''}>${escapeHtml(String(p.name).split(' ')[0])}</option>`;
+            }
+            html += `<td><select class="paraf-select" data-day="${day}">${opts}</select></td>`;
         }
-        html += '</select></td>';
     }
     html += '</tr>';
 
@@ -188,6 +200,27 @@ tbody.addEventListener('change', (e) => {
         saveTemp(e.target.dataset.timeId, e.target.dataset.day, e.target.value.trim());
     } else if (e.target.matches('.paraf-select')) {
         saveParaf(e.target.dataset.day, e.target.value);
+    }
+});
+
+// Paraf is stamped with the logged-in account: click an empty cell to sign it
+// with your own name, click a signed cell to clear it. Only writable cells
+// (today, or an approved edit unlock) render as buttons.
+tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('button.paraf-cell');
+    if (!btn) return;
+    const day = btn.dataset.day;
+    if (btn.dataset.filled === '1') {
+        saveParaf(day, '');
+        btn.dataset.filled = '0';
+        btn.classList.remove('filled');
+        btn.innerHTML = '<span class="paraf-plus">+</span>';
+    } else {
+        if (!CURRENT_USER.id) return;
+        saveParaf(day, CURRENT_USER.id);
+        btn.dataset.filled = '1';
+        btn.classList.add('filled');
+        btn.textContent = String(CURRENT_USER.name || '').split(' ')[0] || '—';
     }
 });
 

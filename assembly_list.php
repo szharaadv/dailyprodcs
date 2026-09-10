@@ -46,6 +46,8 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([$department['id']]);
 $checkers = $stmt->fetchAll();
+// Checker dropdown lists only people whose job title is Operator.
+$operators = users_by_title($checkers, 'Operator');
 
 $stmt = $pdo->prepare('SELECT * FROM m_assy_model WHERE department_id = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department['id']]);
@@ -136,7 +138,7 @@ require __DIR__ . '/includes/app_top.php';
         <div class="field-block">
             <label>Checker</label>
             <select id="f_checker">
-                <?php foreach ($checkers as $ch): ?>
+                <?php foreach ($operators as $ch): ?>
                     <option value="<?= $ch['id'] ?>" <?= $draft && $ch['id'] == $draft['checker_id'] ? 'selected' : '' ?>><?= htmlspecialchars($ch['name']) ?></option>
                 <?php endforeach; ?>
             </select>
