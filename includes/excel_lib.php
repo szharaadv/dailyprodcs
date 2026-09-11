@@ -15,6 +15,13 @@
 function excel_available(): bool
 {
     if (class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) return true;
+    // PhpSpreadsheet 5.x needs PHP 8.1+ and these extensions. On an older or
+    // under-provisioned server, don't even load it — just report unavailable so
+    // callers fall back to the plain HTML export instead of fatal-erroring.
+    if (PHP_VERSION_ID < 80100) return false;
+    foreach (['zip', 'xml', 'mbstring'] as $ext) {
+        if (!extension_loaded($ext)) return false;
+    }
     foreach ([__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../lib/phpspreadsheet/autoload.php'] as $f) {
         if (is_file($f)) { require_once $f; if (class_exists('PhpOffice\\PhpSpreadsheet\\Spreadsheet')) return true; }
     }

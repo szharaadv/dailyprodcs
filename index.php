@@ -9,6 +9,17 @@ if (empty($_SESSION['auth_user']['name'])) {
 }
 
 $departments = $pdo->query('SELECT * FROM m_department WHERE is_active = 1 ORDER BY sort_order')->fetchAll();
+
+// FO Pump is a group of check sheets that lives under the Assembling
+// department, but it's a distinct enough product line to earn its own card on
+// this landing page (a shortcut straight to its sheets). Look it up by its
+// group_label — a stable natural key — rather than a hard-coded department id,
+// since ids can differ between the local and server copies of the database.
+$fopump_dept = $pdo->query(
+    "SELECT department_id FROM m_checksheet_section
+     WHERE group_label = 'FO Pump' AND is_active = 1
+     ORDER BY sort_order, id LIMIT 1"
+)->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,6 +57,13 @@ $departments = $pdo->query('SELECT * FROM m_department WHERE is_active = 1 ORDER
                 <div class="dept-go">Open Check Sheet &rarr;</div>
             </a>
         <?php endforeach; ?>
+        <?php if ($fopump_dept): ?>
+            <a class="dept-card" href="select_group.php?department_id=<?= (int)$fopump_dept ?>&group=<?= urlencode('FO Pump') ?>">
+                <div class="dept-icon">FO</div>
+                <div class="dept-name">FO Pump</div>
+                <div class="dept-go">Open Check Sheet &rarr;</div>
+            </a>
+        <?php endif; ?>
         <?php if (!$departments): ?>
             <p class="empty">No departments yet.</p>
         <?php endif; ?>

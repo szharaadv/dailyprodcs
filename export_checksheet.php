@@ -25,6 +25,15 @@ $title = trim((string)($section['doc_title'] ?? '')) !== ''
 $monthLabel = excel_month_label($month, $year);
 $e = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 
+// Native .xlsx path (a real, print-ready spreadsheet) for the sections that
+// have a dedicated writer; everything else falls back to the HTML-as-.xls
+// export below.
+require_once __DIR__ . '/includes/export_xlsx.php';
+if (xlsx_export_supported($section['route'])) {
+    export_section_xlsx($pdo, $section, $month, $year, $title, $monthLabel);
+    exit;
+}
+
 // Logo: Excel can't render base64 data URIs (shows "linked image"), so point
 // to the logo by an absolute URL on this server — Excel fetches it on open.
 $logoTag = '';
@@ -33,7 +42,7 @@ foreach (['png', 'jpg', 'jpeg'] as $ext) {
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $baseDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
         $logoUrl = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . $baseDir . '/assets/img/logo.' . $ext;
-        $logoTag = '<img src="' . $e($logoUrl) . '" height="36">';
+        $logoTag = '<img src="' . $e($logoUrl) . '" height="36" style="display:block;margin:0 auto;">';
         break;
     }
 }
@@ -45,6 +54,15 @@ $blocks = $built['blocks'];
 
 $fLeft  = intdiv($COLS - 1, 2);
 $fRight = $COLS - 1 - $fLeft;
+
+// The branded header spans the SAME columns as the data table so everything
+// lines up: the logo occupies the first TWO columns (Excel floats images and
+// won't clip them to one narrow cell, so the extra column gives it room and
+// keeps it off the title), the last two columns hold the doc box (label +
+// value), and the title/"Bulan" band fills the middle. Both tables share one
+// colgroup so their column boundaries match in Excel.
+$titleSpan = max(1, $COLS - 4); // columns between the logo (2) and doc box (2)
+$colgroup  = '<colgroup><col style="width:52px;"><col style="width:64px;">' . str_repeat('<col>', $COLS - 2) . '</colgroup>';
 
 $fname = preg_replace('/[^A-Za-z0-9_\- ]/', '', $section['name']) . ' ' . $monthLabel . '.xls';
 header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
@@ -73,20 +91,17 @@ echo "\xEF\xBB\xBF";
 </style>
 </head>
 <body>
-<!-- Fixed 6-column branded header (same layout for every section) -->
+<!-- Branded header — spans $COLS columns so it aligns with the data table. -->
 <table cellspacing="0" cellpadding="3" style="border-collapse:collapse;">
-    <colgroup>
-        <col style="width:92px;"><col style="width:70px;"><col style="width:70px;">
-        <col style="width:175px;"><col style="width:80px;"><col style="width:150px;">
-    </colgroup>
+    <?= $colgroup ?>
     <tr>
-        <td rowspan="4" class="logobox"><?= $logoTag ?></td>
-        <td colspan="3" rowspan="2" class="title"><?= $e($title) ?></td>
+        <td colspan="2" rowspan="4" class="logobox"><?= $logoTag ?></td>
+        <td colspan="<?= $titleSpan ?>" rowspan="2" class="title"><?= $e($title) ?></td>
         <td class="docb-label">No. Doc</td><td class="docb-val"><?= $e($section['doc_no']) ?></td>
     </tr>
     <tr><td class="docb-label">Revisi</td><td class="docb-val"><?= $e($section['doc_rev']) ?></td></tr>
     <tr>
-        <td colspan="3" rowspan="2" class="month">Bulan : <?= $e($monthLabel) ?></td>
+        <td colspan="<?= $titleSpan ?>" rowspan="2" class="month">Bulan : <?= $e($monthLabel) ?></td>
         <td class="docb-label">Tgl</td><td class="docb-val"><?= $e($section['doc_date']) ?></td>
     </tr>
     <tr><td class="docb-label">Halaman</td><td class="docb-val">1 / 1</td></tr>
@@ -94,8 +109,9 @@ echo "\xEF\xBB\xBF";
 
 <br>
 
-<!-- Data table (columns per section) -->
+<!-- Data table (columns per section) — same colgroup so columns line up. -->
 <table cellspacing="0" cellpadding="3" style="border-collapse:collapse;">
+    <?= $colgroup ?>
     <?= $blocks ?>
     <tr><td colspan="<?= $COLS ?>" style="height:14px;"></td></tr>
     <tr>
