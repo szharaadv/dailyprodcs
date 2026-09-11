@@ -51,8 +51,8 @@ $stmt = $pdo->prepare(
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
 // Each person dropdown lists only people whose job title matches its role.
-$foremen     = users_by_title($people, 'Foreman');
-$supervisors = users_by_title($people, 'Supervisor');
+$foremen     = users_by_title($people, 'Foreman')    ?: $people;
+$supervisors = users_by_title($people, 'Supervisor') ?: $people;
 
 // Always open on today's month/year — editing is locked to today anyway,
 // so a stale month/year from a bookmark or browser-back would just be dead

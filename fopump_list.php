@@ -49,9 +49,9 @@ $stmt = $pdo->prepare(
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
 // Each person dropdown lists only people whose job title matches its role.
-$operators   = users_by_title($people, 'Operator');
-$foremen     = users_by_title($people, 'Foreman');
-$supervisors = users_by_title($people, 'Supervisor');
+$operators   = users_by_title($people, 'Operator')   ?: $people;
+$foremen     = users_by_title($people, 'Foreman')    ?: $people;
+$supervisors = users_by_title($people, 'Supervisor') ?: $people;
 
 $models = $pdo->query('SELECT model FROM m_engine WHERE is_active = 1 ORDER BY sort_order, model')->fetchAll(PDO::FETCH_COLUMN);
 

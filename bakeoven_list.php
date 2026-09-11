@@ -55,8 +55,8 @@ $people = $stmt->fetchAll();
 // Foreman / Supervisor dropdowns list only people whose job title matches.
 // (The per-day Paraf grid is stamped automatically with the logged-in user —
 // see CURRENT_USER below — so it needs no people list.)
-$foremen     = users_by_title($people, 'Foreman');
-$supervisors = users_by_title($people, 'Supervisor');
+$foremen     = users_by_title($people, 'Foreman')    ?: $people;
+$supervisors = users_by_title($people, 'Supervisor') ?: $people;
 
 $stmt = $pdo->prepare('SELECT * FROM m_bakeoven WHERE department_id = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department['id']]);

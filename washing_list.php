@@ -52,7 +52,7 @@ $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
 // The per-day Checker/Control grid is filled by operators, so the picker
 // (PEOPLE, below) lists only people whose job title is Operator.
-$operators = users_by_title($people, 'Operator');
+$operators = users_by_title($people, 'Operator') ?: $people; // fall back to all if no Operator assigned
 
 // Always open on today's month/year — editing is locked to today anyway,
 // so a stale month/year from a bookmark or browser-back would just be dead

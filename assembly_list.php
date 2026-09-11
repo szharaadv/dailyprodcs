@@ -47,7 +47,9 @@ $stmt = $pdo->prepare(
 $stmt->execute([$department['id']]);
 $checkers = $stmt->fetchAll();
 // Checker dropdown lists only people whose job title is Operator.
-$operators = users_by_title($checkers, 'Operator');
+// …but if this section has nobody titled Operator (e.g. Torque is checked by
+// a Foreman/Staff here), fall back to the full roster so it's never empty.
+$operators = users_by_title($checkers, 'Operator') ?: $checkers;
 
 $stmt = $pdo->prepare('SELECT * FROM m_assy_model WHERE department_id = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department['id']]);

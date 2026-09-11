@@ -49,7 +49,7 @@ $stmt = $pdo->prepare(
 $stmt->execute([$department['id']]);
 $checkers = $stmt->fetchAll();
 // "Checked by" dropdown lists only people whose job title is Foreman or Supervisor.
-$checked_by = users_by_title($checkers, 'Foreman', 'Supervisor');
+$checked_by = users_by_title($checkers, 'Foreman', 'Supervisor') ?: $checkers; // fall back to all if none match
 
 $shifts = $pdo->query('SELECT * FROM m_shift WHERE is_active = 1 ORDER BY sort_order')->fetchAll();
 

@@ -53,9 +53,9 @@ $stmt = $pdo->prepare(
 $stmt->execute([$department['id']]);
 $people = $stmt->fetchAll();
 // Each person dropdown lists only people whose job title matches its role.
-$operators   = users_by_title($people, 'Operator');
-$foremen     = users_by_title($people, 'Foreman');
-$supervisors = users_by_title($people, 'Supervisor');
+$operators   = users_by_title($people, 'Operator')   ?: $people;
+$foremen     = users_by_title($people, 'Foreman')    ?: $people;
+$supervisors = users_by_title($people, 'Supervisor') ?: $people;
 
 $stmt = $pdo->prepare('SELECT * FROM m_jig WHERE department_id = ? AND is_active = 1 ORDER BY sort_order');
 $stmt->execute([$department['id']]);

@@ -56,7 +56,7 @@ $people = $stmt->fetchAll();
 // The "OP (Operator)" dropdown lists only people whose job title is Operator.
 // $people itself stays the full section roster — the PIC selects and the PEOPLE
 // JS constant still need it.
-$operators = users_by_title($people, 'Operator');
+$operators = users_by_title($people, 'Operator') ?: $people; // fall back to all if no Operator assigned
 
 $selected_line = $editing_unlocked ? $editing_line : trim((string)($_GET['line'] ?? ''));
 // Always open on today's month/year — editing is locked to the current
