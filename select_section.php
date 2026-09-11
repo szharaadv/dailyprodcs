@@ -37,6 +37,9 @@ if (count($sections) <= 1) {
 $groups = [];
 $cards = [];
 foreach ($sections as $s) {
+    // FO Pump has its own card on the department landing (see index.php), so
+    // don't list it a second time here inside its home department.
+    if ($s['group_label'] === 'FO Pump') continue;
     if ($s['group_label']) {
         $groups[$s['group_label']][] = $s;
     } else {
