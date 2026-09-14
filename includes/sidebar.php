@@ -268,6 +268,7 @@ function icon(string $name): string
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>admin/edit_requests.php">Edit Requests<?php if ($pending_edit_requests > 0): ?> <span class="badge badge-accent" style="margin-left:6px;"><?= $pending_edit_requests ?></span><?php endif; ?></a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-section-docs' ? 'active' : '' ?>" href="<?= $base_url ?>admin/section_docs.php">Nomor Dokumen</a>
+            <a class="nav-subitem <?= $active_nav === 'mgmt-notifications' ? 'active' : '' ?>" href="<?= $base_url ?>admin/notifications.php">Notifikasi</a>
         </div>
         <?php else: ?>
         <!-- Visible but inert for non-admins: shows the nav exists without letting them click into it. -->

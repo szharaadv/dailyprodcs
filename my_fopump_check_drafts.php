@@ -11,11 +11,13 @@ if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     exit;
 }
 
+// LEFT JOIN on the checker: a FO Pump Check draft has no checker yet (the
+// checker is only stamped on Submit), so an INNER JOIN would hide every draft.
 $sql = "SELECT h.*, d.name AS department_name, m.name AS model_name, ck.name AS checker_name
         FROM t_fopump_check_header h
         JOIN m_department d ON d.id = h.department_id
         JOIN m_fopump_check_model m ON m.id = h.model_id
-        JOIN m_user ck ON ck.id = h.checker_id
+        LEFT JOIN m_user ck ON ck.id = h.checker_id
         WHERE h.status = 'draft'
         ORDER BY h.created_at DESC";
 $drafts = $pdo->query($sql)->fetchAll();
@@ -39,7 +41,7 @@ require __DIR__ . '/includes/app_top.php';
         </div>
         <div class="cs-card-body">
             <div class="cs-card-title"><?= htmlspecialchars($row['department_name']) ?> &middot; <?= htmlspecialchars($row['model_name']) ?></div>
-            <div class="cs-card-meta">Checked by <?= htmlspecialchars($row['checker_name']) ?> &middot; last saved <?= htmlspecialchars(date('d/m/Y H:i', strtotime($row['created_at']))) ?></div>
+            <div class="cs-card-meta">Checked by <?= htmlspecialchars($row['checker_name'] ?: '—') ?> &middot; last saved <?= htmlspecialchars(date('d/m/Y H:i', strtotime($row['created_at']))) ?></div>
         </div>
         <span class="cs-status cs-status-draft">Draft</span>
         <div class="cs-card-actions">

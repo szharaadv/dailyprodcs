@@ -163,7 +163,12 @@ async function saveChecksheet(status, silent = false) {
 }
 
 document.getElementById('btn-draft').addEventListener('click', () => saveChecksheet('draft'));
-document.getElementById('btn-submit').addEventListener('click', () => saveChecksheet('submitted'));
-if (window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });
+document.getElementById('btn-submit').addEventListener('click', () => {
+    if (window.checksheetComplete && !checksheetComplete()) return;
+    saveChecksheet('submitted');
+});
+// No autosave here: this sheet updates one record per model in place, so
+// switching models while browsing would keep creating empty draft records.
+// Use the explicit "Save as Draft" button instead.
 
 loadModel();

@@ -260,10 +260,10 @@ body {
     color: #181a1e;
 }
 .app-topbar p { margin: 0; color: #8b93a1; font-size: 13px; }
-.topbar-date { color: #8b93a1; font-size: 13px; white-space: nowrap; }
+.topbar-date { color: #8b93a1; font-size: 13px; white-space: nowrap; order: -1; }
 
-/* User chip in the top-right, next to the date */
-.topbar-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+/* Right side: date · bell · user chip, on one clean centered row. */
+.topbar-right { display: flex; flex-direction: row; align-items: center; gap: 14px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
 .topbar-user {
     display: flex;
     align-items: center;
@@ -365,8 +365,7 @@ body.is-resizing .app-content { transition: none !important; }
         align-items: flex-start;
         gap: 8px;
     }
-    .topbar-date { align-self: flex-start; }
-    .topbar-right { align-items: flex-start; width: 100%; }
+    .topbar-right { width: 100%; justify-content: flex-start; }
     .topbar-breadcrumb { flex-wrap: wrap; }
     .app-content { padding: 14px; }
 }

@@ -57,5 +57,6 @@
     const LOGGED_IN_USER_ID = <?= json_encode($me['id'] ?? null) ?>;
 </script>
 <script src="<?= $base_url ?>assets/js/request-edit.js"></script>
+<script src="<?= $base_url ?>assets/js/notifications.js?v=<?= @filemtime(__DIR__ . '/../assets/js/notifications.js') ?: 1 ?>"></script>
 </body>
 </html>

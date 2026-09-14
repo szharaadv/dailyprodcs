@@ -84,10 +84,9 @@ require __DIR__ . '/includes/app_top.php';
             <label>Prod. Date Code</label>
             <input type="text" id="f_prod_date_code" placeholder="e.g. 2024/10">
         </div>
-        <div class="field-block" style="grid-column:1/-1;">
-            <label>Sign-off &nbsp;<span class="signoff-badge empty" id="signoff-badge">Belum diisi</span></label>
-            <div id="signoff-stepper"></div>
-        </div>
+        <!-- Sign-off stepper hidden on the fill form to keep it compact; the
+             Checker/Foreman/Supervisor approval still runs (checker signed on
+             Submit, Foreman/Supervisor via "Persetujuan Saya"). -->
     </div>
 
     <div class="fopump-check-toolbar">

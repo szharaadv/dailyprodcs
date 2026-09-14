@@ -41,6 +41,7 @@ function overallStatus(h) {
 // Build the sign-off stepper: Checker → Foreman → Supervisor, each showing the
 // signer + time when done, "Giliran Anda" on the viewer's own pending line.
 function renderSignoff(header) {
+    if (!stepperEl || !badgeEl) return; // sign-off stepper hidden on this page
     const steps = [
         { role: 'checker', label: 'Checker', name: header && header.checker_name, at: header && header.checker_at },
         { role: 'foreman', label: 'Foreman', name: header && header.foreman_name, at: header && header.foreman_at },
@@ -280,7 +281,12 @@ async function saveChecksheet(status, silent = false) {
 }
 
 document.getElementById('btn-draft').addEventListener('click', () => saveChecksheet('draft'));
-document.getElementById('btn-submit').addEventListener('click', () => saveChecksheet('submitted'));
-if (window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });
+document.getElementById('btn-submit').addEventListener('click', () => {
+    if (window.checksheetComplete && !checksheetComplete()) return;
+    saveChecksheet('submitted');
+});
+// No autosave here: this sheet updates one record per model in place, so
+// switching models while browsing would keep creating empty draft records.
+// Use the explicit "Save as Draft" button instead.
 
 loadItems();
