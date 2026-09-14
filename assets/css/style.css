@@ -185,6 +185,15 @@
 
 .checklist-table tbody tr:nth-child(odd) { background: #fafafb; }
 
+/* Abnormal (out-of-standard) result rows in the checksheet detail view —
+ * flagged so it's clear at a glance which items were NG, like the paper sheet. */
+.checklist-table tbody tr.row-abnormal,
+.checklist-table tbody tr.row-abnormal:nth-child(odd) { background: #fdecea; }
+.checklist-table tbody tr.row-abnormal td { border-bottom-color: #f5c6c0; }
+.checklist-table td.cell-abnormal { font-weight: 700; color: #c0392b; }
+.cat-abnormal { color: #c0392b; font-weight: 700; }
+.cat-normal { color: #3f7d43; font-weight: 600; }
+
 .checklist-table tbody td:nth-child(2) { text-align: left; }
 
 /* column widths: Condition, Checking Item, Metode, Min, Max, Tank/Tube, Satuan, Actual Result, Category */
@@ -198,7 +207,10 @@
 .checklist-table th:nth-child(8), .checklist-table td:nth-child(8) { width: 170px; }
 .checklist-table th:nth-child(9), .checklist-table td:nth-child(9) { width: 120px; }
 
-.checklist-table td:nth-child(1), .checklist-table td:nth-child(3), .checklist-table td:nth-child(4),
+/* Short value columns stay on one line. The Condition column (1) is NOT here:
+ * a long name like "Water Daily Phosphate" must wrap inside its 110px cell
+ * instead of overflowing (nowrap) into the Checking Item column. */
+.checklist-table td:nth-child(3), .checklist-table td:nth-child(4),
 .checklist-table td:nth-child(5), .checklist-table td:nth-child(6), .checklist-table td:nth-child(7) {
     white-space: nowrap;
 }
@@ -664,11 +676,18 @@
     justify-content: space-between;
     gap: 12px;
 }
+/* One time slot inside a per-date card: a small header (time + checker/shift +
+ * status) above that slot's condition rows, separated from the slot above. */
+.cs-time-block { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e6e8ec; }
+.cs-time-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cs-time-label { font-weight: 700; font-size: 14px; color: #2a3140; }
+.cs-time-meta { font-size: 12px; color: #8b93a1; }
+
 .cs-condition-list {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-top: 14px;
+    margin-top: 10px;
 }
 .cs-condition-row {
     display: flex;

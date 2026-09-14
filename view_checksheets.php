@@ -36,7 +36,8 @@ if ($selected_condition_id) {
 
 $sql = 'SELECT h.*, d.name AS department_name, c.name AS condition_name, ck.name AS checker_name, s.name AS shift_name,
                (SELECT COUNT(*) FROM t_checksheet_detail x WHERE x.header_id = h.id) AS item_count,
-               (SELECT COUNT(*) FROM t_checksheet_detail x WHERE x.header_id = h.id AND x.category = \'NG\') AS abnormal_count
+               (SELECT COUNT(*) FROM t_checksheet_detail x WHERE x.header_id = h.id
+                    AND LOWER(x.category) IN (\'ng\',\'nok\',\'abnormal\',\'reject\',\'fail\')) AS abnormal_count
         FROM t_checksheet_header h
         JOIN m_department d ON d.id = h.department_id
         JOIN m_condition c ON c.id = h.condition_id
@@ -49,28 +50,41 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $results = $stmt->fetchAll();
 
-// Group rows sharing the same Department + Date + Time into one card.
+// One card per Department + Date; inside a card, sub-group by Time (jam) so a
+// day with several time slots stays a single card instead of one card per time.
+// (SQL already orders by tanggal DESC, jam ASC, so dates and times come sorted.)
 $groups = [];
 foreach ($results as $row) {
-    $key = $row['department_id'] . '|' . $row['tanggal'] . '|' . $row['jam'];
+    $key = $row['department_id'] . '|' . $row['tanggal'];
     if (!isset($groups[$key])) {
         $groups[$key] = [
             'tanggal' => $row['tanggal'],
-            'jam' => $row['jam'],
             'department_name' => $row['department_name'],
-            'items' => [],
+            'times' => [],
             'abnormal_total' => 0,
+            'condition_total' => 0,
         ];
     }
-    $groups[$key]['items'][] = $row;
+    $jam = $row['jam'];
+    if (!isset($groups[$key]['times'][$jam])) {
+        $groups[$key]['times'][$jam] = ['jam' => $jam, 'items' => [], 'abnormal' => 0];
+    }
+    $groups[$key]['times'][$jam]['items'][] = $row;
+    $groups[$key]['times'][$jam]['abnormal'] += (int) $row['abnormal_count'];
     $groups[$key]['abnormal_total'] += (int) $row['abnormal_count'];
+    $groups[$key]['condition_total']++;
 }
 
+// Per time slot: a single shared checker/shift is shown on the slot header;
+// otherwise it's shown per condition row instead.
 foreach ($groups as &$g) {
-    $checkers = array_unique(array_column($g['items'], 'checker_name'));
-    $shifts = array_unique(array_column($g['items'], 'shift_name'));
-    $g['uniform_checker'] = count($checkers) === 1 ? $checkers[0] : null;
-    $g['uniform_shift'] = count($shifts) === 1 ? $shifts[0] : null;
+    foreach ($g['times'] as &$t) {
+        $checkers = array_values(array_unique(array_column($t['items'], 'checker_name')));
+        $shifts = array_values(array_unique(array_column($t['items'], 'shift_name')));
+        $t['uniform_checker'] = count($checkers) === 1 ? $checkers[0] : null;
+        $t['uniform_shift'] = count($shifts) === 1 ? $shifts[0] : null;
+    }
+    unset($t);
 }
 unset($g);
 
@@ -189,11 +203,10 @@ require __DIR__ . '/includes/app_top.php';
         <div class="cs-card-body">
             <div class="cs-card-head-row">
                 <div>
-                    <div class="cs-card-title"><?= htmlspecialchars(substr($g['jam'], 0, 5)) ?></div>
+                    <div class="cs-card-title"><?= htmlspecialchars(date('l, d M Y', strtotime($g['tanggal']))) ?></div>
                     <div class="cs-card-meta">
-                        <?= count($g['items']) ?> condition<?= count($g['items']) > 1 ? 's' : '' ?> checked
-                        <?php if ($g['uniform_checker']): ?> &middot; Checked by <?= htmlspecialchars($g['uniform_checker']) ?><?php endif; ?>
-                        <?php if ($g['uniform_shift']): ?> - <?= htmlspecialchars($g['uniform_shift']) ?><?php endif; ?>
+                        <?= count($g['times']) ?> time slot<?= count($g['times']) > 1 ? 's' : '' ?>
+                        &middot; <?= $g['condition_total'] ?> condition<?= $g['condition_total'] > 1 ? 's' : '' ?> checked
                     </div>
                 </div>
                 <?php if ($g['abnormal_total'] > 0): ?>
@@ -202,30 +215,46 @@ require __DIR__ . '/includes/app_top.php';
                     <span class="cs-summary-badge cs-summary-badge-ok">All normal</span>
                 <?php endif; ?>
             </div>
-            <div class="cs-condition-list">
-                <?php foreach ($g['items'] as $row): ?>
-                    <div class="cs-condition-row">
-                        <span class="cs-condition-name"><?= htmlspecialchars($row['condition_name']) ?></span>
-                        <span class="cs-condition-meta">
-                            <?= (int) $row['item_count'] ?> item<?= (int) $row['item_count'] !== 1 ? 's' : '' ?>
-                            <?php if (!$g['uniform_checker'] || !$g['uniform_shift']): ?>
-                                - <?= htmlspecialchars($row['checker_name']) ?> - <?= htmlspecialchars($row['shift_name']) ?>
+
+            <?php foreach ($g['times'] as $t): ?>
+            <div class="cs-time-block">
+                <div class="cs-time-head">
+                    <span class="cs-time-label"><?= htmlspecialchars(substr($t['jam'], 0, 5)) ?></span>
+                    <?php if ($t['uniform_checker']): ?>
+                        <span class="cs-time-meta">Checked by <?= htmlspecialchars($t['uniform_checker']) ?><?php if ($t['uniform_shift']): ?> - <?= htmlspecialchars($t['uniform_shift']) ?><?php endif; ?></span>
+                    <?php endif; ?>
+                    <?php if ($t['abnormal'] > 0): ?>
+                        <span class="cs-row-badge cs-row-badge-abnormal"><?= $t['abnormal'] ?> abnormal</span>
+                    <?php else: ?>
+                        <span class="cs-row-badge cs-row-badge-ok">All normal</span>
+                    <?php endif; ?>
+                </div>
+                <div class="cs-condition-list">
+                    <?php foreach ($t['items'] as $row): ?>
+                        <div class="cs-condition-row">
+                            <span class="cs-condition-name"><?= htmlspecialchars($row['condition_name']) ?></span>
+                            <span class="cs-condition-meta">
+                                <?= (int) $row['item_count'] ?> item<?= (int) $row['item_count'] !== 1 ? 's' : '' ?>
+                                <?php if (!$t['uniform_checker'] || !$t['uniform_shift']): ?>
+                                    - <?= htmlspecialchars($row['checker_name']) ?> - <?= htmlspecialchars($row['shift_name']) ?>
+                                <?php endif; ?>
+                            </span>
+                            <?php if ((int) $row['abnormal_count'] > 0): ?>
+                                <span class="cs-row-badge cs-row-badge-abnormal"><?= (int) $row['abnormal_count'] ?> abnormal</span>
+                            <?php else: ?>
+                                <span class="cs-row-badge cs-row-badge-ok">Normal</span>
                             <?php endif; ?>
-                        </span>
-                        <?php if ((int) $row['abnormal_count'] > 0): ?>
-                            <span class="cs-row-badge cs-row-badge-abnormal"><?= (int) $row['abnormal_count'] ?> abnormal</span>
-                        <?php else: ?>
-                            <span class="cs-row-badge cs-row-badge-ok">Normal</span>
-                        <?php endif; ?>
-                        <?php if (is_admin()): ?>
-                            <a class="cs-view-btn-sm" href="painting_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
-                        <?php else: ?>
-                        <button type="button" class="cs-request-edit-btn" data-edit-type="painting" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['condition_name'] . ' - ' . date('d M Y', strtotime($g['tanggal']))) ?>">Request Edit</button>
-                        <?php endif; ?>
-                        <a href="view_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn-sm">View &rarr;</a>
-                    </div>
-                <?php endforeach; ?>
+                            <?php if (is_admin()): ?>
+                                <a class="cs-view-btn-sm" href="painting_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+                            <?php else: ?>
+                            <button type="button" class="cs-request-edit-btn" data-edit-type="painting" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['condition_name'] . ' - ' . date('d M Y', strtotime($g['tanggal']))) ?>">Request Edit</button>
+                            <?php endif; ?>
+                            <a href="view_checksheet_detail.php?id=<?= $row['id'] ?>&back=<?= urlencode($backQuery) ?>" class="cs-view-btn-sm">View &rarr;</a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
+            <?php endforeach; ?>
         </div>
     </div>
     <?php endforeach; ?>

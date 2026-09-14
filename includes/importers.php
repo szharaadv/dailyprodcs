@@ -236,6 +236,8 @@ function import_painting(PDO $pdo, int $dept, array $rows): array
         ON DUPLICATE KEY UPDATE actual_result=VALUES(actual_result), category=VALUES(category)');
     $selCond = $pdo->prepare('SELECT id FROM m_condition WHERE department_id=? AND LOWER(name)=LOWER(?) AND is_active=1 LIMIT 1');
     $selItem = $pdo->prepare('SELECT id FROM m_checklist_item WHERE condition_id=? AND LOWER(checking_item)=LOWER(?) LIMIT 1');
+    // Same item name can exist once per Tank/Tube — match those by name + tank.
+    $selItemTank = $pdo->prepare('SELECT id FROM m_checklist_item WHERE condition_id=? AND LOWER(checking_item)=LOWER(?) AND tank_tube = ? LIMIT 1');
     $selShift = $pdo->prepare('SELECT id FROM m_shift WHERE LOWER(name)=LOWER(?) AND is_active=1 LIMIT 1');
 
     foreach ($groups as $g) {
@@ -285,14 +287,23 @@ function import_painting(PDO $pdo, int $dept, array $rows): array
         foreach ($g['rows'] as $rr) {
             $item = trim((string)($rr['data']['checking_item'] ?? ''));
             if ($item === '') continue;
-            $selItem->execute([$cond_id, $item]);
-            $iid = (int)$selItem->fetchColumn();
+            $tankTube = trim((string) ($rr['data']['tank_tube'] ?? ''));
+            // Some conditions repeat the same checking item once per Tank/Tube
+            // (e.g. Water Daily Phosphate: 6 items × Tank 1 & 2 = 12 masters with
+            // identical names). Match on name AND tank_tube first so a Tank 2 row
+            // maps to its own master item instead of colliding with Tank 1's.
+            $iid = 0;
+            if ($tankTube !== '') {
+                $selItemTank->execute([$cond_id, $item, $tankTube]);
+                $iid = (int)$selItemTank->fetchColumn();
+            }
             if (!$iid) {
-                $tankTube = trim((string) ($rr['data']['tank_tube'] ?? ''));
-                if ($tankTube !== '') {
-                    $selItem->execute([$cond_id, "$item (Line $tankTube)"]);
-                    $iid = (int) $selItem->fetchColumn();
-                }
+                $selItem->execute([$cond_id, $item]);
+                $iid = (int)$selItem->fetchColumn();
+            }
+            if (!$iid && $tankTube !== '') {
+                $selItem->execute([$cond_id, "$item (Line $tankTube)"]);
+                $iid = (int) $selItem->fetchColumn();
             }
             if (!$iid) {
                 $iid = import_match_checklist_item_loose($pdo, $cond_id, $item, $occurrence);

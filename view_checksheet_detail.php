@@ -34,6 +34,12 @@ $stmt = $pdo->prepare(
 $stmt->execute([$id]);
 $details = $stmt->fetchAll();
 
+// A result counts as abnormal from its Category (fill sheets use "NG", imports
+// use "Abnormal") — used to flag those rows so it's clear at a glance which
+// items were out of standard, like on the paper checksheet.
+$isAbnormal = fn($cat) => in_array(strtolower(trim((string)$cat)), ['ng', 'nok', 'abnormal', 'reject', 'fail'], true);
+$abnormalCount = count(array_filter($details, fn($d) => $isAbnormal($d['category'])));
+
 $backHref = 'view_checksheets.php' . (isset($_GET['back']) && $_GET['back'] !== '' ? '?' . $_GET['back'] : '');
 
 $base_url = '';
@@ -47,6 +53,11 @@ require __DIR__ . '/includes/app_top.php';
 <div class="checksheet-card">
     <div class="dept-context">
         <a href="<?= htmlspecialchars($backHref) ?>" class="dept-switch-link">&larr; Back to list</a>
+        <?php if ($abnormalCount > 0): ?>
+            <span class="cs-summary-badge cs-summary-badge-abnormal"><?= $abnormalCount ?> abnormal item<?= $abnormalCount > 1 ? 's' : '' ?></span>
+        <?php else: ?>
+            <span class="cs-summary-badge cs-summary-badge-ok">All normal</span>
+        <?php endif; ?>
     </div>
 
     <div class="form-grid-top">
@@ -92,8 +103,8 @@ require __DIR__ . '/includes/app_top.php';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($details as $d): ?>
-                <tr>
+                <?php foreach ($details as $d): $abn = $isAbnormal($d['category']); ?>
+                <tr class="<?= $abn ? 'row-abnormal' : '' ?>">
                     <td><?= htmlspecialchars($header['condition_name']) ?></td>
                     <td><?= htmlspecialchars($d['checking_item']) ?></td>
                     <td><?= htmlspecialchars($d['metode_pengecekan']) ?></td>
@@ -101,8 +112,8 @@ require __DIR__ . '/includes/app_top.php';
                     <td><?= htmlspecialchars($d['standard_max'] ?? '-') ?></td>
                     <td><?= htmlspecialchars($d['tank_tube'] ?? '-') ?></td>
                     <td><?= htmlspecialchars($d['satuan'] ?? '-') ?></td>
-                    <td><?= htmlspecialchars($d['actual_result'] ?: '-') ?></td>
-                    <td><?= htmlspecialchars($d['category'] ?: '-') ?></td>
+                    <td class="<?= $abn ? 'cell-abnormal' : '' ?>"><?= htmlspecialchars($d['actual_result'] ?: '-') ?></td>
+                    <td><span class="<?= $abn ? 'cat-abnormal' : 'cat-normal' ?>"><?= htmlspecialchars($d['category'] ?: '-') ?></span></td>
                 </tr>
                 <?php endforeach; ?>
                 <?php if (!$details): ?><tr><td colspan="9" class="empty">No data.</td></tr><?php endif; ?>
