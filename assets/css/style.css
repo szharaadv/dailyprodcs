@@ -888,6 +888,10 @@ button.paraf-cell:hover { background: #f5f6f8; border-color: #c3c8d1; }
 .paraf-cell.paraf-ro { cursor: default; color: #b7bcc4; background: #f0f1f3; border-color: #e6e8ec; }
 .paraf-cell.paraf-ro.filled { color: #2a6b2a; background: #eef7f0; border-color: #cfe8d5; }
 
+/* Small muted "Tersimpan otomatis HH:MM" note shown next to the Draft/Submit
+ * buttons by assets/js/autosave-draft.js. */
+.autosave-status { font-size: 12px; color: #8b93a1; margin-left: 10px; align-self: center; white-space: nowrap; }
+
 /* Sub Assembly's OK/NG toggle is built from <span> buttons, which have no
  * native disabled state — this class fakes it visually and via pointer-events. */
 .cat-toggle.cal-blocked {

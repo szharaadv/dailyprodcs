@@ -200,23 +200,26 @@ function buildPayload(status) {
     };
 }
 
-async function saveChecksheet(status) {
+async function saveChecksheet(status, silent = false) {
     const payload = buildPayload(status);
 
     const res = await fetch('ajax/save_checksheet.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        keepalive: true,
     });
     const data = await res.json();
 
     if (!data.success) {
+        if (silent) return false;
         alert('Failed to save: ' + (data.error || 'unknown error'));
         return;
     }
 
     if (status === 'draft') {
         currentDraftId = data.header_id;
+        if (silent) return true;
         alert('Saved as draft. You can continue it later from the My Drafts menu.');
     } else {
         alert('Checksheet submitted successfully.');
@@ -226,5 +229,6 @@ async function saveChecksheet(status) {
 
 document.getElementById('btn-draft').addEventListener('click', () => saveChecksheet('draft'));
 document.getElementById('btn-submit').addEventListener('click', () => saveChecksheet('submitted'));
+if (window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });
 
 loadItems();

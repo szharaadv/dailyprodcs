@@ -251,24 +251,27 @@ function buildPayload(status) {
     };
 }
 
-async function saveChecksheet(status) {
-    statusLabel.textContent = 'Saving...';
+async function saveChecksheet(status, silent = false) {
+    if (!silent) statusLabel.textContent = 'Saving...';
     const payload = buildPayload(status);
 
     const res = await fetch('ajax/save_fopump_check.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        keepalive: true,
     });
     const data = await res.json();
 
     if (!data.success) {
+        if (silent) return false;
         statusLabel.textContent = '';
         alert('Failed to save: ' + (data.error || 'unknown error'));
         return;
     }
 
     currentHeaderId = data.header_id;
+    if (silent) return true; // autosave: don't alert or reload (would wipe in-progress edits)
     alert(status === 'draft'
         ? 'Tersimpan sebagai draft.'
         : 'Tersimpan. Tanda tangan Anda tercatat — lihat progres sign-off di atas.');
@@ -278,5 +281,6 @@ async function saveChecksheet(status) {
 
 document.getElementById('btn-draft').addEventListener('click', () => saveChecksheet('draft'));
 document.getElementById('btn-submit').addEventListener('click', () => saveChecksheet('submitted'));
+if (window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });
 
 loadItems();

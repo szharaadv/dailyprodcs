@@ -27,6 +27,12 @@ $page_subtitle = $page_subtitle ?? '';
     ?>
     <link rel="stylesheet" href="<?= $base_url ?>assets/css/<?= $cssFile ?>?v=<?= $ver ?>">
     <?php endforeach; ?>
+    <script>
+        // Autosave-to-draft is off while editing an already-submitted record (an
+        // approved edit unlock) — there we're changing a submitted sheet, not a draft.
+        const AUTOSAVE_ENABLED = <?= json_encode(empty($editing_unlocked)) ?>;
+    </script>
+    <script src="<?= $base_url ?>assets/js/autosave-draft.js?v=<?= @filemtime(__DIR__ . '/../assets/js/autosave-draft.js') ?: 1 ?>"></script>
 </head>
 <body>
 <div class="app-shell">

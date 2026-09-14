@@ -164,20 +164,23 @@ function buildPayload(status) {
     };
 }
 
-async function save(status) {
-    statusLabel.textContent = 'Saving...';
+async function save(status, silent = false) {
+    if (!silent) statusLabel.textContent = 'Saving...';
     const res = await fetch('ajax/save_fopump.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(buildPayload(status)),
+        keepalive: true,
     });
     const data = await res.json();
     if (data.error) {
+        if (silent) return false;
         statusLabel.textContent = '';
         alert('Failed to save: ' + data.error);
         return;
     }
     currentHeaderId = data.header_id;
+    if (silent) return true; // autosave: stay on the page, no redirect
     window.location.href = `view_fopump_checksheets.php?saved=1`;
 }
 
@@ -187,5 +190,6 @@ document.getElementById('btn-draft').addEventListener('click', () => save('draft
 document.getElementById('btn-submit').addEventListener('click', () => {
     if (confirm('Submit this FO Pump daily report?')) save('submitted');
 });
+if (window.initAutosaveDraft) initAutosaveDraft({ save: () => save('draft', true) });
 
 loadContext();
