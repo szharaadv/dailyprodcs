@@ -133,7 +133,10 @@ function import_torque(PDO $pdo, int $dept, array $rows): array
         VALUES (?,?,?,?,?,?,?,?,?,?,\'submitted\')');
     $updH = $pdo->prepare('UPDATE t_assy_header SET mark_crank_shaft=?,mark_conrod=?,mark_fo_pump=?,no_cyl_block=?,no_engine=?,detail_model=?,checker_id=?,status=\'submitted\' WHERE id=?');
     $delD = $pdo->prepare('DELETE FROM t_assy_detail WHERE header_id=?');
-    $insD = $pdo->prepare('INSERT INTO t_assy_detail (header_id,checklist_item_id,actual_result,consumable_item) VALUES (?,?,?,?)');
+    // ON DUPLICATE KEY UPDATE: merge a repeated item within one record instead
+    // of hitting uq_assydetail_slot and aborting the import (see import_painting).
+    $insD = $pdo->prepare('INSERT INTO t_assy_detail (header_id,checklist_item_id,actual_result,consumable_item) VALUES (?,?,?,?)
+        ON DUPLICATE KEY UPDATE actual_result=VALUES(actual_result), consumable_item=VALUES(consumable_item)');
     $selItem = $pdo->prepare('SELECT id FROM m_assy_checklist_item WHERE model_id=? AND LOWER(checking_item)=LOWER(?) LIMIT 1');
     $selModel = $pdo->prepare('SELECT id FROM m_assy_model WHERE department_id=? AND LOWER(name)=LOWER(?) AND is_active=1 LIMIT 1');
 
@@ -224,7 +227,13 @@ function import_painting(PDO $pdo, int $dept, array $rows): array
     $insH = $pdo->prepare('INSERT INTO t_checksheet_header (tanggal,condition_id,department_id,checker_id,jam,shift_id,status) VALUES (?,?,?,?,?,?,\'submitted\')');
     $updH = $pdo->prepare('UPDATE t_checksheet_header SET checker_id=?,shift_id=?,status=\'submitted\' WHERE id=?');
     $delD = $pdo->prepare('DELETE FROM t_checksheet_detail WHERE header_id=?');
-    $insD = $pdo->prepare('INSERT INTO t_checksheet_detail (header_id,checklist_item_id,actual_result,category) VALUES (?,?,?,?)');
+    // ON DUPLICATE KEY UPDATE: if the source list repeats a row that resolves
+    // to the same checklist item within one record (e.g. two "Paint mixer
+    // condition 2 unit" lines, which map to a single master item), merge them —
+    // last value wins — instead of hitting the uq_csdetail_slot unique key and
+    // aborting the whole import.
+    $insD = $pdo->prepare('INSERT INTO t_checksheet_detail (header_id,checklist_item_id,actual_result,category) VALUES (?,?,?,?)
+        ON DUPLICATE KEY UPDATE actual_result=VALUES(actual_result), category=VALUES(category)');
     $selCond = $pdo->prepare('SELECT id FROM m_condition WHERE department_id=? AND LOWER(name)=LOWER(?) AND is_active=1 LIMIT 1');
     $selItem = $pdo->prepare('SELECT id FROM m_checklist_item WHERE condition_id=? AND LOWER(checking_item)=LOWER(?) LIMIT 1');
     $selShift = $pdo->prepare('SELECT id FROM m_shift WHERE LOWER(name)=LOWER(?) AND is_active=1 LIMIT 1');
