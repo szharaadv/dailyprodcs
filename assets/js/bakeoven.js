@@ -46,9 +46,15 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
         tbody.innerHTML = '<tr><td class="empty">No checking times set up for this oven yet.</td></tr>';
         return;
     }
+    // Two kinds of empty cell: an "off" day (holiday/weekend — no check expected)
+    // and a "missed" day (a past working day left blank). Tag each so they can be
+    // told apart at a glance instead of both just looking grey.
     const holidayBlockedDays = new Set();
+    const pastWorkday = new Set();
     for (let day = 1; day <= day1Total; day++) {
-        if (getDayInfo(day, month, year, holidays, null).blocked) holidayBlockedDays.add(day);
+        if (getDayInfo(day, month, year, holidays, null).blocked) { holidayBlockedDays.add(day); continue; }
+        const ds = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (TODAY && ds < TODAY) pastWorkday.add(day);
     }
 
     let html = '';
@@ -59,7 +65,8 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
             const cls = verdictClass(value, min, max);
             const writable = !holidayBlockedDays.has(day) && isCellWritable(value === "", day, month, year, TODAY, unlocked);
             const dis = writable ? '' : 'disabled';
-            html += `<td><input type="text" inputmode="decimal" class="temp-input ${cls}" data-time-id="${t.id}" data-day="${day}" value="${escapeHtml(value)}" ${dis}></td>`;
+            const tdCls = holidayBlockedDays.has(day) ? 'cal-off' : (value === '' && pastWorkday.has(day) ? 'cal-missed' : '');
+            html += `<td class="${tdCls}"><input type="text" inputmode="decimal" class="temp-input ${cls}" data-time-id="${t.id}" data-day="${day}" value="${escapeHtml(value)}" ${dis}></td>`;
         }
         html += '</tr>';
     }
@@ -73,18 +80,19 @@ function renderRows(times, details, paraf, day1Total, min, max, month, year, hol
         const filled = !!(pf && pf.id);
         const firstName = filled ? (String(pf.name ?? '').split(' ')[0] || '—') : '';
         const writable = !holidayBlockedDays.has(day) && isCellWritable(!filled, day, month, year, TODAY, unlocked);
+        const tdCls = holidayBlockedDays.has(day) ? 'cal-off' : (!filled && pastWorkday.has(day) ? 'cal-missed' : '');
         if (!writable) {
-            html += `<td><span class="paraf-cell paraf-ro${filled ? ' filled' : ''}">${filled ? escapeHtml(firstName) : '–'}</span></td>`;
+            html += `<td class="${tdCls}"><span class="paraf-cell paraf-ro${filled ? ' filled' : ''}">${filled ? escapeHtml(firstName) : '–'}</span></td>`;
         } else if (canStamp) {
             const inner = filled ? escapeHtml(firstName) : '<span class="paraf-plus">+</span>';
-            html += `<td><button type="button" class="paraf-cell${filled ? ' filled' : ''}" data-day="${day}" data-filled="${filled ? '1' : '0'}">${inner}</button></td>`;
+            html += `<td class="${tdCls}"><button type="button" class="paraf-cell${filled ? ' filled' : ''}" data-day="${day}" data-filled="${filled ? '1' : '0'}">${inner}</button></td>`;
         } else {
             const selId = filled ? String(pf.id) : '';
             let opts = '<option value="">-</option>';
             for (const p of PEOPLE) {
                 opts += `<option value="${p.id}" ${String(p.id) === selId ? 'selected' : ''}>${escapeHtml(String(p.name).split(' ')[0])}</option>`;
             }
-            html += `<td><select class="paraf-select" data-day="${day}">${opts}</select></td>`;
+            html += `<td class="${tdCls}"><select class="paraf-select" data-day="${day}">${opts}</select></td>`;
         }
     }
     html += '</tr>';

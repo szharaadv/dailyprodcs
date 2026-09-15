@@ -78,7 +78,8 @@ function renderRows(items, details, day1Total, month, year, holidays, unlocked) 
             const cls = verdictClass(value, min, max);
             const writable = !holidayBlockedDays.has(day) && isCellWritable(value === '', day, month, year, TODAY, unlocked);
             const dis = writable ? '' : 'disabled';
-            html += `<td><input type="text" inputmode="decimal" class="temp-input ${cls}" data-item-id="${item.id}" data-day="${day}" value="${escapeHtml(value)}" ${dis}></td>`;
+            const tdCls = cellStateClass(day, month, year, holidays, TODAY, value === '');
+            html += `<td class="${tdCls}"><input type="text" inputmode="decimal" class="temp-input ${cls}" data-item-id="${item.id}" data-day="${day}" value="${escapeHtml(value)}" ${dis}></td>`;
         }
         html += '</tr>';
     }

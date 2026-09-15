@@ -907,6 +907,26 @@ button.paraf-cell:hover { background: #f5f6f8; border-color: #c3c8d1; }
 .paraf-cell.paraf-ro { cursor: default; color: #b7bcc4; background: #f0f1f3; border-color: #e6e8ec; }
 .paraf-cell.paraf-ro.filled { color: #2a6b2a; background: #eef7f0; border-color: #cfe8d5; }
 
+/* Monthly-grid empty-cell states (shared by Bake Oven / Paint Viscosity column
+ * grids and Washing / Sub Assembly row grids): amber = a missed working day
+ * left blank, striped grey = an off day (holiday/weekend, no check expected).
+ * Applied to a per-cell <td> (column grids) or a per-day <tr> (row grids). */
+td.cal-missed, tr.cal-missed > td { background-color: #fff8e6; }
+td.cal-missed .temp-input, td.cal-missed input, td.cal-missed select, td.cal-missed .paraf-cell.paraf-ro,
+tr.cal-missed input, tr.cal-missed select, tr.cal-missed .cat-toggle {
+    background-color: #fff2cc !important; border-color: #ecc978 !important; color: #8a5a00 !important;
+}
+td.cal-off, tr.cal-off > td { background-image: repeating-linear-gradient(-45deg, transparent, transparent 4px, #e3e6ea 4px, #e3e6ea 5px); }
+td.cal-off .temp-input:disabled, td.cal-off input:disabled, td.cal-off select:disabled, td.cal-off .paraf-cell.paraf-ro,
+tr.cal-off input:disabled, tr.cal-off select:disabled { background-color: rgba(255, 255, 255, .4) !important; }
+
+/* Legend under a monthly grid. */
+.grid-legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 8px 2px 0; font-size: 12px; color: #6b7280; }
+.grid-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.grid-legend-sw { width: 15px; height: 15px; border-radius: 3px; border: 1px solid #d7dbe2; display: inline-block; }
+.grid-legend-missed { background: #fff2cc; border-color: #ecc978; }
+.grid-legend-off { background-image: repeating-linear-gradient(-45deg, #f3f4f6, #f3f4f6 3px, #e3e6ea 3px, #e3e6ea 4px); }
+
 /* Small muted "Tersimpan otomatis HH:MM" note shown next to the Draft/Submit
  * buttons by assets/js/autosave-draft.js. */
 .autosave-status { font-size: 12px; color: #8b93a1; margin-left: 10px; align-self: center; white-space: nowrap; }

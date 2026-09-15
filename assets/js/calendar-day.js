@@ -49,6 +49,19 @@ function isCellWritable(isEmpty, day, month, year, todayStr, unlocked) {
     return isEmpty && dateStr === yest.toISOString().slice(0, 10);
 }
 
+/**
+ * State class for a monthly-grid cell (or whole day-row) so empty cells read
+ * clearly: 'cal-off' for a holiday/weekend (no check expected), 'cal-missed'
+ * for a past working day left blank, '' otherwise (future day, or filled).
+ * `isEmpty` = the cell/day currently has no value.
+ */
+function cellStateClass(day, month, year, holidays, todayStr, isEmpty) {
+    if (getDayInfo(day, month, year, holidays, null).blocked) return 'cal-off';
+    if (!isEmpty || !todayStr) return '';
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return dateStr < todayStr ? 'cal-missed' : '';
+}
+
 async function fetchHolidays(year) {
     try {
         const res = await fetch(`ajax/get_holidays.php?year=${year}`);

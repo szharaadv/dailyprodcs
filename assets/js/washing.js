@@ -27,7 +27,10 @@ function renderRows(days, rows, month, year, holidays, unlocked) {
         const { cls, title, blocked: holidayBlocked } = getDayInfo(day, month, year, holidays, null);
         const w = (val) => !holidayBlocked && isCellWritable(!val, day, month, year, TODAY, unlocked);
         const dis = (val) => w(val) ? '' : 'disabled';
-        const rowCls = holidayBlocked ? 'washing-row-blocked' : '';
+        const dayEmpty = !r.ganti_air && !r.temperatur_air && !r.penambahan_gildaon
+            && !r.total_acid && !r.checker_id && !r.control_id;
+        const rowCls = (holidayBlocked ? 'washing-row-blocked ' : '')
+            + cellStateClass(day, month, year, holidays, TODAY, dayEmpty);
         html += `<tr class="${rowCls}">
             <td class="washing-date-col ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>
             <td><input type="text" class="washing-input" data-day="${day}" data-field="ganti_air" value="${escapeHtml(r.ganti_air)}" ${dis(r.ganti_air)}></td>

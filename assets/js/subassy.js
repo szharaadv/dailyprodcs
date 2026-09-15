@@ -32,7 +32,9 @@ function renderRows(items, details, month, year, holidays, unlocked) {
     let html = '';
     for (let day = 1; day <= total; day++) {
         const { cls, title, blocked: holidayBlocked } = getDayInfo(day, month, year, holidays, null);
-        html += `<tr><td class="jig-day ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>`;
+        const dayEmpty = items.every((item) => (details[`${item.id}_${day}`] ?? '') === '');
+        const rowCls = cellStateClass(day, month, year, holidays, TODAY, dayEmpty);
+        html += `<tr class="${rowCls}"><td class="jig-day ${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>${day}</td>`;
         for (const item of items) {
             const value = details[`${item.id}_${day}`] ?? '';
             const writable = !holidayBlocked && isCellWritable(value === '', day, month, year, TODAY, unlocked);

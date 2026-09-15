@@ -89,7 +89,10 @@ function export_build_painting(PDO $pdo, array $section, int $month, int $year):
         $ok = 0; $ng = 0; $n = 0; $body = '';
         foreach ($items as $it) {
             $n++;
-            $isng = _x_isng($it['category']) || _x_isng($it['actual_result']);
+            // Verdict comes from the checker's Category (Normal/OK vs NG/Abnormal)
+            // only — not from parsing the Actual Result text, where a good value
+            // like "Tidak Bocor" would wrongly match the word "bocor" as NG.
+            $isng = _x_isng($it['category']);
             $isng ? $ng++ : $ok++;
             $body .= '<tr><td class="b center">' . $n . '</td><td class="b">' . _x_e($h['scope'])
                 . '</td><td class="b">' . _x_e($it['checking_item']) . '</td><td class="b center">Checked</td>'
