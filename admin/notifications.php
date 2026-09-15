@@ -51,8 +51,9 @@ require __DIR__ . '/../includes/app_top.php';
 <?php if (isset($_GET['deleted'])): ?><div class="alert alert-ok">Notifikasi dihapus.</div><?php endif; ?>
 <?php if (isset($_GET['err'])): ?><div class="alert alert-error">Judul wajib diisi<?= $_GET['err'] == 2 ? ', dan pilih user tujuan' : '' ?>.</div><?php endif; ?>
 
-<div class="admin-card" style="margin-bottom:20px;">
-    <h3 style="margin:0 0 12px;">Kirim notifikasi baru</h3>
+<div class="admin-form" style="margin-bottom:22px;">
+    <div class="admin-form-title">&#128276; Kirim notifikasi baru</div>
+    <div class="admin-form-hint">Pengumuman / update / reminder ini akan muncul di lonceng notifikasi user.</div>
     <form method="post">
         <input type="hidden" name="action" value="send">
         <div class="form-grid">
@@ -89,11 +90,11 @@ require __DIR__ . '/../includes/app_top.php';
                 </select>
             </div>
         </div>
-        <div style="margin-top:12px;"><button type="submit" class="btn">&#128276; Kirim</button></div>
+        <div style="margin-top:6px;"><button type="submit" class="btn">&#128276; Kirim notifikasi</button></div>
     </form>
 </div>
 
-<h3 style="margin:0 0 10px;">Terkirim (50 terakhir)</h3>
+<h3 style="margin:22px 0 12px;font:600 15px Inter,sans-serif;color:#1f2430;">Terkirim <span style="color:#8b93a1;font-weight:500;">(50 terakhir)</span></h3>
 <div class="table-scroll">
 <table class="admin-table">
     <thead>

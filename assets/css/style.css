@@ -918,6 +918,27 @@ button.paraf-cell:hover { background: #f5f6f8; border-color: #c3c8d1; }
     background: #fdf1ef !important;
 }
 
+/* ---------- Export control (Bulan/Tahun picker + button) ---------- */
+.export-bar {
+    display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap;
+    background: #fff; border: 1px solid #e4e7ec; border-radius: 12px;
+    padding: 14px 16px; margin: 0 0 16px; box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+}
+.export-bar-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #1f2430; align-self: center; }
+.export-bar-title svg { width: 18px; height: 18px; color: #9b3b32; }
+.export-bar-form { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 0; }
+.export-bar-form-alt { padding-left: 18px; border-left: 1px solid #eceef1; }
+.export-field { display: flex; flex-direction: column; gap: 5px; font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em; color: #8b93a1; }
+.export-select {
+    font-size: 13px; padding: 8px 30px 8px 11px; border: 1px solid #d7dbe2; border-radius: 8px;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b93a1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 10px center;
+    color: #1f2430; min-width: 118px; font-weight: 600; appearance: none; -webkit-appearance: none; cursor: pointer;
+}
+.export-select:hover { border-color: #c3c8d1; }
+.export-select:focus { outline: none; border-color: #9b3b32; box-shadow: 0 0 0 3px rgba(155, 59, 50, .12); }
+.export-btn { align-self: flex-end; }
+
 /* Sub Assembly's OK/NG toggle is built from <span> buttons, which have no
  * native disabled state — this class fakes it visually and via pointer-events. */
 .cat-toggle.cal-blocked {

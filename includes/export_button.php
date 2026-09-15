@@ -13,40 +13,38 @@ if (!empty($export_route) && !empty($export_dept)) {
         $__m = max(1, min(12, (int)($_GET['month'] ?? date('n'))));
         $__y = (int)($_GET['year'] ?? date('Y'));
         $__names = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        echo '<form action="export_checksheet.php" method="get" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px;">';
-        echo '<input type="hidden" name="section_id" value="' . $__sid . '">';
-        echo '<span style="font-weight:600;">Export bulan:</span>';
-        echo '<select name="month">';
-        for ($i = 1; $i <= 12; $i++) {
-            echo '<option value="' . $i . '"' . ($i === $__m ? ' selected' : '') . '>' . $__names[$i] . '</option>';
-        }
-        echo '</select>';
-        echo '<select name="year">';
-        for ($y = (int)date('Y') - 2; $y <= (int)date('Y') + 1; $y++) {
-            echo '<option value="' . $y . '"' . ($y === $__y ? ' selected' : '') . '>' . $y . '</option>';
-        }
-        echo '</select>';
-        echo '<button type="submit" class="btn">&#8681; Export Excel</button>';
-        echo '</form>';
 
-        // Torque also offers a print-to-PDF monthly report (one engine per page).
-        if ($export_route === 'assembly_list.php') {
-            echo '<form action="export_torque_pdf.php" method="get" target="_blank" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px;">';
-            echo '<input type="hidden" name="section_id" value="' . $__sid . '">';
-            echo '<input type="hidden" name="print" value="1">';
-            echo '<span style="font-weight:600;">Export PDF bulan:</span>';
-            echo '<select name="month">';
-            for ($i = 1; $i <= 12; $i++) {
-                echo '<option value="' . $i . '"' . ($i === $__m ? ' selected' : '') . '>' . $__names[$i] . '</option>';
-            }
-            echo '</select>';
-            echo '<select name="year">';
-            for ($y = (int)date('Y') - 2; $y <= (int)date('Y') + 1; $y++) {
-                echo '<option value="' . $y . '"' . ($y === $__y ? ' selected' : '') . '>' . $y . '</option>';
-            }
-            echo '</select>';
-            echo '<button type="submit" class="btn">&#128424; Export PDF</button>';
-            echo '</form>';
+        $__monthOptions = '';
+        for ($i = 1; $i <= 12; $i++) {
+            $__monthOptions .= '<option value="' . $i . '"' . ($i === $__m ? ' selected' : '') . '>' . $__names[$i] . '</option>';
         }
+        $__yearOptions = '';
+        for ($y = (int)date('Y') - 2; $y <= (int)date('Y') + 1; $y++) {
+            $__yearOptions .= '<option value="' . $y . '"' . ($y === $__y ? ' selected' : '') . '>' . $y . '</option>';
+        }
+        ?>
+        <div class="export-bar">
+            <div class="export-bar-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export Excel</span>
+            </div>
+            <form action="export_checksheet.php" method="get" class="export-bar-form">
+                <input type="hidden" name="section_id" value="<?= $__sid ?>">
+                <label class="export-field"><span>Bulan</span><select name="month" class="export-select"><?= $__monthOptions ?></select></label>
+                <label class="export-field"><span>Tahun</span><select name="year" class="export-select"><?= $__yearOptions ?></select></label>
+                <button type="submit" class="btn export-btn">Unduh</button>
+            </form>
+
+            <?php if ($export_route === 'assembly_list.php'): // Torque also offers a print-to-PDF report ?>
+            <form action="export_torque_pdf.php" method="get" target="_blank" class="export-bar-form export-bar-form-alt">
+                <input type="hidden" name="section_id" value="<?= $__sid ?>">
+                <input type="hidden" name="print" value="1">
+                <label class="export-field"><span>PDF Bulan</span><select name="month" class="export-select"><?= $__monthOptions ?></select></label>
+                <label class="export-field"><span>Tahun</span><select name="year" class="export-select"><?= $__yearOptions ?></select></label>
+                <button type="submit" class="btn btn-secondary export-btn">PDF</button>
+            </form>
+            <?php endif; ?>
+        </div>
+        <?php
     }
 }
