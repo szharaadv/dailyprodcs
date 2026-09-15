@@ -51,6 +51,23 @@ function notif_list(PDO $pdo, int $limit = 20): array
     return $stmt->fetchAll();
 }
 
+/** Visible notifications newer than $afterId (for live polling / toasts). */
+function notif_since(PDO $pdo, int $afterId, int $limit = 10): array
+{
+    $vid = notif_viewer_id();
+    [$w, $p] = _notif_visible_where($vid);
+    $limit = max(1, min(20, $limit));
+    $stmt = $pdo->prepare(
+        "SELECT n.id, n.title, n.body, n.type, n.created_by, n.created_at
+         FROM t_notification n
+         WHERE $w AND n.id > ?
+         ORDER BY n.id ASC
+         LIMIT $limit"
+    );
+    $stmt->execute(array_merge($p, [$afterId]));
+    return $stmt->fetchAll();
+}
+
 /** Mark every notification currently visible to the viewer as read. */
 function notif_mark_all_read(PDO $pdo): void
 {

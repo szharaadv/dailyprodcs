@@ -1090,6 +1090,25 @@ button.missing-banner-fill-btn { cursor: pointer; font-family: inherit; line-hei
     font-size: 13px; color: #9b3b32; border-top: 1px solid #f0f1f3; text-decoration: none; }
 .notif-panel-foot:hover { background: #faf7f6; }
 
+/* Toast pop-ups for notifications that arrive while the page is open. */
+.toast-layer { position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px; width: 330px; max-width: calc(100vw - 32px); }
+.toast { display: flex; gap: 11px; align-items: flex-start; background: #fff;
+    border: 1px solid #e4e7ec; border-left: 4px solid #9b3b32; border-radius: 10px;
+    padding: 12px 12px 12px 14px; box-shadow: 0 12px 32px rgba(16, 24, 40, .18);
+    opacity: 0; transform: translateY(16px); transition: opacity .25s ease, transform .25s ease; cursor: pointer; }
+.toast.show { opacity: 1; transform: none; }
+.toast-info { border-left-color: #2b5bb5; }
+.toast-update { border-left-color: #3f7d43; }
+.toast-reminder { border-left-color: #b3660f; }
+.toast-icon { font-size: 16px; line-height: 1.35; flex-shrink: 0; }
+.toast-body { min-width: 0; flex: 1; }
+.toast-title { font-weight: 700; font-size: 13.5px; color: #1f2430; }
+.toast-text { font-size: 12.5px; color: #4b5563; margin-top: 2px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.toast-close { background: none; border: none; font-size: 18px; line-height: 1; color: #9aa1ab; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
+.toast-close:hover { color: #1f2430; }
+
 .signoff-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .signoff-badge.done { background: #eafaf0; color: #1f7a3d; }
 .signoff-badge.waiting { background: #fff4e6; color: #b3660f; }
