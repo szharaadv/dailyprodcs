@@ -15,7 +15,10 @@ function checksheetFirstEmpty(root) {
     for (const el of els) {
         if (el.disabled || el.readOnly) continue;
         if (skipTypes.includes((el.type || '').toLowerCase())) continue;
-        if (el.classList.contains('optional') || el.hasAttribute('data-optional')) continue;
+        // Skip fields marked optional, or anything inside an optional container
+        // (e.g. a list/tally table where blank rows are normal, marked with
+        // data-optional on the wrapper).
+        if (el.closest('[data-optional], .optional')) continue;
         if (el.offsetParent === null) continue; // not visible (collapsed/hidden)
         if ((el.value ?? '').trim() === '') return el;
     }

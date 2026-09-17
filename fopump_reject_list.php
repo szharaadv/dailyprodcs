@@ -89,7 +89,10 @@ require __DIR__ . '/includes/app_top.php';
         <span class="import-hint">Add one row per reject occurrence during the month.</span>
     </div>
 
-    <div class="table-wrap">
+    <!-- data-optional: a reject log — a month may have no rejects at all, and
+         Remarks are optional — so the table is exempt from the "all fields
+         required" submit guard (header fields above stay required). -->
+    <div class="table-wrap" data-optional>
         <table id="fopump-reject-table" class="fopump-check-table">
             <thead>
                 <tr>

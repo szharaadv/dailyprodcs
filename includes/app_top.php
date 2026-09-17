@@ -16,9 +16,17 @@ require_once __DIR__ . '/notifications.php';
 $notifUnread = 0;
 $notifList = [];
 if (current_user() !== null) {
-    $__notifPdo = get_db();
-    $notifUnread = notif_unread_count($__notifPdo);
-    $notifList = notif_list($__notifPdo, 15);
+    // Degrade gracefully (empty bell) if the notification tables aren't there
+    // yet — e.g. the code was deployed before its migration was run — instead
+    // of fatal-erroring every page.
+    try {
+        $__notifPdo = get_db();
+        $notifUnread = notif_unread_count($__notifPdo);
+        $notifList = notif_list($__notifPdo, 15);
+    } catch (Throwable $e) {
+        $notifUnread = 0;
+        $notifList = [];
+    }
 }
 ?>
 <!DOCTYPE html>

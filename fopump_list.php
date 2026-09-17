@@ -89,7 +89,11 @@ if (!$editing_unlocked) {
     }
 }
 
-$selected_date = $editing_unlocked ? $editing_tanggal : ($catchup_tanggal ?: date('Y-m-d'));
+// The page loads its data by the date field, so continuing a draft must open on
+// the draft's OWN date — otherwise it lands on today and shows the wrong record.
+$selected_date = $editing_unlocked ? $editing_tanggal
+    : ($draft ? $draft['tanggal']
+    : ($catchup_tanggal ?: date('Y-m-d')));
 
 $base_url = '';
 $active_nav = 'checksheet';
@@ -157,7 +161,10 @@ require __DIR__ . '/includes/app_top.php';
         <button type="button" class="btn btn-secondary" id="btn-add-row">+ Add Row</button>
     </div>
 
-    <div class="table-wrap">
+    <!-- data-optional: this is a production tally, not a checklist — rows and
+         whole sections (e.g. "To Sparepart PTC") are often legitimately blank,
+         so the table is exempt from the "all fields required" submit guard. -->
+    <div class="table-wrap" data-optional>
         <table id="fopump-table" class="fopump-table">
             <colgroup>
                 <col class="fopump-col-no">
