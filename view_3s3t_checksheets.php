@@ -20,6 +20,18 @@ if (!$department) {
     exit;
 }
 
+// Admin-only delete of a 3S-3T record (removes the header and its details).
+if (is_admin() && ($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
+    $delId = (int)$_GET['id'];
+    $pdo->beginTransaction();
+    $pdo->prepare('DELETE FROM t_3s3t_detail WHERE header_id = ?')->execute([$delId]);
+    $pdo->prepare('DELETE FROM t_3s3t_header WHERE id = ?')->execute([$delId]);
+    $pdo->commit();
+    $q = http_build_query(array_filter(['year' => $_GET['year'] ?? '', 'line' => $_GET['line'] ?? '', 'deleted' => 1]));
+    header('Location: view_3s3t_checksheets.php?' . $q);
+    exit;
+}
+
 $year = (int)($_GET['year'] ?? date('Y'));
 $selected_line = trim((string)($_GET['line'] ?? ''));
 
@@ -62,6 +74,8 @@ require __DIR__ . '/includes/app_top.php';
 $export_route = '3s3t_list.php'; $export_dept = $department_id; require __DIR__ . '/includes/export_button.php';
 ?>
 
+<?php if (isset($_GET['deleted'])): ?><div class="alert alert-ok">Record deleted.</div><?php endif; ?>
+
 <form method="get" class="admin-form filter-bar">
     <div class="form-grid">
         <div class="form-row">
@@ -102,6 +116,7 @@ $export_route = '3s3t_list.php'; $export_dept = $department_id; require __DIR__ 
         <span class="cs-status <?= $row['ng_count'] > 0 ? 'cs-status-draft' : 'cs-status-submitted' ?>"><?= $row['ng_count'] > 0 ? 'Has NG' : 'All OK' ?></span>
         <?php if (is_admin()): ?>
             <a class="cs-view-btn-sm" href="3s3t_list.php?edit_id=<?= $row['id'] ?>">Edit</a>
+            <a class="cs-delete-link" href="view_3s3t_checksheets.php?action=delete&id=<?= $row['id'] ?>&year=<?= (int)$row['year'] ?>&line=<?= urlencode($selected_line) ?>" onclick="return confirm('Delete this 3S-3T record (<?= htmlspecialchars($row['line'] . ' - ' . $monthNames[$row['month']] . ' ' . $row['year'], ENT_QUOTES) ?>)? This cannot be undone.')">Delete</a>
         <?php else: ?>
         <button type="button" class="cs-request-edit-btn" data-edit-type="3s3t" data-edit-id="<?= $row['id'] ?>" data-edit-label="<?= htmlspecialchars($row['line'] . ' - ' . $monthNames[$row['month']] . ' ' . $row['year']) ?>">Request Edit</button>
         <?php endif; ?>
