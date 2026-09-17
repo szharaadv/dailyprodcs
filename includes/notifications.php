@@ -101,9 +101,9 @@ function notif_time_ago(?string $at): string
     $ts = strtotime($at);
     if (!$ts) return '';
     $diff = time() - $ts;
-    if ($diff < 60) return 'baru saja';
-    if ($diff < 3600) return floor($diff / 60) . ' menit lalu';
-    if ($diff < 86400) return floor($diff / 3600) . ' jam lalu';
-    if ($diff < 604800) return floor($diff / 86400) . ' hari lalu';
+    if ($diff < 60) return 'just now';
+    if ($diff < 3600) return floor($diff / 60) . 'm ago';
+    if ($diff < 86400) return floor($diff / 3600) . 'h ago';
+    if ($diff < 604800) return floor($diff / 86400) . 'd ago';
     return date('d/m/Y', $ts);
 }

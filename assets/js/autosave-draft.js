@@ -44,7 +44,7 @@ function initAutosaveDraft(opts) {
         // sheet isn't filled enough, or the record is already submitted) the
         // save returns falsy — stay quiet and wait for the next edit to retry,
         // rather than spamming requests or showing a scary error.
-        if (ok) stamp('Tersimpan otomatis ' + hhmm(new Date()));
+        if (ok) stamp('Auto-saved ' + hhmm(new Date()));
     }
     function schedule() { clearTimeout(timer); timer = setTimeout(run, DELAY); }
 

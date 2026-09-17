@@ -3,7 +3,7 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 $pdo = get_db();
 
-$next = $_GET['next'] ?? ($_POST['next'] ?? 'index.php');
+$next = $_GET['next'] ?? ($_POST['next'] ?? 'dashboard.php');
 // Only allow relative redirects within this app.
 if (!preg_match('#^[a-zA-Z0-9_\-./]+\.php(\?.*)?$#', $next)) {
     $next = 'index.php';
@@ -97,6 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'user_
             <button type="submit" class="dept-go" style="border:none; background:none; cursor:pointer; font:inherit; padding:8px 0 0; width:100%;">Continue &rarr;</button>
         </form>
     </div>
+
+    <p class="landing-hint" style="margin-top:26px;">
+        No account? <a href="dashboard_public.php" style="color:#9b3b32; font-weight:600; text-decoration:none;">&#128202; View today's check sheet status &rarr;</a>
+    </p>
 </div>
 </body>
 </html>

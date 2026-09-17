@@ -129,6 +129,7 @@ function icon(string $name): string
         'users'    => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         'clock'    => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
         'check'    => '<path d="M20 6L9 17l-5-5"/>',
+        'grid'     => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
     ];
     return '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' . ($icons[$name] ?? '') . '</svg>';
 }
@@ -144,6 +145,9 @@ function icon(string $name): string
 
     <nav class="sidebar-nav">
         <div class="nav-group-label">Workspace</div>
+        <a class="nav-item <?= $active_nav === 'dashboard' ? 'active' : '' ?>" href="<?= $base_url ?>dashboard.php">
+            <?= icon('grid') ?> Dashboard
+        </a>
         <a class="nav-item <?= $active_nav === 'checksheet' ? 'active' : '' ?>" href="<?= $checksheet_href ?>">
             <?= icon('doc') ?> Check Sheet
         </a>
@@ -180,7 +184,7 @@ function icon(string $name): string
             $signoff_pending = signoff_pending_count($pdo, $signoff_role, $signoff_type);
         ?>
         <a class="nav-item <?= $active_nav === 'my-approvals' ? 'active' : '' ?>" href="<?= $base_url ?>my_approvals.php?type=<?= urlencode($signoff_type) ?>">
-            <?= icon('check') ?> Persetujuan Saya
+            <?= icon('check') ?> My Approvals
             <?php if ($signoff_pending > 0): ?><span class="nav-badge"><?= $signoff_pending ?></span><?php endif; ?>
         </a>
         <?php endif; ?>
@@ -267,8 +271,9 @@ function icon(string $name): string
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
             <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>admin/edit_requests.php">Edit Requests<?php if ($pending_edit_requests > 0): ?> <span class="badge badge-accent" style="margin-left:6px;"><?= $pending_edit_requests ?></span><?php endif; ?></a>
-            <a class="nav-subitem <?= $active_nav === 'mgmt-section-docs' ? 'active' : '' ?>" href="<?= $base_url ?>admin/section_docs.php">Nomor Dokumen</a>
-            <a class="nav-subitem <?= $active_nav === 'mgmt-notifications' ? 'active' : '' ?>" href="<?= $base_url ?>admin/notifications.php">Notifikasi</a>
+            <a class="nav-subitem <?= $active_nav === 'mgmt-section-docs' ? 'active' : '' ?>" href="<?= $base_url ?>admin/section_docs.php">Document Numbers</a>
+            <a class="nav-subitem <?= $active_nav === 'mgmt-notifications' ? 'active' : '' ?>" href="<?= $base_url ?>admin/notifications.php">Notifications</a>
+            <a class="nav-subitem <?= $active_nav === 'mgmt-dashboard-settings' ? 'active' : '' ?>" href="<?= $base_url ?>admin/dashboard_settings.php">Dashboard Settings</a>
         </div>
         <?php else: ?>
         <!-- Visible but inert for non-admins: shows the nav exists without letting them click into it. -->

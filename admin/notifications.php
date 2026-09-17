@@ -42,63 +42,63 @@ $sent = $pdo->query(
 
 $base_url = '../';
 $active_nav = 'mgmt-notifications';
-$page_title = 'Notifikasi';
-$page_subtitle = 'Management · Kirim pengumuman / update / reminder ke user';
+$page_title = 'Notifications';
+$page_subtitle = 'Management · Send announcements / updates / reminders to users';
 require __DIR__ . '/../includes/app_top.php';
 ?>
 
-<?php if (isset($_GET['sent'])): ?><div class="alert alert-ok">Notifikasi terkirim.</div><?php endif; ?>
-<?php if (isset($_GET['deleted'])): ?><div class="alert alert-ok">Notifikasi dihapus.</div><?php endif; ?>
-<?php if (isset($_GET['err'])): ?><div class="alert alert-error">Judul wajib diisi<?= $_GET['err'] == 2 ? ', dan pilih user tujuan' : '' ?>.</div><?php endif; ?>
+<?php if (isset($_GET['sent'])): ?><div class="alert alert-ok">Notification sent.</div><?php endif; ?>
+<?php if (isset($_GET['deleted'])): ?><div class="alert alert-ok">Notification deleted.</div><?php endif; ?>
+<?php if (isset($_GET['err'])): ?><div class="alert alert-error">Title is required<?= $_GET['err'] == 2 ? ', and select a target user' : '' ?>.</div><?php endif; ?>
 
 <div class="admin-form" style="margin-bottom:22px;">
-    <div class="admin-form-title">&#128276; Kirim notifikasi baru</div>
-    <div class="admin-form-hint">Pengumuman / update / reminder ini akan muncul di lonceng notifikasi user.</div>
+    <div class="admin-form-title">&#128276; Send a new notification</div>
+    <div class="admin-form-hint">This announcement / update / reminder will appear in users' notification bell.</div>
     <form method="post">
         <input type="hidden" name="action" value="send">
         <div class="form-grid">
             <div class="form-row" style="grid-column:1/-1;">
-                <label>Judul *</label>
-                <input type="text" name="title" maxlength="200" required placeholder="mis. Update sistem / Pengingat isi checksheet">
+                <label>Title *</label>
+                <input type="text" name="title" maxlength="200" required placeholder="e.g. System update / Reminder to fill check sheets">
             </div>
             <div class="form-row" style="grid-column:1/-1;">
-                <label>Isi pesan</label>
-                <textarea name="body" rows="3" placeholder="Detail pengumuman / reminder (opsional)"></textarea>
+                <label>Message</label>
+                <textarea name="body" rows="3" placeholder="Announcement / reminder details (optional)"></textarea>
             </div>
             <div class="form-row">
-                <label>Jenis</label>
+                <label>Type</label>
                 <select name="type">
-                    <option value="info">Info / Pengumuman</option>
+                    <option value="info">Info / Announcement</option>
                     <option value="update">Update</option>
                     <option value="reminder">Reminder</option>
                 </select>
             </div>
             <div class="form-row">
-                <label>Tujuan</label>
+                <label>Audience</label>
                 <select name="audience" id="notif-audience">
-                    <option value="all">Semua user</option>
-                    <option value="user">User tertentu</option>
+                    <option value="all">All users</option>
+                    <option value="user">Specific user</option>
                 </select>
             </div>
             <div class="form-row" id="notif-user-row" style="display:none;">
-                <label>Pilih user</label>
+                <label>Select user</label>
                 <select name="user_id">
-                    <option value="">— pilih —</option>
+                    <option value="">— select —</option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['name']) ?><?= $u['title'] ? ' (' . htmlspecialchars($u['title']) . ')' : '' ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
         </div>
-        <div style="margin-top:6px;"><button type="submit" class="btn">&#128276; Kirim notifikasi</button></div>
+        <div style="margin-top:6px;"><button type="submit" class="btn">&#128276; Send notification</button></div>
     </form>
 </div>
 
-<h3 style="margin:22px 0 12px;font:600 15px Inter,sans-serif;color:#1f2430;">Terkirim <span style="color:#8b93a1;font-weight:500;">(50 terakhir)</span></h3>
+<h3 style="margin:22px 0 12px;font:600 15px Inter,sans-serif;color:#1f2430;">Sent <span style="color:#8b93a1;font-weight:500;">(last 50)</span></h3>
 <div class="table-scroll">
 <table class="admin-table">
     <thead>
-        <tr><th>Waktu</th><th>Jenis</th><th>Judul</th><th>Tujuan</th><th style="width:90px;">Dibaca</th><th style="width:70px;"></th></tr>
+        <tr><th>Time</th><th>Type</th><th>Title</th><th>Audience</th><th style="width:90px;">Read</th><th style="width:70px;"></th></tr>
     </thead>
     <tbody>
         <?php foreach ($sent as $n): ?>
@@ -109,18 +109,18 @@ require __DIR__ . '/../includes/app_top.php';
                 <strong><?= htmlspecialchars($n['title']) ?></strong>
                 <?php if (!empty($n['body'])): ?><div style="font-size:12px;color:#6b7280;"><?= nl2br(htmlspecialchars($n['body'])) ?></div><?php endif; ?>
             </td>
-            <td><?= $n['audience'] === 'all' ? 'Semua user' : htmlspecialchars($n['target_name'] ?? '—') ?></td>
+            <td><?= $n['audience'] === 'all' ? 'All users' : htmlspecialchars($n['target_name'] ?? '—') ?></td>
             <td><?= (int)$n['read_count'] ?>x</td>
             <td>
-                <form method="post" onsubmit="return confirm('Hapus notifikasi ini?');" style="margin:0;">
+                <form method="post" onsubmit="return confirm('Delete this notification?');" style="margin:0;">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="id" value="<?= $n['id'] ?>">
-                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                 </form>
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$sent): ?><tr><td colspan="6" class="empty">Belum ada notifikasi terkirim.</td></tr><?php endif; ?>
+        <?php if (!$sent): ?><tr><td colspan="6" class="empty">No notifications sent yet.</td></tr><?php endif; ?>
     </tbody>
 </table>
 </div>

@@ -134,7 +134,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
         <table id="bakeoven-table" class="bakeoven-table">
             <thead>
                 <tr id="bakeoven-table-head">
-                    <th class="bo-corner-cell"><span class="bo-corner-text">Waktu<br>Pengecekan</span></th>
+                    <th class="bo-corner-cell"><span class="bo-corner-text">Check<br>Time</span></th>
                 </tr>
             </thead>
             <tbody id="bakeoven-tbody">
@@ -163,14 +163,14 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
             </select>
         </div>
         <div class="field-block" style="flex:1 1 260px;">
-            <label>Keterangan</label>
+            <label>Notes</label>
             <textarea id="f_notes" rows="2"></textarea>
         </div>
     </div>
-    <p class="import-hint">Type a temperature and click away to save — no submit button needed. Klik sel Paraf untuk menandai dengan akun Anda.</p>
+    <p class="import-hint">Type a temperature and click away to save — no submit button needed. Click a Paraf cell to sign with your account.</p>
     <div class="grid-legend">
-        <span><i class="grid-legend-sw grid-legend-missed"></i> Terlewat &mdash; hari kerja yang belum diisi</span>
-        <span><i class="grid-legend-sw grid-legend-off"></i> Libur / weekend &mdash; tidak perlu diisi</span>
+        <span><i class="grid-legend-sw grid-legend-missed"></i> Missed &mdash; a working day not yet filled</span>
+        <span><i class="grid-legend-sw grid-legend-off"></i> Off day / weekend &mdash; no entry needed</span>
     </div>
 </div>
 

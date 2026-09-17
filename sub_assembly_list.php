@@ -218,8 +218,8 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
     </div>
     <p class="import-hint">Tap OK / NG for each day — it saves right away, no submit button needed.</p>
     <div class="grid-legend">
-        <span><i class="grid-legend-sw grid-legend-missed"></i> Terlewat &mdash; hari kerja yang belum diisi</span>
-        <span><i class="grid-legend-sw grid-legend-off"></i> Libur / weekend &mdash; tidak perlu diisi</span>
+        <span><i class="grid-legend-sw grid-legend-missed"></i> Missed &mdash; a working day not yet filled</span>
+        <span><i class="grid-legend-sw grid-legend-off"></i> Off day / weekend &mdash; no entry needed</span>
     </div>
 </div>
 

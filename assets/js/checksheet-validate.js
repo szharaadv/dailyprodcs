@@ -33,7 +33,7 @@ function checksheetComplete(root) {
     try { el.focus({ preventScroll: true }); } catch (e) {}
     el.addEventListener('input', function clear() { el.classList.remove('field-error'); el.removeEventListener('input', clear); });
     el.addEventListener('change', function clear() { el.classList.remove('field-error'); el.removeEventListener('change', clear); });
-    alert('Masih ada kolom yang belum terisi. Lengkapi semua kolom dulu sebelum submit.');
+    alert('Some fields are still empty. Please fill in all fields before submitting.');
     return false;
 }
 window.checksheetComplete = checksheetComplete;
