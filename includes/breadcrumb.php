@@ -7,35 +7,39 @@ function build_checksheet_breadcrumb(PDO $pdo, array $department, string $curren
 {
     $crumbs = [];
 
+    $stmt = $pdo->prepare('SELECT name, group_label FROM m_checksheet_section WHERE department_id = ? AND route = ? AND is_active = 1');
+    $stmt->execute([$department['id'], $current_route]);
+    $current = $stmt->fetch();
+    $group = $current['group_label'] ?? '';
+
+    // A grouped section (e.g. FO Pump) is its own top-level card on the landing
+    // and hidden from the department's section list, so its breadcrumb reads
+    // "FO Pump › Sheet" — not the department it technically belongs to — with
+    // both crumbs leading back to that group's own sheet picker.
+    if ($group !== '') {
+        $groupHref = 'select_group.php?department_id=' . $department['id'] . '&group=' . urlencode($group);
+        $crumbs[] = ['label' => $group, 'href' => $groupHref, 'title' => 'Change ' . $group . ' check sheet'];
+        if ($current) {
+            $crumbs[] = ['label' => $current['name'], 'href' => $groupHref, 'title' => 'Change ' . $group . ' check sheet'];
+        }
+        return $crumbs;
+    }
+
+    // Ungrouped: Department [ › Section ].
     $crumbs[] = [
         'label' => $department['name'],
         'href'  => 'index.php',
         'title' => 'Change Department',
     ];
 
-    $stmt = $pdo->prepare('SELECT name FROM m_checksheet_section WHERE department_id = ? AND is_active = 1');
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM m_checksheet_section WHERE department_id = ? AND is_active = 1');
     $stmt->execute([$department['id']]);
-    $sections = $stmt->fetchAll();
-
-    if (count($sections) > 1) {
-        $stmt = $pdo->prepare('SELECT name, group_label FROM m_checksheet_section WHERE department_id = ? AND route = ? AND is_active = 1');
-        $stmt->execute([$department['id'], $current_route]);
-        $current = $stmt->fetch();
-
-        if ($current) {
-            if ($current['group_label']) {
-                $crumbs[] = [
-                    'label' => $current['group_label'],
-                    'href'  => 'select_group.php?department_id=' . $department['id'] . '&group=' . urlencode($current['group_label']),
-                    'title' => 'Change ' . $current['group_label'] . ' check sheet',
-                ];
-            }
-            $crumbs[] = [
-                'label' => $current['name'],
-                'href'  => 'select_section.php?department_id=' . $department['id'],
-                'title' => 'Change Section',
-            ];
-        }
+    if ((int)$stmt->fetchColumn() > 1 && $current) {
+        $crumbs[] = [
+            'label' => $current['name'],
+            'href'  => 'select_section.php?department_id=' . $department['id'],
+            'title' => 'Change Section',
+        ];
     }
 
     return $crumbs;
