@@ -43,6 +43,7 @@ if (!$header_id && !$unlockedEdit) {
     }
 }
 
+$employee = $input['employee_count'] ?? null;
 $checker = $input['checker_id'] ?? null;
 $shift = $input['shift_id'] ?? null;
 $status = ($input['status'] ?? 'submitted') === 'draft' ? 'draft' : 'submitted';
@@ -83,6 +84,7 @@ try {
 
     $params = [
         $tanggal, $department_id,
+        nz($employee) !== null ? (int)$employee : null,
         nz($checker) !== null ? (int)$checker : null,
         nz($shift) !== null ? (int)$shift : null,
         $checker_at,
@@ -95,7 +97,7 @@ try {
         // Admin has approved an edit request for this record.
         $lockClause = $unlockedEdit ? '' : ' AND status="draft"';
         $stmt = $pdo->prepare(
-            'UPDATE t_painting_prod_header SET tanggal=?, department_id=?, checker_id=?, shift_id=?, checker_at=?, status=?
+            'UPDATE t_painting_prod_header SET tanggal=?, department_id=?, employee_count=?, checker_id=?, shift_id=?, checker_at=?, status=?
              WHERE id=?' . $lockClause
         );
         $stmt->execute(array_merge($params, [$header_id]));
@@ -109,8 +111,8 @@ try {
         $pdo->prepare('DELETE FROM t_painting_prod_line WHERE header_id = ?')->execute([$header_id]);
     } else {
         $stmt = $pdo->prepare(
-            'INSERT INTO t_painting_prod_header (tanggal, department_id, checker_id, shift_id, checker_at, status)
-             VALUES (?,?,?,?,?,?)'
+            'INSERT INTO t_painting_prod_header (tanggal, department_id, employee_count, checker_id, shift_id, checker_at, status)
+             VALUES (?,?,?,?,?,?,?)'
         );
         $stmt->execute($params);
         $header_id = (int)$pdo->lastInsertId();

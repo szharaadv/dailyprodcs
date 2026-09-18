@@ -144,6 +144,10 @@ require __DIR__ . '/includes/app_top.php';
                 <?php endforeach; ?>
             </select>
         </div>
+        <div class="field-block">
+            <label>Employee</label>
+            <input type="number" id="f_employee" min="0" placeholder="Count">
+        </div>
     </div>
 
     <div class="fopump-check-toolbar">

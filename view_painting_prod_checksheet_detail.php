@@ -70,6 +70,7 @@ require __DIR__ . '/includes/app_top.php';
         <div class="field-block"><label>Date</label><div class="static-value"><?= htmlspecialchars(date('d/m/Y', strtotime($header['tanggal']))) ?></div></div>
         <div class="field-block"><label>Checked By</label><div class="static-value"><?= htmlspecialchars($header['checker_name'] ?: '-') ?></div></div>
         <div class="field-block"><label>Shift</label><div class="static-value"><?= htmlspecialchars($header['shift_name'] ?: '-') ?></div></div>
+        <div class="field-block"><label>Employee</label><div class="static-value"><?= htmlspecialchars($header['employee_count'] ?? '-') ?></div></div>
         <div class="field-block"><label>Status</label><div class="static-value"><?= htmlspecialchars(ucfirst($header['status'])) ?></div></div>
     </div>
 

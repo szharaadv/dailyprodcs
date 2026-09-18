@@ -215,6 +215,7 @@ CREATE TABLE IF NOT EXISTS `t_painting_prod_header` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `department_id` int(11) NOT NULL,
   `tanggal` date NOT NULL,
+  `employee_count` int(11) NULL DEFAULT NULL,
   `checker_id` int(11) NULL DEFAULT NULL,
   `checker_at` datetime NULL DEFAULT NULL,
   `foreman_id` int(11) NULL DEFAULT NULL,
@@ -252,6 +253,9 @@ CREATE TABLE IF NOT EXISTS `t_painting_prod_line` (
   KEY `fk_pprodline_header` (`header_id`),
   CONSTRAINT `fk_pprodline_header` FOREIGN KEY (`header_id`) REFERENCES `t_painting_prod_header` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- If the header table was created by an earlier run without employee_count, add it.
+CALL _mig_addcol('t_painting_prod_header','employee_count','`employee_count` int(11) NULL DEFAULT NULL AFTER `tanggal`');
 
 INSERT INTO `m_checksheet_section` (department_id, name, route, section_type, sort_order)
 SELECT d.id, 'Painting Daily Report', 'painting_prod_list.php', 'painting_prod', 2

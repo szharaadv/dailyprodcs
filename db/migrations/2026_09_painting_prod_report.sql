@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `t_painting_prod_header` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `department_id` int(11) NOT NULL,
   `tanggal` date NOT NULL,
+  `employee_count` int(11) NULL DEFAULT NULL,
   `checker_id` int(11) NULL DEFAULT NULL,
   `checker_at` datetime NULL DEFAULT NULL,
   `foreman_id` int(11) NULL DEFAULT NULL,
@@ -39,6 +40,11 @@ CREATE TABLE IF NOT EXISTS `t_painting_prod_header` (
   CONSTRAINT `fk_pprodheader_supervisor` FOREIGN KEY (`supervisor_id`) REFERENCES `m_user` (`id`),
   CONSTRAINT `fk_pprodheader_shift` FOREIGN KEY (`shift_id`) REFERENCES `m_shift` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- If the header table already existed from an earlier run without this column,
+-- add it (MariaDB supports IF NOT EXISTS on ADD COLUMN — safe to re-run).
+ALTER TABLE `t_painting_prod_header`
+  ADD COLUMN IF NOT EXISTS `employee_count` int(11) NULL DEFAULT NULL AFTER `tanggal`;
 
 -- ------------------------------------------------------------
 -- Line: one model per row, five painting quantity buckets + a remark.

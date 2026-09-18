@@ -526,6 +526,7 @@ CREATE TABLE `t_painting_prod_header` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `department_id` int(11) NOT NULL,
   `tanggal` date NOT NULL,
+  `employee_count` int(11) NULL DEFAULT NULL,
   `checker_id` int(11) NULL DEFAULT NULL,
   `checker_at` datetime NULL DEFAULT NULL,
   `foreman_id` int(11) NULL DEFAULT NULL,

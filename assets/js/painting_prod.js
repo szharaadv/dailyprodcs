@@ -2,6 +2,7 @@ const hariInput = document.getElementById('f_hari');
 const tanggalInput = document.getElementById('f_tanggal');
 const pekerjaSelect = document.getElementById('f_pekerja');
 const shiftSelect = document.getElementById('f_shift');
+const employeeInput = document.getElementById('f_employee');
 const tbody = document.getElementById('pprod-tbody');
 const tfoot = document.getElementById('pprod-tfoot');
 const statusLabel = document.getElementById('pprod-status-label');
@@ -125,6 +126,7 @@ async function loadContext() {
 
     pekerjaSelect.value = header?.checker_id ?? '';
     shiftSelect.value = header?.shift_id ?? '';
+    employeeInput.value = header?.employee_count ?? '';
 
     renderRows(data.lines);
     renderFoot();
@@ -172,6 +174,7 @@ function buildPayload(status) {
         department_id: DEPARTMENT_ID,
         checker_id: pekerjaSelect.value,
         shift_id: shiftSelect.value,
+        employee_count: employeeInput.value,
         lines,
     };
 }
