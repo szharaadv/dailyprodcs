@@ -112,9 +112,11 @@ require __DIR__ . '/includes/app_top.php';
                     <?php foreach ($CATS as $c): ?><td class="fopump-total"><?= $totals[$c] ?></td><?php endforeach; ?>
                     <td></td>
                 </tr>
+                <?php $accumSum = 0; foreach ($CATS as $c) { if ($c !== 'others') $accumSum += $accum[$c]; } ?>
                 <tr class="fopump-accum-row">
                     <td colspan="2">AKUMULASI</td>
-                    <?php foreach ($CATS as $c): ?><td class="fopump-accum"><?= $accum[$c] ?></td><?php endforeach; ?>
+                    <td class="fopump-accum" colspan="<?= count($CATS) - 1 ?>"><?= $accumSum ?></td>
+                    <td></td>
                     <td></td>
                 </tr>
             </tfoot>

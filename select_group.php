@@ -64,7 +64,15 @@ if (count($sections) <= 1) {
         <?php endforeach; ?>
     </div>
 
-    <p class="landing-hint" style="margin-top:28px;"><a href="select_section.php?department_id=<?= $department_id ?>" class="dept-switch-link">&larr; Back to Sections</a></p>
+    <?php
+    // FO Pump is promoted to its own card on the landing (index.php) and hidden
+    // from its department's section picker, so "back" belongs on the landing —
+    // not select_section, which would show the unrelated Assembling sections.
+    $isTopLevelGroup = $group === 'FO Pump';
+    $backHref = $isTopLevelGroup ? 'index.php' : 'select_section.php?department_id=' . $department_id;
+    $backLabel = $isTopLevelGroup ? 'Change Department' : 'Back to Sections';
+    ?>
+    <p class="landing-hint" style="margin-top:28px;"><a href="<?= htmlspecialchars($backHref) ?>" class="dept-switch-link">&larr; <?= htmlspecialchars($backLabel) ?></a></p>
 </div>
 </body>
 </html>

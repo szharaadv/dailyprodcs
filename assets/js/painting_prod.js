@@ -10,6 +10,8 @@ const statusLabel = document.getElementById('pprod-status-label');
 // exactly like FO Pump's three production categories.
 const CATS = ['cb', 'fot', 'fw', 'part', 'others'];
 const CAT_LABELS = { cb: 'CB', fot: 'FOT', fw: 'FW', part: 'PART', others: 'OTHERS' };
+// AKUMULASI is a single grand total that EXCLUDES the OTHERS column.
+const ACCUM_CATS = CATS.filter((c) => c !== 'others');
 const HARI_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 let currentHeaderId = typeof DRAFT_ID !== 'undefined' ? DRAFT_ID : null;
@@ -67,7 +69,8 @@ function addRow() {
 
 function renderFoot() {
     const totalCells = CATS.map((c) => `<td class="fopump-total" data-cat="${c}">0</td>`).join('');
-    const accumCells = CATS.map((c) => `<td class="fopump-accum" data-cat="${c}">0</td>`).join('');
+    // AKUMULASI is a single merged cell spanning CB..PART: the month-to-date grand
+    // total of those columns (OTHERS is excluded and gets its own empty cell).
     tfoot.innerHTML = `
         <tr class="fopump-total-row">
             <td colspan="2">TOTAL</td>
@@ -76,7 +79,8 @@ function renderFoot() {
         </tr>
         <tr class="fopump-accum-row">
             <td colspan="2">AKUMULASI</td>
-            ${accumCells}
+            <td class="fopump-accum" colspan="${ACCUM_CATS.length}">0</td>
+            <td></td>
             <td></td>
         </tr>`;
 }
@@ -92,10 +96,12 @@ function sumCat(cat) {
 
 function updateTotals() {
     CATS.forEach((cat) => {
-        const total = sumCat(cat);
-        tfoot.querySelector(`.fopump-total[data-cat="${cat}"]`).textContent = total;
-        tfoot.querySelector(`.fopump-accum[data-cat="${cat}"]`).textContent = total + (priorAccum[cat] || 0);
+        tfoot.querySelector(`.fopump-total[data-cat="${cat}"]`).textContent = sumCat(cat);
     });
+    // AKUMULASI excludes OTHERS.
+    const grandAccum = ACCUM_CATS.reduce((sum, cat) => sum + sumCat(cat) + (priorAccum[cat] || 0), 0);
+    const accumCell = tfoot.querySelector('.fopump-accum');
+    if (accumCell) accumCell.textContent = grandAccum;
 }
 
 async function loadContext() {
