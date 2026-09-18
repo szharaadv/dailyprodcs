@@ -136,7 +136,18 @@ async function loadContext() {
 }
 
 tbody.addEventListener('input', (e) => {
-    if (e.target.matches('.pprod-qty')) updateTotals();
+    const t = e.target;
+    if (!t.matches('.pprod-qty')) return;
+    // CB/FOT/FW/PART mirror the same figure, so typing CB auto-fills the other
+    // three in that row (they stay editable if a row genuinely needs to differ).
+    if (t.dataset.cat === 'cb') {
+        const no = t.dataset.no;
+        ['fot', 'fw', 'part'].forEach((cat) => {
+            const cell = tbody.querySelector(`.pprod-qty[data-cat="${cat}"][data-no="${no}"]`);
+            if (cell) cell.value = t.value;
+        });
+    }
+    updateTotals();
 });
 
 tanggalInput.addEventListener('change', loadContext);
