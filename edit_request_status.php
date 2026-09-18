@@ -84,7 +84,20 @@ require __DIR__ . '/includes/app_top.php';
             </td>
             <td>
                 <?php if ($row['status'] === 'approved' && strtotime($row['unlock_expires_at']) > time() && isset($typeRoutes[$row['checksheet_type']])): ?>
-                    <a class="cs-view-btn-sm" href="<?= $typeRoutes[$row['checksheet_type']] ?>?edit_id=<?= $row['header_id'] ?>">Edit Now &rarr;</a>
+                    <?php if ($row['header_id'] === null):
+                        // A "fill a missed day" request has no existing record — open the
+                        // sheet on that exact date via fill_date (same entry point as the
+                        // missing-date banner's "Fill" button), NOT edit_id. Using edit_id
+                        // with a null header_id would land on today instead, so the day the
+                        // user actually fills wouldn't match the requested date.
+                        $fillUrl = $typeRoutes[$row['checksheet_type']]
+                            . '?department_id=' . (int)$row['department_id']
+                            . ($row['condition_id'] ? '&condition_id=' . (int)$row['condition_id'] : '')
+                            . '&fill_date=' . htmlspecialchars($row['target_date']); ?>
+                        <a class="cs-view-btn-sm" href="<?= $fillUrl ?>">Fill Now &rarr;</a>
+                    <?php else: ?>
+                        <a class="cs-view-btn-sm" href="<?= $typeRoutes[$row['checksheet_type']] ?>?edit_id=<?= $row['header_id'] ?>">Edit Now &rarr;</a>
+                    <?php endif; ?>
                 <?php else: ?>
                     &mdash;
                 <?php endif; ?>
