@@ -112,11 +112,15 @@ require __DIR__ . '/includes/app_top.php';
                     <?php foreach ($CATS as $c): ?><td class="fopump-total"><?= $totals[$c] ?></td><?php endforeach; ?>
                     <td></td>
                 </tr>
-                <?php // CB/FOT/FW/PART hold the same figure by design, so AKUMULASI shows one
-                      // column's (CB) month-to-date running total, not the sum of the four. ?>
+                <?php
+                // CB/FOT/FW/PART hold the same figure by design, so AKUMULASI shows one
+                // column's (CB) month-to-date running total, not the sum of the four —
+                // and only once all four columns were filled for the day.
+                $allFilled = $totals['cb'] > 0 && $totals['fot'] > 0 && $totals['fw'] > 0 && $totals['part'] > 0;
+                ?>
                 <tr class="fopump-accum-row">
                     <td colspan="2">AKUMULASI</td>
-                    <td class="fopump-accum" colspan="<?= count($CATS) - 1 ?>"><?= $accum['cb'] ?></td>
+                    <td class="fopump-accum" colspan="<?= count($CATS) - 1 ?>"><?= $allFilled ? $accum['cb'] : '' ?></td>
                     <td></td>
                     <td></td>
                 </tr>

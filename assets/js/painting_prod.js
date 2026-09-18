@@ -102,10 +102,12 @@ function updateTotals() {
     // CB/FOT/FW/PART carry the same figure by design (one production counted per
     // stage), so AKUMULASI is NOT their sum — it's a single column's month-to-date
     // running total that grows day by day (like FO Pump). OTHERS is not included.
+    // It's only shown once all four columns have been filled for the day.
     const ref = ACCUM_CATS[0]; // 'cb' — representative column
+    const allFilled = ACCUM_CATS.every((cat) => sumCat(cat) > 0);
     const accum = sumCat(ref) + (priorAccum[ref] || 0);
     const accumCell = tfoot.querySelector('.fopump-accum');
-    if (accumCell) accumCell.textContent = accum;
+    if (accumCell) accumCell.textContent = allFilled ? accum : '';
 }
 
 async function loadContext() {
