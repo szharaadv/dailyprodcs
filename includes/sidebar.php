@@ -63,7 +63,14 @@ $draft_table_map = [
     'fopump_reject_list.php' => 't_fopump_reject_header',
 ];
 $draft_table = $draft_table_map[$section_route] ?? ($is_assy_context ? 't_assy_header' : 't_checksheet_header');
-$draft_count = (int)$pdo->query("SELECT COUNT(*) FROM `$draft_table` WHERE status = 'draft'")->fetchColumn();
+// Degrade gracefully if this sheet's table hasn't been created yet (e.g. code
+// deployed before its migration ran) — show 0 drafts instead of fataling the
+// whole app on every page that renders the sidebar.
+try {
+    $draft_count = (int)$pdo->query("SELECT COUNT(*) FROM `$draft_table` WHERE status = 'draft'")->fetchColumn();
+} catch (Throwable $e) {
+    $draft_count = 0;
+}
 
 $checksheet_href = $section_route
     ? $base_url . $section_route . ($nav_department_id ? '?department_id=' . $nav_department_id : '')
