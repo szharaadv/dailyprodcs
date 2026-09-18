@@ -219,7 +219,13 @@ document.getElementById('btn-add-row').addEventListener('click', addRow);
 document.getElementById('btn-draft').addEventListener('click', () => save('draft'));
 document.getElementById('btn-submit').addEventListener('click', () => {
     if (window.checksheetComplete && !checksheetComplete()) return;
-    if (confirm('Submit this Painting daily report?')) save('submitted');
+    if (confirm('Submit this Painting daily report?')) {
+        // Stop autosave the moment we submit, so a queued/pending draft save can't
+        // race the submit — for a brand-new date (e.g. an Admin backdate) both
+        // would INSERT the same day and one could win as a draft.
+        if (window.stopAutosaveDraft) stopAutosaveDraft();
+        save('submitted');
+    }
 });
 if (window.initAutosaveDraft) initAutosaveDraft({ save: () => save('draft', true) });
 

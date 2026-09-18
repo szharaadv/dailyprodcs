@@ -68,10 +68,8 @@ require __DIR__ . '/includes/app_top.php';
     <div class="form-grid-top">
         <div class="field-block"><label>Day</label><div class="static-value"><?= htmlspecialchars($hari) ?></div></div>
         <div class="field-block"><label>Date</label><div class="static-value"><?= htmlspecialchars(date('d/m/Y', strtotime($header['tanggal']))) ?></div></div>
-        <div class="field-block"><label>Worker</label><div class="static-value"><?= htmlspecialchars($header['checker_name'] ?: '-') ?></div></div>
+        <div class="field-block"><label>Checked By</label><div class="static-value"><?= htmlspecialchars($header['checker_name'] ?: '-') ?></div></div>
         <div class="field-block"><label>Shift</label><div class="static-value"><?= htmlspecialchars($header['shift_name'] ?: '-') ?></div></div>
-        <div class="field-block"><label>Foreman</label><div class="static-value"><?= htmlspecialchars($header['foreman_name'] ?: '-') ?></div></div>
-        <div class="field-block"><label>Supervisor</label><div class="static-value"><?= htmlspecialchars($header['supervisor_name'] ?: '-') ?></div></div>
         <div class="field-block"><label>Status</label><div class="static-value"><?= htmlspecialchars(ucfirst($header['status'])) ?></div></div>
     </div>
 

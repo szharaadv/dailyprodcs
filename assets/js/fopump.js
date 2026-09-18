@@ -199,7 +199,10 @@ document.getElementById('btn-add-row').addEventListener('click', addRow);
 document.getElementById('btn-draft').addEventListener('click', () => save('draft'));
 document.getElementById('btn-submit').addEventListener('click', () => {
     if (window.checksheetComplete && !checksheetComplete()) return;
-    if (confirm('Submit this FO Pump daily report?')) save('submitted');
+    if (confirm('Submit this FO Pump daily report?')) {
+        if (window.stopAutosaveDraft) stopAutosaveDraft(); // no draft save may race the submit
+        save('submitted');
+    }
 });
 if (window.initAutosaveDraft) initAutosaveDraft({ save: () => save('draft', true) });
 

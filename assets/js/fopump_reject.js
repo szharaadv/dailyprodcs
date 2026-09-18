@@ -120,6 +120,7 @@ async function saveChecksheet(status, silent = false) {
 document.getElementById('btn-draft').addEventListener('click', () => saveChecksheet('draft'));
 document.getElementById('btn-submit').addEventListener('click', () => {
     if (window.checksheetComplete && !checksheetComplete()) return;
+    if (window.stopAutosaveDraft) stopAutosaveDraft(); // no draft save may race the submit
     saveChecksheet('submitted');
 });
 if (window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });

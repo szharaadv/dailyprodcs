@@ -127,7 +127,7 @@ require __DIR__ . '/includes/app_top.php';
             <input type="text" id="f_tanggal" class="holiday-date-input" readonly value="<?= htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>" <?php if ($is_admin_user): ?>data-plain<?php else: ?>min="<?= date('Y-m-d') ?>"<?php endif; ?>>
         </div>
         <div class="field-block">
-            <label>Worker</label>
+            <label>Checked By</label>
             <select id="f_pekerja">
                 <option value="">—</option>
                 <?php foreach ($workers as $w): ?>
