@@ -14,7 +14,10 @@ $header_id      = (int)($input['header_id'] ?? 0);
 // keep its original date instead (see includes/edit_requests.php).
 $tanggal        = date('Y-m-d');
 $unlockedEdit   = $header_id && has_active_unlock($pdo, 'painting', $header_id);
-if ($unlockedEdit) {
+// Updating an existing record keeps that record's OWN date — never rewrite it to
+// today. Otherwise re-saving a past-date draft (e.g. a missed-day fill draft)
+// would move it onto today's row and hit the unique department+condition+date key.
+if ($header_id) {
     $stmt = $pdo->prepare('SELECT tanggal FROM t_checksheet_header WHERE id = ?');
     $stmt->execute([$header_id]);
     $origTanggal = $stmt->fetchColumn();
