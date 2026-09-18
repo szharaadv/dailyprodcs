@@ -69,8 +69,9 @@ function addRow() {
 
 function renderFoot() {
     const totalCells = CATS.map((c) => `<td class="fopump-total" data-cat="${c}">0</td>`).join('');
-    // AKUMULASI is a single merged cell spanning CB..PART: the month-to-date grand
-    // total of those columns (OTHERS is excluded and gets its own empty cell).
+    // AKUMULASI is a single merged cell spanning CB..PART: those columns hold the
+    // same figure by design, so it shows that one column's month-to-date running
+    // total (accumulated across days), not their sum. OTHERS gets its own empty cell.
     tfoot.innerHTML = `
         <tr class="fopump-total-row">
             <td colspan="2">TOTAL</td>
@@ -98,10 +99,13 @@ function updateTotals() {
     CATS.forEach((cat) => {
         tfoot.querySelector(`.fopump-total[data-cat="${cat}"]`).textContent = sumCat(cat);
     });
-    // AKUMULASI excludes OTHERS.
-    const grandAccum = ACCUM_CATS.reduce((sum, cat) => sum + sumCat(cat) + (priorAccum[cat] || 0), 0);
+    // CB/FOT/FW/PART carry the same figure by design (one production counted per
+    // stage), so AKUMULASI is NOT their sum — it's a single column's month-to-date
+    // running total that grows day by day (like FO Pump). OTHERS is not included.
+    const ref = ACCUM_CATS[0]; // 'cb' — representative column
+    const accum = sumCat(ref) + (priorAccum[ref] || 0);
     const accumCell = tfoot.querySelector('.fopump-accum');
-    if (accumCell) accumCell.textContent = grandAccum;
+    if (accumCell) accumCell.textContent = accum;
 }
 
 async function loadContext() {
