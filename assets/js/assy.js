@@ -137,6 +137,19 @@ function buildPayload(status) {
 async function saveChecksheet(status, silent = false) {
     const payload = buildPayload(status);
 
+    // Never let a background autosave persist an untouched form as a draft —
+    // require an actual result, a consumable, or an engine-number field.
+    if (silent) {
+        const hasContent =
+            payload.rows.some(r =>
+                (r.actual_result != null && String(r.actual_result).trim() !== '') ||
+                (r.consumable_item != null && String(r.consumable_item).trim() !== '')) ||
+            [payload.mark_crank_shaft, payload.mark_conrod, payload.mark_fo_pump,
+             payload.no_cyl_block, payload.no_engine, payload.detail_model]
+                .some(v => v != null && String(v).trim() !== '');
+        if (!hasContent) return false;
+    }
+
     const res = await fetch('ajax/save_assy_checksheet.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,6 +169,7 @@ async function saveChecksheet(status, silent = false) {
         if (silent) return true;
         alert('Saved as draft. You can continue it later from the My Drafts menu.');
     } else {
+        if (window.stopAutosaveDraft) stopAutosaveDraft();
         alert('Checksheet submitted successfully.');
         window.location.href = 'view_assy_checksheets.php';
     }

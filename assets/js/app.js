@@ -203,6 +203,10 @@ function buildPayload(status) {
 async function saveChecksheet(status, silent = false) {
     const payload = buildPayload(status);
 
+    // Never let a background autosave persist an untouched form as a draft —
+    // require at least one actual result to have been entered.
+    if (silent && !payload.rows.some(r => r.actual_result != null && String(r.actual_result).trim() !== '')) return false;
+
     const res = await fetch('ajax/save_checksheet.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -222,6 +226,7 @@ async function saveChecksheet(status, silent = false) {
         if (silent) return true;
         alert('Saved as draft. You can continue it later from the My Drafts menu.');
     } else {
+        if (window.stopAutosaveDraft) stopAutosaveDraft();
         alert('Checksheet submitted successfully.');
         window.location.href = 'view_checksheets.php';
     }

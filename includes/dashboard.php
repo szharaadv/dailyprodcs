@@ -32,6 +32,8 @@ function _dash_filled(PDO $pdo, string $route, int $dept): bool
                 return _dash_exists($pdo, "SELECT 1 FROM t_assy_header WHERE department_id=? AND tanggal=? AND status='submitted' LIMIT 1", [$dept, $today]);
             case 'fopump_list.php':
                 return _dash_exists($pdo, "SELECT 1 FROM t_fopump_header WHERE department_id=? AND tanggal=? AND status='submitted' LIMIT 1", [$dept, $today]);
+            case 'painting_prod_list.php':
+                return _dash_exists($pdo, "SELECT 1 FROM t_painting_prod_header WHERE department_id=? AND tanggal=? AND status='submitted' LIMIT 1", [$dept, $today]);
             case 'bakeoven_list.php':
                 return _dash_exists($pdo, "SELECT 1 FROM t_bakeoven_detail dt JOIN t_bakeoven_header h ON h.id=dt.header_id JOIN m_bakeoven b ON b.id=h.bakeoven_id WHERE b.department_id=? AND h.month=? AND h.year=? AND dt.day=? AND dt.actual_temp<>'' LIMIT 1", [$dept, $m, $y, $d]);
             case 'washing_list.php':

@@ -7,6 +7,7 @@ $pdo = get_db();
 
 $typeLabels = [
     'painting' => 'Painting',
+    'painting_prod' => 'Painting Daily Report',
     'assy' => 'Torque (Assembling)',
     'fopump' => 'FO Pump Daily Report',
     'fopump_reject' => 'FO Pump Daily Reject',
@@ -18,6 +19,7 @@ $typeLabels = [
 ];
 $typeRoutes = [
     'painting' => 'painting_list.php',
+    'painting_prod' => 'painting_prod_list.php',
     'assy' => 'assembly_list.php',
     'fopump' => 'fopump_list.php',
     'fopump_reject' => 'fopump_reject_list.php',

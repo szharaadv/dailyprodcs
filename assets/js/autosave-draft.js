@@ -21,7 +21,7 @@ function initAutosaveDraft(opts) {
 
     const root = opts.root || document;
     const DELAY = opts.delay || 1500;
-    let touched = false, dirty = false, saving = false, timer = null;
+    let touched = false, dirty = false, saving = false, timer = null, stopped = false;
 
     const status = document.createElement('span');
     status.className = 'autosave-status';
@@ -35,7 +35,7 @@ function initAutosaveDraft(opts) {
     }
 
     async function run() {
-        if (saving || !dirty || !touched) return;
+        if (stopped || saving || !dirty || !touched) return;
         saving = true; dirty = false;
         let ok = false;
         try { ok = await save(); } catch (e) { ok = false; }
@@ -60,8 +60,15 @@ function initAutosaveDraft(opts) {
     // Best-effort final save when the tab is hidden / the page is being left.
     // The sheet's fetch uses keepalive so this can still complete during unload.
     function flush() {
+        if (stopped) return;
         if (touched && dirty && !saving) { clearTimeout(timer); try { save(); } catch (e) {} }
     }
+
+    // Let a sheet permanently stop autosave once its record is finalised (e.g.
+    // after a successful Submit) — otherwise the pagehide flush on the post-
+    // submit redirect could re-save the record as a draft and, for an Admin
+    // (whose edit-lock is always unlocked), silently downgrade it back to draft.
+    window.stopAutosaveDraft = () => { stopped = true; clearTimeout(timer); };
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') flush();
     });

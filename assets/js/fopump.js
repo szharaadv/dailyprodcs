@@ -165,11 +165,18 @@ function buildPayload(status) {
 }
 
 async function save(status, silent = false) {
+    const payload = buildPayload(status);
+    // Never let a background autosave persist an untouched form as a draft —
+    // require at least one model or quantity somewhere in the table.
+    if (silent && !payload.lines.some(l =>
+        [l.production_model, l.production_qty, l.assembly_model,
+         l.assembly_qty, l.export_model, l.export_qty]
+            .some(v => v != null && String(v).trim() !== ''))) return false;
     if (!silent) statusLabel.textContent = 'Saving...';
     const res = await fetch('ajax/save_fopump.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload(status)),
+        body: JSON.stringify(payload),
         keepalive: true,
     });
     const data = await res.json();
@@ -181,6 +188,9 @@ async function save(status, silent = false) {
     }
     currentHeaderId = data.header_id;
     if (silent) return true; // autosave: stay on the page, no redirect
+    // Record is finalised — stop autosave so the pagehide flush on this redirect
+    // can't re-save (and, for Admin, downgrade) it back to a draft.
+    if (window.stopAutosaveDraft) stopAutosaveDraft();
     window.location.href = `view_fopump_checksheets.php?saved=1`;
 }
 

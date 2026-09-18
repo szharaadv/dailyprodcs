@@ -46,6 +46,7 @@ function export_section_blocks(PDO $pdo, array $section, int $month, int $year):
     // route → function map (explicit to avoid surprises).
     $map = [
         'painting_list.php'        => 'export_build_painting',
+        'painting_prod_list.php'   => 'export_build_painting_prod',
         'assembly_list.php'        => 'export_build_assy',
         'fopump_list.php'          => 'export_build_fopump',
         'fopump_test_list.php'     => 'export_build_fopump_test',
@@ -190,6 +191,54 @@ function export_build_fopump(PDO $pdo, array $section, int $month, int $year): a
             . _x_head(['No', 'Production Model', 'Qty', 'Assembly Model', 'Qty', 'Export Model', 'Qty'])
             . ($lines ? $body : '<tr><td colspan="' . $cols . '" class="b center">Tidak ada baris.</td></tr>')
             . _x_summary($cols, 'Total &mdash; Production: ' . $tp . '&nbsp; Assembly: ' . $ta . '&nbsp; Export: ' . $tx)
+            . _x_spacer($cols);
+    }
+    if (!$headers) $blocks = '<tr><td colspan="' . $cols . '" class="b center">Tidak ada data untuk bulan ini.</td></tr>';
+    return ['cols' => $cols, 'blocks' => $blocks];
+}
+
+function export_build_painting_prod(PDO $pdo, array $section, int $month, int $year): array
+{
+    // Painting Daily Production Report — one model per row, five quantity
+    // buckets (CB/FOT/FW/PART/OTHERS) + a remark, per day.
+    $cols = 8;
+    $hq = $pdo->prepare(
+        "SELECT h.id, h.tanggal, h.created_at, u.name AS pekerja, sh.name AS shift_label
+         FROM t_painting_prod_header h
+         LEFT JOIN m_user u ON u.id = h.checker_id
+         LEFT JOIN m_shift sh ON sh.id = h.shift_id
+         WHERE h.department_id=? AND h.status='submitted' AND MONTH(h.tanggal)=? AND YEAR(h.tanggal)=?
+         ORDER BY h.tanggal, h.id"
+    );
+    $hq->execute([$section['department_id'], $month, $year]);
+    $lq = $pdo->prepare(
+        "SELECT line_no, model, cb, fot, fw, part, others, keterangan
+         FROM t_painting_prod_line WHERE header_id=? ORDER BY line_no"
+    );
+    $blocks = '';
+    $headers = $hq->fetchAll();
+    foreach ($headers as $h) {
+        $lq->execute([$h['id']]);
+        $lines = $lq->fetchAll();
+        $tcb = 0; $tfot = 0; $tfw = 0; $tpart = 0; $tothers = 0; $body = '';
+        foreach ($lines as $l) {
+            $tcb += (int)$l['cb']; $tfot += (int)$l['fot']; $tfw += (int)$l['fw'];
+            $tpart += (int)$l['part']; $tothers += (int)$l['others'];
+            $body .= '<tr><td class="b center">' . (int)$l['line_no'] . '</td>'
+                . '<td class="b">' . _x_e($l['model']) . '</td>'
+                . '<td class="b center">' . _x_e($l['cb']) . '</td>'
+                . '<td class="b center">' . _x_e($l['fot']) . '</td>'
+                . '<td class="b center">' . _x_e($l['fw']) . '</td>'
+                . '<td class="b center">' . _x_e($l['part']) . '</td>'
+                . '<td class="b center">' . _x_e($l['others']) . '</td>'
+                . '<td class="b">' . _x_e($l['keterangan']) . '</td></tr>';
+        }
+        $blocks .= _x_banner($cols, 'Worker: ' . _x_e($h['pekerja'] ?? '-') . ' &nbsp;|&nbsp; Shift: ' . _x_e($h['shift_label'] ?? '-')
+                . ' &nbsp;|&nbsp; Date: ' . _x_e($h['tanggal']) . ' &nbsp;|&nbsp; Submitted: ' . _x_e($h['created_at']))
+            . _x_head(['NO', 'MODEL', 'CB', 'FOT', 'FW', 'PART', 'OTHERS', 'REMARKS'])
+            . ($lines ? $body : '<tr><td colspan="' . $cols . '" class="b center">Tidak ada baris.</td></tr>')
+            . _x_summary($cols, 'Total &mdash; CB: ' . $tcb . '&nbsp; FOT: ' . $tfot . '&nbsp; FW: ' . $tfw
+                . '&nbsp; PART: ' . $tpart . '&nbsp; OTHERS: ' . $tothers)
             . _x_spacer($cols);
     }
     if (!$headers) $blocks = '<tr><td colspan="' . $cols . '" class="b center">Tidak ada data untuk bulan ini.</td></tr>';

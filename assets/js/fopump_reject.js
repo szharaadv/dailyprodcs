@@ -82,11 +82,18 @@ function buildPayload(status) {
 }
 
 async function saveChecksheet(status, silent = false) {
+    const payload = buildPayload(status);
+    // Never let a background autosave persist an untouched form as a draft —
+    // require the target or a line (model/quantity/remarks) to be filled.
+    if (silent && !(
+        (payload.target != null && String(payload.target).trim() !== '') ||
+        payload.lines.some(l => [l.model, l.quantity, l.remarks].some(v => v != null && String(v).trim() !== ''))
+    )) return false;
     if (!silent) statusLabel.textContent = 'Saving...';
     const res = await fetch('ajax/save_fopump_reject.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload(status)),
+        body: JSON.stringify(payload),
         keepalive: true,
     });
     const data = await res.json();
@@ -104,6 +111,7 @@ async function saveChecksheet(status, silent = false) {
         alert('Saved as draft. You can continue it later from the My Drafts menu.');
         statusLabel.textContent = 'Editing a saved draft for this month.';
     } else {
+        if (window.stopAutosaveDraft) stopAutosaveDraft();
         alert('Checksheet submitted successfully.');
         window.location.href = 'view_fopump_reject_checksheets.php';
     }

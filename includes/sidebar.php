@@ -55,6 +55,7 @@ if ($section_route) {
 
 $draft_table_map = [
     'painting_list.php' => 't_checksheet_header',
+    'painting_prod_list.php' => 't_painting_prod_header',
     'assembly_list.php' => 't_assy_header',
     'fopump_list.php' => 't_fopump_header',
     'fopump_check_list.php' => 't_fopump_check_header',
@@ -73,6 +74,7 @@ $checksheet_href = $section_route
 // at all, since its sheets auto-save as you go).
 $view_map = [
     'painting_list.php' => 'view_checksheets.php',
+    'painting_prod_list.php' => 'view_painting_prod_checksheets.php',
     'assembly_list.php' => 'view_assy_checksheets.php',
     'sub_assembly_list.php' => 'view_jig_checksheets.php',
     'bakeoven_list.php' => 'view_bakeoven_checksheets.php',
@@ -92,6 +94,7 @@ $view_href = $base_url . ($view_map[$section_route] ?? ($is_assy_context ? 'view
 
 $drafts_map = [
     'painting_list.php' => 'my_drafts.php',
+    'painting_prod_list.php' => 'my_painting_prod_drafts.php',
     'assembly_list.php' => 'my_assy_drafts.php',
     'sub_assembly_list.php' => null,
     'bakeoven_list.php' => null,
@@ -223,6 +226,10 @@ function icon(string $name): string
                 ['key' => 'config-fopump-test-model', 'label' => 'Model', 'href' => 'admin/fopump_test_models.php'],
             ],
             'fopump_reject_list.php' => [],
+            'painting_prod_list.php' => [
+                ['key' => 'config-master-engine', 'label' => 'Model', 'href' => 'admin/engines.php'],
+                ['key' => 'config-shift', 'label' => 'Shift', 'href' => 'admin/shifts.php'],
+            ],
             'washing_list.php' => [],
             'paint_viscosity_list.php' => [
                 ['key' => 'config-paint-viscosity-item', 'label' => 'Product', 'href' => 'admin/paint_viscosity_items.php'],

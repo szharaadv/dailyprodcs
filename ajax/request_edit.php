@@ -8,9 +8,9 @@ header('Content-Type: application/json');
 $pdo = get_db();
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 
-$allowedTypes = ['painting', 'assy', 'fopump', 'fopump_reject', 'jig', 'bakeoven', 'washing', 'paint_viscosity', '3s3t'];
+$allowedTypes = ['painting', 'painting_prod', 'assy', 'fopump', 'fopump_reject', 'jig', 'bakeoven', 'washing', 'paint_viscosity', '3s3t'];
 $typeLabels = [
-    'painting' => 'Painting', 'assy' => 'Torque (Assembling)', 'fopump' => 'FO Pump Daily Report',
+    'painting' => 'Painting', 'painting_prod' => 'Painting Daily Report', 'assy' => 'Torque (Assembling)', 'fopump' => 'FO Pump Daily Report',
     'fopump_reject' => 'FO Pump Daily Reject', 'jig' => 'Sub Assembly (Jig)', 'bakeoven' => 'Bake Oven',
     'washing' => 'Washing Machine', 'paint_viscosity' => 'Paint Viscosity', '3s3t' => 'Checksheet 3S-3T',
 ];

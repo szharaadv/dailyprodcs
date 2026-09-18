@@ -516,6 +516,56 @@ CREATE TABLE `t_fopump_line` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
+-- Painting: Daily Production Report (F-PNT-PROD) — production tally modelled on
+-- the FO Pump Daily Report: one model per row, five painting quantity buckets
+-- (CB/FOT/FW/PART/OTHERS) + a remark, with a per-column Total and a month-to-date
+-- Acumulation row. Header carries the shared Checker/Foreman/Supervisor sign-off.
+-- ------------------------------------------------------------
+DROP TABLE IF EXISTS `t_painting_prod_header`;
+CREATE TABLE `t_painting_prod_header` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `checker_id` int(11) NULL DEFAULT NULL,
+  `checker_at` datetime NULL DEFAULT NULL,
+  `foreman_id` int(11) NULL DEFAULT NULL,
+  `foreman_at` datetime NULL DEFAULT NULL,
+  `supervisor_id` int(11) NULL DEFAULT NULL,
+  `supervisor_at` datetime NULL DEFAULT NULL,
+  `shift_id` int(11) NULL DEFAULT NULL,
+  `status` enum('draft','submitted') NOT NULL DEFAULT 'submitted',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_pprodheader_date` (`department_id`, `tanggal`),
+  KEY `fk_pprodheader_checker` (`checker_id`),
+  KEY `fk_pprodheader_foreman` (`foreman_id`),
+  KEY `fk_pprodheader_supervisor` (`supervisor_id`),
+  KEY `fk_pprodheader_shift` (`shift_id`),
+  CONSTRAINT `fk_pprodheader_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`),
+  CONSTRAINT `fk_pprodheader_checker` FOREIGN KEY (`checker_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_pprodheader_foreman` FOREIGN KEY (`foreman_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_pprodheader_supervisor` FOREIGN KEY (`supervisor_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_pprodheader_shift` FOREIGN KEY (`shift_id`) REFERENCES `m_shift` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `t_painting_prod_line`;
+CREATE TABLE `t_painting_prod_line` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `header_id` int(11) NOT NULL,
+  `line_no` tinyint(2) NOT NULL,
+  `model` varchar(100) NULL DEFAULT NULL,
+  `cb` int(11) NULL DEFAULT NULL,
+  `fot` int(11) NULL DEFAULT NULL,
+  `fw` int(11) NULL DEFAULT NULL,
+  `part` int(11) NULL DEFAULT NULL,
+  `others` int(11) NULL DEFAULT NULL,
+  `keterangan` varchar(255) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_pprodline_header` (`header_id`),
+  CONSTRAINT `fk_pprodline_header` FOREIGN KEY (`header_id`) REFERENCES `t_painting_prod_header` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
 -- Assembling: FO Pump Assy Daily Check Sheet (F-FIP-01) — quality checklist,
 -- separate from the F-FIP-03 production report above.
 -- Model -> Checklist Item (standard text, per model; result_type/expected_value

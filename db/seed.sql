@@ -23,6 +23,7 @@ SET @assembling_dept = (SELECT id FROM m_department WHERE name = 'Assembling');
 
 INSERT INTO m_checksheet_section (department_id, name, route, section_type, sort_order) VALUES
     (@painting_dept, 'Painting Checklist', 'painting_list.php', 'painting_checklist', 1),
+    (@painting_dept, 'Painting Daily Report', 'painting_prod_list.php', 'painting_prod', 2),
     (@assembling_dept, 'Torque', 'assembly_list.php', 'assembly_checklist', 1);
 
 -- ------------------------------------------------------------

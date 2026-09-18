@@ -206,6 +206,59 @@ CALL _mig_addcol('m_assy_model','configured','`configured` tinyint(1) NOT NULL D
 SET @s := IF(@assy_had_configured = 0, 'UPDATE `m_assy_model` SET `configured` = 1', 'DO 0');
 PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
 
+-- =====================================================================
+-- 13  painting_prod_report  (Painting Daily Production Report — F-PNT-PROD)
+-- Tabel baru + daftarkan section-nya di bawah departemen Painting.
+-- CREATE TABLE IF NOT EXISTS + INSERT ber-guard: aman diulang.
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS `t_painting_prod_header` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `department_id` int(11) NOT NULL,
+  `tanggal` date NOT NULL,
+  `checker_id` int(11) NULL DEFAULT NULL,
+  `checker_at` datetime NULL DEFAULT NULL,
+  `foreman_id` int(11) NULL DEFAULT NULL,
+  `foreman_at` datetime NULL DEFAULT NULL,
+  `supervisor_id` int(11) NULL DEFAULT NULL,
+  `supervisor_at` datetime NULL DEFAULT NULL,
+  `shift_id` int(11) NULL DEFAULT NULL,
+  `status` enum('draft','submitted') NOT NULL DEFAULT 'submitted',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_pprodheader_date` (`department_id`, `tanggal`),
+  KEY `fk_pprodheader_checker` (`checker_id`),
+  KEY `fk_pprodheader_foreman` (`foreman_id`),
+  KEY `fk_pprodheader_supervisor` (`supervisor_id`),
+  KEY `fk_pprodheader_shift` (`shift_id`),
+  CONSTRAINT `fk_pprodheader_department` FOREIGN KEY (`department_id`) REFERENCES `m_department` (`id`),
+  CONSTRAINT `fk_pprodheader_checker` FOREIGN KEY (`checker_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_pprodheader_foreman` FOREIGN KEY (`foreman_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_pprodheader_supervisor` FOREIGN KEY (`supervisor_id`) REFERENCES `m_user` (`id`),
+  CONSTRAINT `fk_pprodheader_shift` FOREIGN KEY (`shift_id`) REFERENCES `m_shift` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `t_painting_prod_line` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `header_id` int(11) NOT NULL,
+  `line_no` tinyint(2) NOT NULL,
+  `model` varchar(100) NULL DEFAULT NULL,
+  `cb` int(11) NULL DEFAULT NULL,
+  `fot` int(11) NULL DEFAULT NULL,
+  `fw` int(11) NULL DEFAULT NULL,
+  `part` int(11) NULL DEFAULT NULL,
+  `others` int(11) NULL DEFAULT NULL,
+  `keterangan` varchar(255) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_pprodline_header` (`header_id`),
+  CONSTRAINT `fk_pprodline_header` FOREIGN KEY (`header_id`) REFERENCES `t_painting_prod_header` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `m_checksheet_section` (department_id, name, route, section_type, sort_order)
+SELECT d.id, 'Painting Daily Report', 'painting_prod_list.php', 'painting_prod', 2
+FROM `m_department` d
+WHERE d.name = 'Painting'
+  AND NOT EXISTS (SELECT 1 FROM `m_checksheet_section` s WHERE s.route = 'painting_prod_list.php');
+
 -- ---------- Bersihkan helper ----------
 DROP PROCEDURE IF EXISTS _mig_addcol;
 DROP PROCEDURE IF EXISTS _mig_addkey;

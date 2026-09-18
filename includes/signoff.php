@@ -45,6 +45,13 @@ function signoff_types(): array
             'title_expr' => "CONCAT('Report ', DATE_FORMAT(h.tanggal, '%d/%m/%Y'))",
             'order' => 'h.id',
         ],
+        'painting_prod' => [
+            'label' => 'Painting Report', 'route' => 'painting_prod_list.php',
+            'table' => 't_painting_prod_header', 'checker_col' => 'checker_id', 'period' => 'daily',
+            'join' => 'JOIN m_department m ON m.id = h.department_id',
+            'title_expr' => "CONCAT('Report ', DATE_FORMAT(h.tanggal, '%d/%m/%Y'))",
+            'order' => 'h.id',
+        ],
         'fopump_test' => [
             'label' => 'FO Pump Test', 'route' => 'fopump_test_list.php',
             'table' => 't_fopump_test_header', 'checker_col' => 'checker_id', 'period' => 'ongoing',

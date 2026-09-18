@@ -1623,6 +1623,23 @@ button.jig-ref-thumb:hover { border-color: #9b3b32; }
     color: #1f2430;
 }
 
+/* ---------- Painting Daily Report (F-PNT-PROD) ----------
+ * Reuses the FO Pump table shell (.fopump-table) with its own 8-column layout:
+ * NO · MODEL · CB · FOT · FW · PART · OTHERS · KETERANGAN. */
+.pprod-table { min-width: 820px; }
+.pprod-col-model { width: 18%; }
+.pprod-col-qty { width: 9%; }
+.pprod-col-note { width: 21%; }
+.pprod-note {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d7dbe2;
+    border-radius: 4px;
+    padding: 5px 6px;
+    font-size: 13px;
+    text-align: left;
+}
+
 /* ---------- FO Pump Assy Daily Check Sheet (F-FIP-01) ---------- */
 .fopump-check-toolbar {
     display: flex;
