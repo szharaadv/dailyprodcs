@@ -14,9 +14,16 @@ function renderRows(items) {
     tbody.innerHTML = items.map(item => {
         const saved = draftValues[item.id] || null;
 
+        // For items where 0 is valid (Min 0, e.g. Penambahan Phalphost), a blank
+        // or "-" actual means "tidak nambah" — record it as an explicit 0 so it
+        // shows/saves 0 and is judged OK (instead of a "-" that reads as NG).
+        const savedActual = saved?.actual ?? '';
+        const actualVal = (item.actual_input_type !== 'select'
+            && zeroAcceptable(item) && (savedActual === '' || savedActual === '-'))
+            ? '0' : savedActual;
         const actualCell = item.actual_input_type === 'select'
             ? buildSelect(`actual-select`, item.id, 'actual', item.actual_options, saved?.actual)
-            : `<input type="text" class="actual-input" data-item-id="${item.id}" data-field="actual" value="${escapeHtml(saved?.actual ?? '')}">`;
+            : `<input type="text" class="actual-input" data-item-id="${item.id}" data-field="actual" value="${escapeHtml(actualVal)}">`;
 
         const categoryCell = item.category_options
             ? buildCategoryCell(item.id, item.category_options, saved?.category)
@@ -103,10 +110,18 @@ function toNum(v) {
     return isNaN(n) ? null : n;
 }
 
+/** Whether 0 is a valid actual for this item (numeric standard with Min ≤ 0 ≤ Max),
+ *  e.g. Penambahan Phalphost / netralizier where "tidak nambah" = 0. */
+function zeroAcceptable(item) {
+    const min = toNum((item.standard_min ?? '').toString().trim());
+    const max = toNum((item.standard_max ?? '').toString().trim());
+    if (min === null && max === null) return false; // non-numeric standard
+    return (min === null || 0 >= min) && (max === null || 0 <= max);
+}
+
 /** Returns 'OK' | 'NG' | null (null = no standard / empty actual → leave manual). */
 function autoVerdict(item, actualRaw) {
     const actual = (actualRaw ?? '').toString().trim();
-    if (actual === '') return null;
 
     const minRaw = (item.standard_min ?? '').toString().trim();
     const maxRaw = (item.standard_max ?? '').toString().trim();
@@ -115,6 +130,18 @@ function autoVerdict(item, actualRaw) {
     if (!hasMin && !hasMax) return null; // no standard → don't auto-decide
 
     const min = toNum(minRaw), max = toNum(maxRaw), val = toNum(actual);
+
+    // No value entered (blank or "-", e.g. "tidak nambah hari ini"): count it as
+    // 0. OK when 0 is within the standard (e.g. Min 0, like Penambahan Phalphost
+    // / netralizier); otherwise stay neutral so an unfilled MEASUREMENT item
+    // (e.g. Total Acid 6.5–7.5) isn't auto-flagged NG.
+    if (actual === '' || actual === '-') {
+        // Only for numeric standards; a non-numeric one (e.g. "Kabut") left blank
+        // stays neutral, never auto-OK.
+        if (min === null && max === null) return null;
+        const zeroOk = (min === null || 0 >= min) && (max === null || 0 <= max);
+        return zeroOk ? 'OK' : null;
+    }
 
     // Numeric range check.
     if (val !== null && (min !== null || max !== null)) {
