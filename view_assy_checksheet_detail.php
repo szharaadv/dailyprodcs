@@ -105,7 +105,7 @@ require __DIR__ . '/includes/app_top.php';
     </div>
 
     <div class="table-wrap">
-        <table class="assy-table">
+        <table class="assy-table assy-table-detail">
             <thead>
                 <tr>
                     <th>No</th>

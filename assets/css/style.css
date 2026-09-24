@@ -266,6 +266,20 @@
 
 .assy-table td:nth-child(3), .assy-table td:nth-child(4) { white-space: nowrap; }
 
+/* Torque DETAIL view reuses .assy-table but has 8 columns (No · Checking Item ·
+ * Standard · Std Min · Std Max · Actual · Status · Consumable). Re-map the column
+ * widths for that layout and let the long "Standard" text wrap instead of
+ * overflowing into the next cell. */
+.assy-table-detail { min-width: 940px; }
+.assy-table-detail th:nth-child(1), .assy-table-detail td:nth-child(1) { width: 48px; text-align: center; }
+.assy-table-detail th:nth-child(2), .assy-table-detail td:nth-child(2) { width: 210px; text-align: left; }
+.assy-table-detail th:nth-child(3), .assy-table-detail td:nth-child(3) { width: 175px; text-align: left; white-space: normal; }
+.assy-table-detail th:nth-child(4), .assy-table-detail td:nth-child(4) { width: 92px; white-space: nowrap; }
+.assy-table-detail th:nth-child(5), .assy-table-detail td:nth-child(5) { width: 92px; }
+.assy-table-detail th:nth-child(6), .assy-table-detail td:nth-child(6) { width: 120px; }
+.assy-table-detail th:nth-child(7), .assy-table-detail td:nth-child(7) { width: 96px; }
+.assy-table-detail th:nth-child(8), .assy-table-detail td:nth-child(8) { width: 120px; }
+
 .washing-table {
     width: 100%;
     min-width: 980px;
