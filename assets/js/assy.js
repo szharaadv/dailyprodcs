@@ -3,38 +3,73 @@ let currentItems = [];
 let currentDraftId = typeof DRAFT_ID !== 'undefined' ? DRAFT_ID : null;
 const draftValues = typeof DRAFT_VALUES !== 'undefined' ? DRAFT_VALUES : {};
 
+// Revision mode: opened on a submitted record from assy_engine_revision.php.
+// Only the record's own items are shown, each with an × to drop it; on save,
+// dropped items are removed and the rest updated (see buildPayload / save).
+const reviseMode = typeof REVISE_MODE !== 'undefined' && REVISE_MODE;
+const reviseItemIds = (typeof REVISE_ITEM_IDS !== 'undefined' ? REVISE_ITEM_IDS : []).map(Number);
+const removedIds = new Set();
+const colspan = reviseMode ? 7 : 6;
+const removeCell = (id) => reviseMode
+    ? `<td class="assy-remove-cell"><button type="button" class="assy-remove-btn" data-remove-id="${id}" title="Hapus item">&times;</button></td>`
+    : '';
+
 function renderRows(items) {
     if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">No checklist items set up for this model yet.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">No checklist items set up for this model yet.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = items.map(item => {
         const saved = draftValues[item.id] || null;
+        const removed = removedIds.has(Number(item.id)) ? ' assy-row-removed' : '';
         // Blocked = checking item tidak berlaku untuk model/varian ini.
         // Kolom isian dikunci (readonly, tidak bisa diisi), otomatis N/A.
         if (Number(item.blocked) === 1) {
-            return `<tr class="row-blocked">
+            return `<tr class="row-blocked${removed}">
                 <td>${escapeHtml(item.checking_item)}</td>
                 <td>${escapeHtml(item.standard ?? '-')}</td>
                 <td>${escapeHtml(item.standard_min ?? '-')}</td>
                 <td>${escapeHtml(item.standard_max ?? '-')}</td>
                 <td><input type="text" class="actual-input blocked-input" data-item-id="${item.id}" data-field="actual" value="" placeholder="N/A" readonly tabindex="-1"></td>
                 <td><input type="text" class="actual-input blocked-input" data-item-id="${item.id}" data-field="consumable" value="" placeholder="N/A" readonly tabindex="-1"></td>
+                ${removeCell(item.id)}
             </tr>`;
         }
-        return `<tr>
+        return `<tr class="${removed.trim()}">
             <td>${escapeHtml(item.checking_item)}</td>
             <td>${escapeHtml(item.standard ?? '-')}</td>
             <td>${escapeHtml(item.standard_min ?? '-')}</td>
             <td>${escapeHtml(item.standard_max ?? '-')}</td>
             <td><input type="text" class="actual-input" data-item-id="${item.id}" data-field="actual" value="${escapeHtml(saved?.actual ?? '')}"></td>
-            <td><input type="text" class="actual-input" data-item-id="${item.id}" data-field="consumable" value="${escapeHtml(saved?.consumable ?? '')}"></td>
+            <td><input type="text" class="actual-input" data-optional data-item-id="${item.id}" data-field="consumable" value="${escapeHtml(saved?.consumable ?? '')}"></td>
+            ${removeCell(item.id)}
         </tr>`;
     }).join('');
 
     // Highlight any out-of-standard actual results (also for loaded drafts).
     items.forEach(item => evaluateActual(item.id));
+}
+
+// Toggle drop/undrop of a checking item (revision mode only).
+if (reviseMode) {
+    tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.assy-remove-btn');
+        if (!btn) return;
+        const id = Number(btn.dataset.removeId);
+        const tr = btn.closest('tr');
+        if (removedIds.has(id)) {
+            removedIds.delete(id);
+            tr.classList.remove('assy-row-removed');
+            btn.innerHTML = '&times;';
+            btn.title = 'Hapus item';
+        } else {
+            removedIds.add(id);
+            tr.classList.add('assy-row-removed');
+            btn.innerHTML = '&#8635;';
+            btn.title = 'Batal hapus';
+        }
+    });
 }
 
 // ---- Standard vs Actual Result check (visual red/green only) ----
@@ -86,16 +121,22 @@ function escapeHtml(str) {
 }
 
 async function loadItems() {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Loading data...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">Loading data...</td></tr>`;
     const modelId = modelResolver.getValue();
     if (!modelId) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">No models set up for this department yet.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty">No models set up for this department yet.</td></tr>`;
         currentItems = [];
         return;
     }
     const res = await fetch(`ajax/get_assy_items.php?model_id=${modelId}`);
     const data = await res.json();
     currentItems = data.items || [];
+    // Revision: show only the items this record actually has (dropped-in-an-
+    // earlier-revision items stay gone).
+    if (reviseMode && reviseItemIds.length) {
+        const keep = new Set(reviseItemIds);
+        currentItems = currentItems.filter(it => keep.has(Number(it.id)));
+    }
     renderRows(currentItems);
 }
 
@@ -103,23 +144,27 @@ const modelOptions = (typeof MODELS !== 'undefined' ? MODELS : []).map(m => ({ v
 const modelResolver = turnIntoCombo(document.getElementById('f_model'), modelOptions, { allowCustom: false, onSelect: loadItems });
 
 function buildPayload(status) {
-    const rows = currentItems.map(item => {
-        // Blocked items are N/A — always saved empty, never the operator's input.
-        if (Number(item.blocked) === 1) {
-            return { checklist_item_id: item.id, actual_result: null, consumable_item: null };
-        }
-        const actualEl = document.querySelector(`[data-item-id="${item.id}"][data-field="actual"]`);
-        const consumableEl = document.querySelector(`[data-item-id="${item.id}"][data-field="consumable"]`);
-        return {
-            checklist_item_id: item.id,
-            actual_result: actualEl ? actualEl.value : null,
-            consumable_item: consumableEl ? consumableEl.value : null,
-        };
-    });
+    const rows = currentItems
+        // Revision: dropped (×) items are excluded, so they're removed on save.
+        .filter(item => !removedIds.has(Number(item.id)))
+        .map(item => {
+            // Blocked items are N/A — always saved empty, never the operator's input.
+            if (Number(item.blocked) === 1) {
+                return { checklist_item_id: item.id, actual_result: null, consumable_item: null };
+            }
+            const actualEl = document.querySelector(`[data-item-id="${item.id}"][data-field="actual"]`);
+            const consumableEl = document.querySelector(`[data-item-id="${item.id}"][data-field="consumable"]`);
+            return {
+                checklist_item_id: item.id,
+                actual_result: actualEl ? actualEl.value : null,
+                consumable_item: consumableEl ? consumableEl.value : null,
+            };
+        });
 
     return {
         header_id: currentDraftId,
         status,
+        revise: reviseMode,
         tanggal: document.getElementById('f_tanggal').value,
         department_id: DEPARTMENT_ID,
         model_id: modelResolver.getValue(),
@@ -170,17 +215,19 @@ async function saveChecksheet(status, silent = false) {
         alert('Saved as draft. You can continue it later from the My Drafts menu.');
     } else {
         if (window.stopAutosaveDraft) stopAutosaveDraft();
-        alert('Checksheet submitted successfully.');
-        window.location.href = 'view_assy_checksheets.php';
+        alert(reviseMode ? 'Revisi tersimpan.' : 'Checksheet submitted successfully.');
+        window.location.href = reviseMode ? 'assy_engine_revision.php' : 'view_assy_checksheets.php';
     }
 }
 
-document.getElementById('btn-draft').addEventListener('click', () => saveChecksheet('draft'));
+document.getElementById('btn-draft')?.addEventListener('click', () => saveChecksheet('draft'));
 document.getElementById('btn-submit').addEventListener('click', () => {
     if (window.checksheetComplete && !checksheetComplete()) return;
+    if (reviseMode && !confirm('Simpan revisi? Item yang ditandai × akan dihapus dari checksheet.')) return;
     if (window.stopAutosaveDraft) stopAutosaveDraft(); // no draft save may race the submit
     saveChecksheet('submitted');
 });
-if (window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });
+// No autosave in revision mode — a revision is an explicit, deliberate save.
+if (!reviseMode && window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });
 
 loadItems();

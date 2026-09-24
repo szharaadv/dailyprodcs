@@ -205,7 +205,7 @@ require __DIR__ . '/includes/app_top.php';
                     <td><?= $e['ng_count'] > 0 ? '<span class="badge badge-off">' . $e['ng_count'] . ' NG</span>' : '<span class="badge badge-ok">OK</span>' ?></td>
                     <td><?= $e['rev_count'] > 0 ? (int)$e['rev_count'] : '-' ?></td>
                     <td class="rev-row-actions">
-                        <a class="btn btn-sm" href="assy_engine_revision.php?<?= http_build_query(['f_date' => $f_date, 'f_model_id' => $f_model, 'all' => $show_all ? 1 : null, 'header_id' => $e['id']]) ?>">Revisi &rarr;</a>
+                        <a class="btn btn-sm" href="assembly_list.php?revise_id=<?= (int)$e['id'] ?>">Revisi &rarr;</a>
                         <?php if ($e['rev_count'] > 0): ?>
                         <a class="btn btn-secondary btn-sm" href="assy_revision_report.php?header_id=<?= (int)$e['id'] ?>&print=1" target="_blank" rel="noopener" title="Tarik PDF revisi">&#128424; PDF</a>
                         <?php endif; ?>

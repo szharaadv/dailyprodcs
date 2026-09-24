@@ -12,6 +12,17 @@ $header_id        = (int)($input['header_id'] ?? 0);
 // case we keep its original date instead.
 $tanggal           = date('Y-m-d');
 $unlockedEdit      = $header_id && has_active_unlock($pdo, 'assy', $header_id);
+
+// Revision flow (assy_engine_revision.php → checksheet): may edit a submitted
+// record and drop (×) items. Requires a logged-in user; treated like an unlock
+// so the "submitted record is locked" guard below doesn't block it.
+$reviseMode = !empty($input['revise']);
+if ($reviseMode && !current_user()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Sesi tidak valid untuk revisi.']);
+    exit;
+}
+$unlockedEdit = $unlockedEdit || $reviseMode;
 // Updating an existing record keeps that record's OWN date — never rewrite it to
 // today. Otherwise re-saving a past-date draft (e.g. a missed-day fill draft)
 // would move it onto today's row and hit the unique department+date key.

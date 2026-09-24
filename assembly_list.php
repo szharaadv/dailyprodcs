@@ -17,6 +17,20 @@ if ($edit_id && has_active_unlock($pdo, 'assy', $edit_id)) {
     }
 }
 
+// Revision flow: open a submitted record directly on the checksheet to revise
+// its values and/or drop (×) checking items. Reached from assy_engine_revision.php.
+$revise_id = (int)($_GET['revise_id'] ?? 0);
+$revise_mode = false;
+if ($revise_id) {
+    $stmt = $pdo->prepare('SELECT department_id FROM t_assy_header WHERE id = ?');
+    $stmt->execute([$revise_id]);
+    $reviseDept = $stmt->fetchColumn();
+    if ($reviseDept) {
+        $_SESSION['department_id'] = (int)$reviseDept;
+        $revise_mode = true;
+    }
+}
+
 if (isset($_GET['department_id'])) {
     $_SESSION['department_id'] = (int)$_GET['department_id'];
 }
@@ -93,6 +107,11 @@ if ($draft_id) {
     $stmt->execute([$edit_id]);
     $draft = $stmt->fetch();
     $draft_id = $edit_id;
+} elseif ($revise_mode) {
+    $stmt = $pdo->prepare('SELECT * FROM t_assy_header WHERE id = ?');
+    $stmt->execute([$revise_id]);
+    $draft = $stmt->fetch();
+    $draft_id = $revise_id;
 }
 
 if ($draft) {
@@ -102,6 +121,11 @@ if ($draft) {
         $draft_values[$d['checklist_item_id']] = ['actual' => $d['actual_result'], 'consumable' => $d['consumable_item']];
     }
 }
+
+// In revise mode, the checksheet shows exactly the items this record currently
+// has (so items dropped in an earlier revision don't come back), each with an ×
+// to remove it.
+$revise_item_ids = ($revise_mode && $draft) ? array_map('intval', array_keys($draft_values)) : [];
 
 $selected_model_id = $_GET['model_id'] ?? ($draft['model_id'] ?? ($models[0]['id'] ?? null));
 $selected_model_name = '';
@@ -120,7 +144,9 @@ require __DIR__ . '/includes/app_top.php';
 ?>
 
 <div class="checksheet-card">
-    <?php if ($editing_unlocked): ?>
+    <?php if ($revise_mode): ?>
+    <div class="alert alert-ok">Mode Revisi — ubah nilainya bila perlu, dan klik <b>×</b> untuk menghapus item. Saat disimpan, hanya item yang tidak dihapus yang dipertahankan.</div>
+    <?php elseif ($editing_unlocked): ?>
     <div class="alert alert-ok">Editing a past record (<?= htmlspecialchars($draft['tanggal']) ?>). Changes save back to that same date.</div>
     <?php elseif ($catchup_tanggal): ?>
     <div class="alert alert-ok">Catching up on a missed day (<?= htmlspecialchars($catchup_tanggal) ?>).  </div>
@@ -129,7 +155,7 @@ require __DIR__ . '/includes/app_top.php';
         <div class="field-block">
             <label>Date</label>
             <input type="text" id="f_tanggal" class="holiday-date-input" readonly
-                   value="<?= $editing_unlocked ? htmlspecialchars($draft['tanggal']) : htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
+                   value="<?= ($editing_unlocked || $revise_mode) ? htmlspecialchars($draft['tanggal']) : htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
         </div>
 
         <div class="field-block">
@@ -187,17 +213,20 @@ require __DIR__ . '/includes/app_top.php';
                     <th>Standard Max.</th>
                     <th>Actual Result</th>
                     <th>Consumable Item</th>
+                    <?php if ($revise_mode): ?><th style="width:44px;"></th><?php endif; ?>
                 </tr>
             </thead>
             <tbody id="assy-tbody">
-                <tr><td colspan="6" class="empty">Loading data...</td></tr>
+                <tr><td colspan="<?= $revise_mode ? 7 : 6 ?>" class="empty">Loading data...</td></tr>
             </tbody>
         </table>
     </div>
 
     <div class="actions">
+        <?php if (!$revise_mode): ?>
         <button type="button" class="btn btn-draft" id="btn-draft">Save as Draft</button>
-        <button type="button" class="btn btn-submit" id="btn-submit">Submit</button>
+        <?php endif; ?>
+        <button type="button" class="btn btn-submit" id="btn-submit"><?= $revise_mode ? 'Simpan Revisi' : 'Submit' ?></button>
     </div>
 </div>
 
@@ -208,12 +237,27 @@ require __DIR__ . '/includes/app_top.php';
         background: #e9ebee; color: #9aa0a6; cursor: not-allowed;
         border-style: dashed; text-align: center;
     }
+    /* Revision mode: × drop button + dropped-row styling. */
+    .assy-remove-cell { text-align: center; }
+    .assy-remove-btn {
+        border: none; background: #f3d6d3; color: #9b3b32;
+        width: 26px; height: 26px; border-radius: 6px;
+        font-size: 16px; line-height: 1; cursor: pointer;
+    }
+    .assy-remove-btn:hover { background: #e9b8b3; }
+    .assy-row-removed td { opacity: .45; text-decoration: line-through; }
+    .assy-row-removed .assy-remove-btn {
+        background: #e3efe4; color: #2f7d34; text-decoration: none;
+    }
+    .assy-row-removed .assy-remove-cell { text-decoration: none; }
 </style>
 <script>
     const DEPARTMENT_ID = <?= json_encode($department['id']) ?>;
     const DRAFT_ID = <?= json_encode($draft_id ?: null) ?>;
     const DRAFT_VALUES = <?= json_encode($draft_values, JSON_FORCE_OBJECT) ?>;
     const MODELS = <?= json_encode(array_map(fn($m) => ['id' => $m['id'], 'name' => $m['name']], $models)) ?>;
+    const REVISE_MODE = <?= json_encode($revise_mode) ?>;
+    const REVISE_ITEM_IDS = <?= json_encode($revise_item_ids) ?>;
 </script>
 <script src="assets/js/combo-select.js"></script>
 <script src="assets/js/assy.js?v=<?= @filemtime(__DIR__ . '/assets/js/assy.js') ?: 1 ?>"></script>
