@@ -227,6 +227,17 @@ document.getElementById('btn-submit').addEventListener('click', () => {
     if (window.stopAutosaveDraft) stopAutosaveDraft(); // no draft save may race the submit
     saveChecksheet('submitted');
 });
+// Enter anywhere on the sheet triggers Submit — except inside the Model combo,
+// where Enter picks the highlighted option.
+document.querySelector('.checksheet-card')?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.isComposing || e.defaultPrevented) return;
+    const t = e.target;
+    if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'SELECT')) return;
+    if (t.classList.contains('combo-input')) return; // Model combo: Enter selects
+    e.preventDefault();
+    document.getElementById('btn-submit').click();
+});
+
 // No autosave in revision mode — a revision is an explicit, deliberate save.
 if (!reviseMode && window.initAutosaveDraft) initAutosaveDraft({ save: () => saveChecksheet('draft', true) });
 
