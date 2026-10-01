@@ -965,35 +965,4 @@ CREATE TABLE IF NOT EXISTS `t_edit_request` (
   CONSTRAINT `fk_editrequest_user` FOREIGN KEY (`requested_by`) REFERENCES `m_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ------------------------------------------------------------
--- Off-day excuses: mark a missing checksheet day as excused with an
--- admin-managed reason instead of filling it (see includes/offday.php).
--- ------------------------------------------------------------
-DROP TABLE IF EXISTS `m_offday_reason`;
-CREATE TABLE `m_offday_reason` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(120) NOT NULL,
-  `sort_order` int(11) NOT NULL DEFAULT 0,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DROP TABLE IF EXISTS `t_checksheet_offday`;
-CREATE TABLE `t_checksheet_offday` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `checksheet_type` varchar(30) NOT NULL,
-  `department_id` int(11) NOT NULL,
-  `condition_id` int(11) NULL DEFAULT NULL,
-  `tanggal` date NOT NULL,
-  `reason_id` int(11) NOT NULL,
-  `note` varchar(255) NULL DEFAULT NULL,
-  `created_by` int(11) NULL DEFAULT NULL,
-  `created_by_name` varchar(120) NULL DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_offday` (`checksheet_type`, `department_id`, `condition_id`, `tanggal`),
-  KEY `fk_offday_reason` (`reason_id`),
-  CONSTRAINT `fk_offday_reason` FOREIGN KEY (`reason_id`) REFERENCES `m_offday_reason` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 SET FOREIGN_KEY_CHECKS = 1;
