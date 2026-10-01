@@ -3,6 +3,7 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/calendar_lib.php';
 require_once __DIR__ . '/includes/edit_requests.php';
+require_once __DIR__ . '/includes/offday.php';
 require_login();
 $pdo = get_db();
 
@@ -49,6 +50,11 @@ if ($department_id && $capEnd >= $monthStart) {
     $missingDates = array_values(array_filter($workingDays, fn($d) => !isset($present[$d])));
 }
 
+// Split off days that were excused with a reason (Preventive Maintenance, etc.).
+$offdaySet = offday_set($pdo, 'fopump', (int)$department_id, $year, $month);
+$excusedDates = array_values(array_filter($missingDates, fn($d) => isset($offdaySet['|' . $d])));
+$missingDates = array_values(array_filter($missingDates, fn($d) => !isset($offdaySet['|' . $d])));
+
 $backQuery = $_SERVER['QUERY_STRING'] ?? '';
 
 $base_url = '';
@@ -81,13 +87,18 @@ $export_route = 'fopump_list.php'; $export_dept = $department_id; require __DIR_
     </div>
 </form>
 
-<?php if ($missingDates): ?>
+<?php if ($missingDates || $excusedDates): ?>
 <?php $fillUnlockSet = active_fill_unlock_set($pdo, 'fopump', (int)$department_id); ?>
 <div class="missing-banner">
     <div class="missing-banner-title">&#9888; Missing checks this month</div>
+    <?php if ($missingDates): ?>
     <div class="missing-banner-row">
         <span class="missing-banner-cond">FO Pump Daily Report</span>
         <span class="missing-banner-dates"><?= format_missing_dates($missingDates) ?></span>
+        <button type="button" class="missing-banner-fill-btn cs-offday-btn"
+                data-type="fopump" data-department-id="<?= $department_id ?>"
+                data-dates="<?= htmlspecialchars(implode(',', $missingDates)) ?>"
+                data-label="FO Pump Daily Report">+ Keterangan</button>
         <?php if (in_array(date('Y-m-d', strtotime('-1 day')), $missingDates, true)): ?>
             <a class="missing-banner-fill-btn" href="fopump_list.php?department_id=<?= $department_id ?>&tanggal=<?= date('Y-m-d', strtotime('-1 day')) ?>">Fill yesterday</a>
         <?php elseif (in_array(date('Y-m-d'), $missingDates, true)): ?>
@@ -108,6 +119,16 @@ $export_route = 'fopump_list.php'; $export_dept = $department_id; require __DIR_
             <?php endif; ?>
         <?php endforeach; ?>
     </div>
+    <?php endif; ?>
+    <?php if ($excusedDates): ?>
+    <div class="missing-banner-row offday-excused-row">
+        <span class="missing-banner-cond">Keterangan tercatat</span>
+        <span class="missing-banner-dates"><?php
+            $parts = array_map(fn($d) => date('d/m', strtotime($d)) . ' (' . $offdaySet['|' . $d] . ')', $excusedDates);
+            echo htmlspecialchars(implode(', ', $parts));
+        ?></span>
+    </div>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
 

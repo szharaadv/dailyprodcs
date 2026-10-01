@@ -1032,6 +1032,31 @@ tr.cal-off input:disabled, tr.cal-off select:disabled { background-color: rgba(2
 button.missing-banner-fill-btn { cursor: pointer; font-family: inherit; line-height: 1.2; }
 .missing-banner-req-btn { background: #fff; border-style: dashed; }
 .missing-banner-req-btn::before { content: "\21BB\00a0"; }
+.offday-excused-row { opacity: .72; font-size: 12px; margin-top: 2px; }
+.offday-excused-row .missing-banner-cond { color: #2f7d34; }
+
+/* "Keterangan Tidak Mengisi" modal */
+.offday-modal .modal-card { max-width: 430px; }
+.offday-form .offday-record-label {
+    margin: 0 0 14px; padding: 7px 10px; border-radius: 7px;
+    background: #f4f5f7; color: #4a5262; font-size: 13px; font-weight: 600;
+}
+.offday-form label {
+    display: block; margin: 13px 0 5px;
+    font: 600 12px Inter, sans-serif; letter-spacing: .02em;
+    text-transform: uppercase; color: #8a90a0;
+}
+.offday-form select,
+.offday-form textarea {
+    width: 100%; box-sizing: border-box;
+    border: 1px solid #d7dbe2; border-radius: 8px;
+    padding: 9px 11px; font: 400 14px Inter, sans-serif; color: #1f2430; background: #fff;
+}
+.offday-form select { height: 40px; appearance: auto; }
+.offday-form select:focus,
+.offday-form textarea:focus { outline: none; border-color: #9b3b32; box-shadow: 0 0 0 3px rgba(155,59,50,.12); }
+.offday-form textarea { resize: vertical; min-height: 58px; }
+.offday-modal .modal-actions { margin-top: 20px; }
 
 /* FO Pump Check role-based sign-off slots */
 .signoff-slot.signoff-done { color: #1f7a3d; font-weight: 600; }

@@ -3,6 +3,7 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/calendar_lib.php';
 require_once __DIR__ . '/includes/edit_requests.php';
+require_once __DIR__ . '/includes/offday.php';
 require_login();
 $pdo = get_db();
 
@@ -94,6 +95,7 @@ unset($g);
 $today = date('Y-m-d');
 $capEnd = min($monthEnd, $today);
 $missingByCondition = [];
+$offdaySet = offday_set($pdo, 'painting', (int)$selected_department_id, $year, $month);
 
 if ($selected_department_id && $capEnd >= $monthStart) {
     $workingDays = get_working_days($pdo, $monthStart, $capEnd);
@@ -110,7 +112,10 @@ if ($selected_department_id && $capEnd >= $monthStart) {
     foreach ($conditions as $c) {
         if ($selected_condition_id && $selected_condition_id != $c['id']) continue;
         $missing = array_values(array_filter($workingDays, fn($d) => empty($present[$c['id']][$d])));
-        if ($missing) $missingByCondition[] = ['id' => $c['id'], 'name' => $c['name'], 'dates' => $missing];
+        // Days excused with a reason are shown separately, not as "missing".
+        $excused = array_values(array_filter($missing, fn($d) => isset($offdaySet[$c['id'] . '|' . $d])));
+        $missing = array_values(array_filter($missing, fn($d) => !isset($offdaySet[$c['id'] . '|' . $d])));
+        if ($missing || $excused) $missingByCondition[] = ['id' => $c['id'], 'name' => $c['name'], 'dates' => $missing, 'excused' => $excused];
     }
 }
 
@@ -164,9 +169,15 @@ require __DIR__ . '/includes/app_top.php';
 <div class="missing-banner">
     <div class="missing-banner-title">&#9888; Missing checks this month</div>
     <?php foreach ($missingByCondition as $mc): ?>
+        <?php if ($mc['dates']): ?>
         <div class="missing-banner-row">
             <span class="missing-banner-cond"><?= htmlspecialchars($mc['name']) ?></span>
             <span class="missing-banner-dates"><?= format_missing_dates($mc['dates']) ?></span>
+            <button type="button" class="missing-banner-fill-btn cs-offday-btn"
+                    data-type="painting" data-department-id="<?= $selected_department_id ?>"
+                    data-condition-id="<?= $mc['id'] ?>"
+                    data-dates="<?= htmlspecialchars(implode(',', $mc['dates'])) ?>"
+                    data-label="<?= htmlspecialchars($mc['name']) ?>">+ Keterangan</button>
             <?php if (in_array(date('Y-m-d', strtotime('-1 day')), $mc['dates'], true)): ?>
                 <a class="missing-banner-fill-btn" href="painting_list.php?department_id=<?= $selected_department_id ?>&condition_id=<?= $mc['id'] ?>&tanggal=<?= date('Y-m-d', strtotime('-1 day')) ?>">Fill yesterday</a>
             <?php elseif (in_array(date('Y-m-d'), $mc['dates'], true)): ?>
@@ -189,6 +200,16 @@ require __DIR__ . '/includes/app_top.php';
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
+        <?php if (!empty($mc['excused'])): ?>
+        <div class="missing-banner-row offday-excused-row">
+            <span class="missing-banner-cond"><?= htmlspecialchars($mc['name']) ?> · keterangan</span>
+            <span class="missing-banner-dates"><?php
+                $parts = array_map(fn($d) => date('d/m', strtotime($d)) . ' (' . $offdaySet[$mc['id'] . '|' . $d] . ')', $mc['excused']);
+                echo htmlspecialchars(implode(', ', $parts));
+            ?></span>
+        </div>
+        <?php endif; ?>
     <?php endforeach; ?>
 </div>
 <?php endif; ?>
