@@ -14,16 +14,49 @@ function get_working_days(PDO $pdo, string $start, string $end): array
     $holidayMap = [];
     foreach ($stmt->fetchAll() as $h) { $holidayMap[$h['tanggal']] = (bool)$h['is_workday']; }
 
+    $stopDays = get_production_stop_days($pdo, $start, $end);
+
     $workingDays = [];
     $cursor = new DateTime($start);
     $endDt = new DateTime($end);
     while ($cursor <= $endDt) {
         $d = $cursor->format('Y-m-d');
+        // A plant-wide production stop (PM, stock taking, …) means no checksheet
+        // is expected that day, so it's never a "working" (checkable) day.
+        if (isset($stopDays[$d])) { $cursor->modify('+1 day'); continue; }
         $isWorking = array_key_exists($d, $holidayMap) ? $holidayMap[$d] : ((int)$cursor->format('N') < 6);
         if ($isWorking) $workingDays[] = $d;
         $cursor->modify('+1 day');
     }
     return $workingDays;
+}
+
+/**
+ * Dates within [start, end] covered by a plant-wide production-stop period, as a
+ * [date => reason name] lookup. Degrades to empty if the feature isn't migrated.
+ */
+function get_production_stop_days(PDO $pdo, string $start, string $end): array
+{
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT s.start_date, s.end_date, r.name AS reason
+             FROM t_prodstop s JOIN m_prodstop_reason r ON r.id = s.reason_id
+             WHERE s.start_date <= ? AND s.end_date >= ?'
+        );
+        $stmt->execute([$end, $start]);
+    } catch (Throwable $e) {
+        return [];
+    }
+    $days = [];
+    foreach ($stmt->fetchAll() as $s) {
+        $cursor = new DateTime(max($s['start_date'], $start));
+        $endDt = new DateTime(min($s['end_date'], $end));
+        while ($cursor <= $endDt) {
+            $days[$cursor->format('Y-m-d')] = $s['reason'];
+            $cursor->modify('+1 day');
+        }
+    }
+    return $days;
 }
 
 /** Formats a "missing" banner's date list, e.g. "03/08, 04/08 (2 days)". */

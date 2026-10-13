@@ -155,7 +155,7 @@ require __DIR__ . '/includes/app_top.php';
         <div class="field-block">
             <label>Date</label>
             <input type="text" id="f_tanggal" class="holiday-date-input" readonly
-                   value="<?= ($editing_unlocked || $revise_mode) ? htmlspecialchars($draft['tanggal']) : htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
+                   value="<?= $draft ? htmlspecialchars($draft['tanggal']) : htmlspecialchars($selected_date) ?>" max="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>">
         </div>
 
         <div class="field-block">

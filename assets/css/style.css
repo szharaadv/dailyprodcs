@@ -39,6 +39,7 @@
 .dept-switch-link:hover { text-decoration: underline; }
 .dept-switch-link-disabled { color: #c7ccd4; cursor: default; }
 .dept-switch-link-next { margin-left: auto; }
+.detail-daynav { display: inline-flex; gap: 16px; }
 .dept-switch-link-disabled:hover { text-decoration: none; }
 
 .form-grid-top {

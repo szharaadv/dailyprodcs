@@ -275,6 +275,11 @@ function icon(string $name): string
         <a class="nav-item <?= $active_nav === 'config-holidays' ? 'active' : '' ?>" href="<?= $base_url ?>admin/holidays.php">
             <?= icon('clock') ?> YADIN Calendar
         </a>
+        <?php if (is_admin()): ?>
+        <a class="nav-item <?= $active_nav === 'config-prodstop' ? 'active' : '' ?>" href="<?= $base_url ?>admin/production_stop.php">
+            <?= icon('clock') ?> Stop Produksi
+        </a>
+        <?php endif; ?>
 
         <div class="nav-group-label">Management</div>
         <?php if (is_admin()): ?>

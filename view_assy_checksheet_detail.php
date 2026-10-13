@@ -51,6 +51,17 @@ foreach ($rev as $r) {
 }
 
 $backHref = 'view_assy_checksheets.php' . (isset($_GET['back']) && $_GET['back'] !== '' ? '?' . $_GET['back'] : '');
+$backQ = isset($_GET['back']) && $_GET['back'] !== '' ? '&back=' . urlencode($_GET['back']) : '';
+
+// Prev/next submitted record in chronological order (same department). Torque
+// can have several records per day, so order by (date, id).
+$dep = $header['department_id']; $tg = $header['tanggal']; $hid = (int)$header['id'];
+$navStmt = $pdo->prepare("SELECT id FROM t_assy_header WHERE department_id=? AND status='submitted' AND (tanggal < ? OR (tanggal = ? AND id < ?)) ORDER BY tanggal DESC, id DESC LIMIT 1");
+$navStmt->execute([$dep, $tg, $tg, $hid]);
+$prevId = $navStmt->fetchColumn() ?: null;
+$navStmt = $pdo->prepare("SELECT id FROM t_assy_header WHERE department_id=? AND status='submitted' AND (tanggal > ? OR (tanggal = ? AND id > ?)) ORDER BY tanggal ASC, id ASC LIMIT 1");
+$navStmt->execute([$dep, $tg, $tg, $hid]);
+$nextId = $navStmt->fetchColumn() ?: null;
 
 $base_url = '';
 $active_nav = 'view-checksheets';
@@ -63,6 +74,10 @@ require __DIR__ . '/includes/app_top.php';
 <div class="checksheet-card">
     <div class="dept-context">
         <a href="<?= htmlspecialchars($backHref) ?>" class="dept-switch-link">&larr; Back to list</a>
+        <span class="detail-daynav dept-switch-link-next">
+            <?php if ($prevId): ?><a class="dept-switch-link" href="view_assy_checksheet_detail.php?id=<?= $prevId ?><?= $backQ ?>">&larr; Prev</a><?php else: ?><span class="dept-switch-link dept-switch-link-disabled">&larr; Prev</span><?php endif; ?>
+            <?php if ($nextId): ?><a class="dept-switch-link" href="view_assy_checksheet_detail.php?id=<?= $nextId ?><?= $backQ ?>">Next &rarr;</a><?php else: ?><span class="dept-switch-link dept-switch-link-disabled">Next &rarr;</span><?php endif; ?>
+        </span>
     </div>
 
     <div class="form-grid-top">

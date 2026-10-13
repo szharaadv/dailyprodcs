@@ -41,6 +41,15 @@ $isAbnormal = fn($cat) => in_array(strtolower(trim((string)$cat)), ['ng', 'nok',
 $abnormalCount = count(array_filter($details, fn($d) => $isAbnormal($d['category'])));
 
 $backHref = 'view_checksheets.php' . (isset($_GET['back']) && $_GET['back'] !== '' ? '?' . $_GET['back'] : '');
+$backQ = isset($_GET['back']) && $_GET['back'] !== '' ? '&back=' . urlencode($_GET['back']) : '';
+
+// Prev/next submitted record by date, same department AND condition.
+$navStmt = $pdo->prepare("SELECT id FROM t_checksheet_header WHERE department_id=? AND condition_id=? AND status='submitted' AND tanggal < ? ORDER BY tanggal DESC, id DESC LIMIT 1");
+$navStmt->execute([$header['department_id'], $header['condition_id'], $header['tanggal']]);
+$prevId = $navStmt->fetchColumn() ?: null;
+$navStmt = $pdo->prepare("SELECT id FROM t_checksheet_header WHERE department_id=? AND condition_id=? AND status='submitted' AND tanggal > ? ORDER BY tanggal ASC, id ASC LIMIT 1");
+$navStmt->execute([$header['department_id'], $header['condition_id'], $header['tanggal']]);
+$nextId = $navStmt->fetchColumn() ?: null;
 
 $base_url = '';
 $active_nav = 'view-checksheets';
@@ -58,6 +67,10 @@ require __DIR__ . '/includes/app_top.php';
         <?php else: ?>
             <span class="cs-summary-badge cs-summary-badge-ok">All normal</span>
         <?php endif; ?>
+        <span class="detail-daynav dept-switch-link-next">
+            <?php if ($prevId): ?><a class="dept-switch-link" href="view_checksheet_detail.php?id=<?= $prevId ?><?= $backQ ?>">&larr; Prev</a><?php else: ?><span class="dept-switch-link dept-switch-link-disabled">&larr; Prev</span><?php endif; ?>
+            <?php if ($nextId): ?><a class="dept-switch-link" href="view_checksheet_detail.php?id=<?= $nextId ?><?= $backQ ?>">Next &rarr;</a><?php else: ?><span class="dept-switch-link dept-switch-link-disabled">Next &rarr;</span><?php endif; ?>
+        </span>
     </div>
 
     <div class="form-grid-top">

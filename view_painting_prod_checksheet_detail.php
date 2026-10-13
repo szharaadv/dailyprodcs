@@ -50,6 +50,15 @@ $hariNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 $hari = $hariNames[(int)date('w', strtotime($header['tanggal']))];
 
 $backHref = 'view_painting_prod_checksheets.php' . (isset($_GET['back']) && $_GET['back'] !== '' ? '?' . $_GET['back'] : '');
+$backQ = isset($_GET['back']) && $_GET['back'] !== '' ? '&back=' . urlencode($_GET['back']) : '';
+
+// Prev/next submitted record by date (same department), for quick navigation.
+$navStmt = $pdo->prepare("SELECT id FROM t_painting_prod_header WHERE department_id=? AND status='submitted' AND tanggal < ? ORDER BY tanggal DESC, id DESC LIMIT 1");
+$navStmt->execute([$header['department_id'], $header['tanggal']]);
+$prevId = $navStmt->fetchColumn() ?: null;
+$navStmt = $pdo->prepare("SELECT id FROM t_painting_prod_header WHERE department_id=? AND status='submitted' AND tanggal > ? ORDER BY tanggal ASC, id ASC LIMIT 1");
+$navStmt->execute([$header['department_id'], $header['tanggal']]);
+$nextId = $navStmt->fetchColumn() ?: null;
 
 $base_url = '';
 $active_nav = 'view-checksheets';
@@ -62,6 +71,10 @@ require __DIR__ . '/includes/app_top.php';
 <div class="checksheet-card">
     <div class="dept-context">
         <a href="<?= htmlspecialchars($backHref) ?>" class="dept-switch-link">&larr; Back to list</a>
+        <span class="detail-daynav">
+            <?php if ($prevId): ?><a class="dept-switch-link" href="view_painting_prod_checksheet_detail.php?id=<?= $prevId ?><?= $backQ ?>">&larr; Prev</a><?php else: ?><span class="dept-switch-link dept-switch-link-disabled">&larr; Prev</span><?php endif; ?>
+            <?php if ($nextId): ?><a class="dept-switch-link" href="view_painting_prod_checksheet_detail.php?id=<?= $nextId ?><?= $backQ ?>">Next &rarr;</a><?php else: ?><span class="dept-switch-link dept-switch-link-disabled">Next &rarr;</span><?php endif; ?>
+        </span>
         <a href="painting_prod_list.php?department_id=<?= $header['department_id'] ?>&tanggal=<?= $header['tanggal'] ?>" class="dept-switch-link dept-switch-link-next">Edit this day &rarr;</a>
     </div>
 
