@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/edit_requests.php';
+require_once __DIR__ . '/includes/calendar_lib.php';
 require_login();
 $pdo = get_db();
 
@@ -114,6 +115,11 @@ if ($draft) {
 
 $selected_condition_id = $_GET['condition_id'] ?? ($draft['condition_id'] ?? ($conditions[0]['id'] ?? null));
 
+// Checksheets can only be filled on a working day. A new entry targets today; a
+// loaded draft keeps its own (already-working) date.
+$check_date = $draft ? $draft['tanggal'] : $selected_date;
+$fill_blocked = !is_working_day($pdo, $check_date);
+
 $base_url = '';
 $active_nav = 'checksheet';
 $section_route = 'painting_list.php';
@@ -125,7 +131,9 @@ require __DIR__ . '/includes/app_top.php';
 ?>
 
 <div class="checksheet-card">
-    <?php if ($editing_unlocked): ?>
+    <?php if ($fill_blocked): ?>
+    <div class="alert alert-error"><b>Bukan hari kerja.</b> Tanggal <?= htmlspecialchars(date('d/m/Y', strtotime($check_date))) ?> (akhir pekan / libur) tidak bisa diisi. Jika memang ada produksi, minta Admin menandai tanggal ini sebagai <b>Working Day</b> di YADIN Calendar.</div>
+    <?php elseif ($editing_unlocked): ?>
     <div class="alert alert-ok">Editing a past record (<?= htmlspecialchars($draft['tanggal']) ?>). Changes save back to that same date.</div>
     <?php elseif ($catchup_tanggal): ?>
     <div class="alert alert-ok">Catching up on a missed day (<?= htmlspecialchars($catchup_tanggal) ?>).  </div>
@@ -157,8 +165,18 @@ require __DIR__ . '/includes/app_top.php';
         </div>
 
         <div class="field-block">
-            <label>Time</label>
-            <input type="time" id="f_jam" value="<?= htmlspecialchars($draft ? substr($draft['jam'], 0, 5) : '06:30') ?>">
+            <label>Check Time</label>
+            <?php
+            $jamOptions = ['06:30', '07:30', '10:00', '13:00', '15:00', '16:00'];
+            $jamVal = ($draft && $draft['jam']) ? substr($draft['jam'], 0, 5) : '06:30';
+            // Keep a saved time that isn't in the preset list selectable.
+            if (!in_array($jamVal, $jamOptions, true)) array_unshift($jamOptions, $jamVal);
+            ?>
+            <select id="f_jam">
+                <?php foreach ($jamOptions as $jo): ?>
+                    <option value="<?= htmlspecialchars($jo) ?>" <?= $jo === $jamVal ? 'selected' : '' ?>><?= htmlspecialchars($jo) ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div class="field-block">
@@ -195,8 +213,8 @@ require __DIR__ . '/includes/app_top.php';
     <div class="actions">
         <div class="progress-label" id="progress-label">Loading...</div>
         <div class="progress-bar"><div class="progress-bar-fill" id="progress-bar-fill"></div></div>
-        <button type="button" class="btn btn-draft" id="btn-draft">Save as Draft</button>
-        <button type="button" class="btn btn-submit" id="btn-submit">Submit</button>
+        <button type="button" class="btn btn-draft" id="btn-draft" <?= $fill_blocked ? 'disabled' : '' ?>>Save as Draft</button>
+        <button type="button" class="btn btn-submit" id="btn-submit" <?= $fill_blocked ? 'disabled' : '' ?>>Submit</button>
     </div>
 </div>
 

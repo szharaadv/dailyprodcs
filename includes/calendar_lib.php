@@ -35,6 +35,18 @@ function get_working_days(PDO $pdo, string $start, string $end): array
  * Dates within [start, end] covered by a plant-wide production-stop period, as a
  * [date => reason name] lookup. Degrades to empty if the feature isn't migrated.
  */
+/**
+ * Whether a date is a "working" (checkable) day: a weekday, or a YADIN-marked
+ * compensating Saturday — minus holidays and production-stop days. A checksheet
+ * may only be filled/submitted on a working day; a non-working day is neither
+ * fillable nor flagged "missing". Mark a weekend/holiday as a Working Day in the
+ * YADIN Calendar to make it checkable.
+ */
+function is_working_day(PDO $pdo, string $date): bool
+{
+    return in_array($date, get_working_days($pdo, $date, $date), true);
+}
+
 function get_production_stop_days(PDO $pdo, string $start, string $end): array
 {
     try {

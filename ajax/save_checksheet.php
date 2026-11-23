@@ -51,7 +51,7 @@ if (!$header_id && !$unlockedEdit) {
     }
 }
 $checker_id     = (int)($input['checker_id'] ?? 0);
-$jam            = $input['jam'] ?? null;
+$jam            = $input['jam'] ?? null; // "Jam Cek" — scheduled check time entered by the operator
 $shift_id       = (int)($input['shift_id'] ?? 0);
 $status         = ($input['status'] ?? 'submitted') === 'draft' ? 'draft' : 'submitted';
 $rows           = $input['rows'] ?? [];
@@ -59,6 +59,14 @@ $rows           = $input['rows'] ?? [];
 if (!$tanggal || !$department_id || !$condition_id || !$checker_id || !$jam || !$shift_id || empty($rows)) {
     http_response_code(400);
     echo json_encode(['error' => 'Data tidak lengkap.']);
+    exit;
+}
+
+// A checksheet may only be filled on a working day (weekday or a YADIN-marked
+// working Saturday). Weekends/holidays are blocked unless marked in the calendar.
+if (!$header_id && !is_working_day($pdo, $tanggal)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Tanggal ini bukan hari kerja (akhir pekan/libur), jadi checksheet tidak bisa diisi. Jika memang ada produksi, minta Admin menandai tanggal ini sebagai "Working Day" di YADIN Calendar.']);
     exit;
 }
 

@@ -82,8 +82,6 @@ require __DIR__ . '/includes/app_top.php';
         <div class="field-block"><label>Working Time</label><div class="static-value"><?= htmlspecialchars($header['working_minutes'] !== null ? $header['working_minutes'] . ' min' : '-') ?></div></div>
         <div class="field-block"><label>Shift</label><div class="static-value"><?= htmlspecialchars($header['shift_label'] ?: '-') ?></div></div>
         <div class="field-block"><label>Operator</label><div class="static-value"><?= htmlspecialchars($header['operator_name'] ?: '-') ?></div></div>
-        <div class="field-block"><label>Foreman</label><div class="static-value"><?= htmlspecialchars($header['foreman_name'] ?: '-') ?></div></div>
-        <div class="field-block"><label>Supervisor</label><div class="static-value"><?= htmlspecialchars($header['supervisor_name'] ?: '-') ?></div></div>
         <div class="field-block"><label>Status</label><div class="static-value"><?= htmlspecialchars(ucfirst($header['status'])) ?></div></div>
     </div>
 

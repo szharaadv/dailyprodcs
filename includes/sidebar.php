@@ -185,19 +185,7 @@ function icon(string $name): string
         <a class="nav-item <?= $active_nav === 'my-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>edit_request_status.php">
             <?= icon('clock') ?> My Edit Requests
         </a>
-        <?php
-        // Scoped to the section currently open: the approval queue only shows
-        // for a section that has a sign-off flow, and counts only that section.
-        $signoff_role = user_signoff_role();
-        $signoff_type = signoff_type_for_route($section_route);
-        if ($signoff_type && in_array($signoff_role, ['foreman', 'supervisor', 'admin'], true)):
-            $signoff_pending = signoff_pending_count($pdo, $signoff_role, $signoff_type);
-        ?>
-        <a class="nav-item <?= $active_nav === 'my-approvals' ? 'active' : '' ?>" href="<?= $base_url ?>my_approvals.php?type=<?= urlencode($signoff_type) ?>">
-            <?= icon('check') ?> My Approvals
-            <?php if ($signoff_pending > 0): ?><span class="nav-badge"><?= $signoff_pending ?></span><?php endif; ?>
-        </a>
-        <?php endif; ?>
+        <?php /* Approval (sign-off) menu hidden — the feature stays in the backend. */ ?>
 
         <?php
         // Configuration links depend on the specific section (route) the user

@@ -68,7 +68,6 @@ $export_route = 'paint_viscosity_list.php'; $export_dept = $department_id; requi
             <div class="cs-card-meta">
                 <?= (int)$row['filled_count'] ?> of <?= $totalCells ?> readings filled
                 <?php if ($row['ng_count'] > 0): ?> &middot; <span style="color:#9b3b32;font-weight:700;"><?= (int)$row['ng_count'] ?> out of range</span><?php endif; ?>
-                <?php if ($row['foreman_name']): ?> &middot; Foreman <?= htmlspecialchars($row['foreman_name']) ?><?php endif; ?>
             </div>
         </div>
         <span class="cs-status <?= $row['ng_count'] > 0 ? 'cs-status-draft' : 'cs-status-submitted' ?>"><?= $row['ng_count'] > 0 ? 'Out of Range' : 'All OK' ?></span>

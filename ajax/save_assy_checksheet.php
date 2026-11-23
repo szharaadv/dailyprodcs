@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/edit_requests.php';
+require_once __DIR__ . '/../includes/calendar_lib.php';
 header('Content-Type: application/json');
 
 $pdo = get_db();
@@ -65,6 +66,14 @@ $rows              = $input['rows'] ?? [];
 if (!$tanggal || !$department_id || !$model_id || !$checker_id || empty($rows)) {
     http_response_code(400);
     echo json_encode(['error' => 'Data tidak lengkap.']);
+    exit;
+}
+
+// A checksheet may only be filled on a working day (weekday or a YADIN-marked
+// working Saturday). Weekends/holidays are blocked unless marked in the calendar.
+if (!$header_id && !is_working_day($pdo, $tanggal)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Tanggal ini bukan hari kerja (akhir pekan/libur), jadi checksheet tidak bisa diisi. Jika memang ada produksi, minta Admin menandai tanggal ini sebagai "Working Day" di YADIN Calendar.']);
     exit;
 }
 

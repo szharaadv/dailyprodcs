@@ -94,7 +94,7 @@ $export_route = 'fopump_test_list.php'; $export_dept = (int)$department['id']; r
         </div>
         <div class="field-block">
             <label>Start Test Time</label>
-            <input type="time" id="f_start_test_time">
+            <input type="text" id="f_start_test_time" class="time-24h" inputmode="numeric" maxlength="5" placeholder="HH:MM" pattern="([01][0-9]|2[0-3]):[0-5][0-9]">
         </div>
         <div class="field-block">
             <label>Checker</label>

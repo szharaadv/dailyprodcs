@@ -91,7 +91,7 @@ require __DIR__ . '/includes/app_top.php';
             <div class="static-value"><?= htmlspecialchars($header['checker_name']) ?></div>
         </div>
         <div class="field-block">
-            <label>Time</label>
+            <label>Check Time</label>
             <div class="static-value"><?= htmlspecialchars(substr($header['jam'], 0, 5)) ?></div>
         </div>
         <div class="field-block">
