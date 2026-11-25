@@ -9,98 +9,181 @@ if (!preg_match('#^[a-zA-Z0-9_\-./]+\.php(\?.*)?$#', $next)) {
     $next = 'index.php';
 }
 
-// Already picked an identity this session — no need to ask again.
+// Already signed in this session — no need to ask again.
 if (!empty($_SESSION['auth_user']['name'])) {
     header('Location: ' . $next);
     exit;
 }
 
-const ADMIN_PIN = '0709';
+/*
+ * Interim sign-in: pick your name from the list, no password. The role comes
+ * from the chosen m_user row. This is temporary until One YADIN (SSO) is wired
+ * up — at that point YADIN authenticates the person and hands their identity
+ * (NIK + name) to a YADIN handler that maps it to an m_user row and calls
+ * establish_session_for(), so people never touch this page. See includes/auth.php.
+ */
 $error = null;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'admin_login') {
-    $pin = trim($_POST['pin'] ?? '');
-    if ($pin !== ADMIN_PIN) {
-        $error = 'Incorrect password.';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $userId = (int) ($_POST['user_id'] ?? 0);
+    $stmt = $pdo->prepare('SELECT id, name, role, title FROM m_user WHERE id = ? AND is_active = 1');
+    $stmt->execute([$userId]);
+    $u = $stmt->fetch();
+    if (!$u) {
+        $error = 'Please choose who you are.';
     } else {
-        $_SESSION['auth_user'] = ['name' => 'Admin', 'role' => 'admin'];
+        establish_session_for($u);
         header('Location: ' . $next);
         exit;
     }
 }
 
-// The User login is a single 4-digit PIN, set for each person by Admin in
-// Management > Users. Since PINs are unique, the PIN alone identifies who's
-// signing in — no separate "pick your name" step needed.
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'user_login') {
-    $pin = trim($_POST['pin'] ?? '');
-    if (!preg_match('/^\d{4}$/', $pin)) {
-        $error = 'Enter your 4-digit PIN.';
-    } else {
-        $stmt = $pdo->prepare("SELECT * FROM m_user WHERE pin = ? AND is_active = 1 AND name <> 'Admin'");
-        $stmt->execute([$pin]);
-        $matchedUser = $stmt->fetch();
-        if (!$matchedUser) {
-            $error = 'Incorrect PIN.';
-        } else {
-            $_SESSION['auth_user'] = ['id' => (int)$matchedUser['id'], 'name' => $matchedUser['name'], 'role' => 'user', 'title' => $matchedUser['title'] ?? null];
-            header('Location: ' . $next);
-            exit;
-        }
-    }
-}
+$users = $pdo->query(
+    "SELECT id, name, role FROM m_user
+     WHERE is_active = 1
+     ORDER BY FIELD(role, 'superadmin', 'admin', 'user'), name"
+)->fetchAll();
+
+$roleLabel = ['superadmin' => 'Super Admin', 'admin' => 'Admin', 'user' => 'User'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Production Check Sheet - Login</title>
+    <title>Daily Production Check Sheet — Sign In</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/app.css">
-    <link rel="stylesheet" href="assets/css/landing.css">
+    <?php $ver = @filemtime(__DIR__ . '/assets/css/app.css') ?: '1'; ?>
+    <link rel="stylesheet" href="assets/css/app.css?v=<?= $ver ?>">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background:
+                radial-gradient(900px 500px at 15% -10%, rgba(166,58,47,.14), transparent 60%),
+                radial-gradient(900px 600px at 110% 120%, rgba(127,42,34,.12), transparent 55%),
+                var(--bg);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+        .login-head {
+            background: linear-gradient(145deg, #9b3328, var(--brand-deep));
+            padding: 30px 28px 26px;
+            color: #fff;
+            text-align: center;
+        }
+        .login-mark {
+            width: 56px; height: 56px; margin: 0 auto 14px;
+            border-radius: 15px; background: #fff; color: var(--brand-ink);
+            display: flex; align-items: center; justify-content: center;
+            font: 700 20px Oswald, sans-serif;
+            box-shadow: 0 4px 14px rgba(0,0,0,.22);
+        }
+        .login-head h1 {
+            margin: 0; font: 700 21px Oswald, sans-serif;
+            text-transform: uppercase; letter-spacing: .03em;
+        }
+        .login-head p { margin: 4px 0 0; font-size: 12.5px; color: rgba(255,255,255,.78); }
+        .login-body { padding: 26px 28px 28px; }
+        .login-body h2 { margin: 0 0 4px; font: 600 16px Inter, sans-serif; color: var(--fg); }
+        .login-body .sub { margin: 0 0 18px; font-size: 13px; color: var(--fg-3); }
+        .name-field { display: flex; flex-direction: column; gap: 7px; }
+        .name-field label {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .05em; color: var(--fg-3);
+        }
+        .name-field select {
+            padding: 13px 14px;
+            border: 1px solid var(--line-strong);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--fg);
+            background: var(--surface-2);
+            cursor: pointer;
+            transition: border-color .15s, box-shadow .15s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a6968f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 18px;
+        }
+        .name-field select:focus {
+            outline: none; border-color: var(--brand);
+            box-shadow: 0 0 0 4px var(--brand-soft); background: var(--surface);
+        }
+        .login-btn {
+            margin-top: 18px; width: 100%;
+            padding: 13px; border: none; border-radius: 12px;
+            background: var(--brand); color: #fff;
+            font: 600 15px Inter, sans-serif; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(127,42,34,.28);
+            transition: background .15s;
+        }
+        .login-btn:hover { background: var(--brand-ink); }
+        .login-alert {
+            background: var(--crit-soft); color: var(--crit);
+            border-radius: 10px; padding: 10px 13px; font-size: 13px; font-weight: 500;
+            margin-bottom: 16px;
+        }
+        .login-foot {
+            margin: 20px 0 0; text-align: center; font-size: 12.5px; color: var(--fg-3);
+        }
+        .login-foot a { color: var(--brand); font-weight: 600; text-decoration: none; }
+        .login-foot a:hover { text-decoration: underline; }
+        .login-note {
+            margin: 14px 0 0; text-align: center; font-size: 11.5px; color: var(--fg-3);
+            line-height: 1.5;
+        }
+    </style>
 </head>
 <body>
-<div class="landing">
-    <div class="landing-brand">
-        <div class="brand-mark">DP</div>
-        <div class="brand-text">
-            <div class="brand-title">Daily Prod</div>
-            <div class="brand-subtitle">Production Check Sheet</div>
-        </div>
+<div class="login-card">
+    <div class="login-head">
+        <div class="login-mark">DP</div>
+        <h1>Daily Prod</h1>
+        <p>Production Check Sheet System</p>
     </div>
+    <div class="login-body">
+        <h2>Sign in</h2>
+        <p class="sub">Choose your name to continue.</p>
 
-    <h1>Who's this?</h1>
-    <p class="landing-hint">Pick how you're signing in.</p>
+        <?php if ($error): ?><div class="login-alert"><?= htmlspecialchars($error) ?></div><?php endif; ?>
 
-    <?php if ($error): ?><div class="alert alert-error" style="max-width: 420px; margin: 0 auto 16px;"><?= htmlspecialchars($error) ?></div><?php endif; ?>
-
-    <div class="dept-grid" style="max-width: 480px; margin: 0 auto;">
-        <form method="post" class="dept-card" style="cursor: default;">
-            <input type="hidden" name="action" value="admin_login">
+        <form method="post">
             <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
-            <div class="dept-icon">AD</div>
-            <div class="dept-name">Admin</div>
-            <input type="password" name="pin" placeholder="Password" required
-                   style="margin-top:10px; width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #d7dbe2; border-radius:6px; font-size:14px; text-align:center;">
-            <button type="submit" class="dept-go" style="border:none; background:none; cursor:pointer; font:inherit; padding:8px 0 0; width:100%;">Continue &rarr;</button>
+            <div class="name-field">
+                <label for="user_id">Your name</label>
+                <select id="user_id" name="user_id" required autofocus>
+                    <option value="" disabled selected>— Select your name —</option>
+                    <?php foreach ($users as $u): ?>
+                        <option value="<?= (int) $u['id'] ?>">
+                            <?= htmlspecialchars($u['name']) ?><?php if ($u['role'] !== 'user'): ?> (<?= $roleLabel[$u['role']] ?? ucfirst($u['role']) ?>)<?php endif; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <button type="submit" class="login-btn">Sign in &rarr;</button>
         </form>
 
-        <form method="post" class="dept-card" style="cursor: default;">
-            <input type="hidden" name="action" value="user_login">
-            <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
-            <div class="dept-icon">US</div>
-            <div class="dept-name">User</div>
-            <input type="password" name="pin" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="4-digit PIN" required
-                   style="margin-top:10px; width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #d7dbe2; border-radius:6px; font-size:14px; text-align:center; letter-spacing:4px;">
-            <button type="submit" class="dept-go" style="border:none; background:none; cursor:pointer; font:inherit; padding:8px 0 0; width:100%;">Continue &rarr;</button>
-        </form>
-    </div>
+        <p class="login-note">Temporary sign-in. One YADIN login is coming soon.</p>
 
-    <p class="landing-hint" style="margin-top:26px;">
-        No account? <a href="dashboard_public.php" style="color:#9b3b32; font-weight:600; text-decoration:none;">&#128202; View today's check sheet status &rarr;</a>
-    </p>
+        <p class="login-foot">
+            <a href="dashboard_public.php">&#128202; View today's status without signing in &rarr;</a>
+        </p>
+    </div>
 </div>
 </body>
 </html>

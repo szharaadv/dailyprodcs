@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_admin();
+require_superadmin();
 $pdo = get_db();
 
 $sections = $pdo->query(
@@ -18,34 +18,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
     $title = trim($_POST['title'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $role = in_array($_POST['role'] ?? '', ['superadmin', 'admin'], true) ? $_POST['role'] : 'user';
-    $pin = trim($_POST['pin'] ?? '');
     $section_ids = array_map('intval', $_POST['section_ids'] ?? []);
-
-    $pinTaken = false;
-    if ($pin !== '' && preg_match('/^\d{4}$/', $pin)) {
-        $stmt = $pdo->prepare('SELECT name FROM m_user WHERE pin = ? AND id <> ?');
-        $stmt->execute([$pin, $id !== '' ? (int)$id : 0]);
-        $pinTaken = $stmt->fetchColumn();
-    }
 
     if ($name === '') {
         $error = 'Name is required.';
     } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Email format is not valid.';
-    } elseif ($pin !== '' && !preg_match('/^\d{4}$/', $pin)) {
-        $error = 'PIN must be exactly 4 digits.';
-    } elseif ($pinTaken) {
-        $error = "PIN already in use by '$pinTaken' — since the User login now identifies people by PIN alone, each PIN must be unique.";
     } else {
         try {
             $pdo->beginTransaction();
             if ($id !== '') {
-                $stmt = $pdo->prepare('UPDATE m_user SET name = ?, title = ?, email = ?, role = ?, pin = ? WHERE id = ?');
-                $stmt->execute([$name, $title !== '' ? $title : null, $email !== '' ? $email : null, $role, $pin !== '' ? $pin : null, (int)$id]);
+                $stmt = $pdo->prepare('UPDATE m_user SET name = ?, title = ?, email = ?, role = ? WHERE id = ?');
+                $stmt->execute([$name, $title !== '' ? $title : null, $email !== '' ? $email : null, $role, (int)$id]);
                 $user_id = (int)$id;
             } else {
-                $stmt = $pdo->prepare('INSERT INTO m_user (name, title, email, role, pin) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([$name, $title !== '' ? $title : null, $email !== '' ? $email : null, $role, $pin !== '' ? $pin : null]);
+                $stmt = $pdo->prepare('INSERT INTO m_user (name, title, email, role) VALUES (?, ?, ?, ?)');
+                $stmt->execute([$name, $title !== '' ? $title : null, $email !== '' ? $email : null, $role]);
                 $user_id = (int)$pdo->lastInsertId();
             }
             $pdo->prepare('DELETE FROM m_user_section WHERE user_id = ?')->execute([$user_id]);
@@ -159,13 +147,9 @@ require __DIR__ . '/../includes/app_top.php';
                         <option value="admin" <?= ($editRow['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
                         <option value="superadmin" <?= ($editRow['role'] ?? '') === 'superadmin' ? 'selected' : '' ?>>Super Admin</option>
                     </select>
-                </div>
-                <div class="form-row">
-                    <label>PIN (4 digits)</label>
-                    <input type="text" name="pin" inputmode="numeric" pattern="\d{4}" maxlength="4" placeholder="e.g. 1234" value="<?= htmlspecialchars($editRow['pin'] ?? '') ?>">
+                    <p class="import-hint">Determines what this person can open. Sign-in itself is by name for now (and will move to One YADIN SSO).</p>
                 </div>
             </div>
-            <p class="import-hint">This person uses their PIN to sign in from the login screen's "User" option — enter their PIN there. Leave blank if they shouldn't be able to sign in yet.</p>
 
             <div class="form-row">
                 <label>Visible on check sheets</label>
@@ -207,7 +191,6 @@ require __DIR__ . '/../includes/app_top.php';
             <th>Title</th>
             <th>Email</th>
             <th>App Role</th>
-            <th>PIN</th>
             <th>Visible On</th>
             <th>Status</th>
             <th>Action</th>
@@ -221,7 +204,6 @@ require __DIR__ . '/../includes/app_top.php';
             <td><?= $row['email'] ? htmlspecialchars($row['email']) : '<span class="import-hint">—</span>' ?></td>
             <?php $roleBadge = ['superadmin' => 'badge-accent', 'admin' => 'badge-ok', 'user' => 'badge-off'][$row['role']] ?? 'badge-off'; ?>
             <td><span class="badge <?= $roleBadge ?>"><?= $row['role'] === 'superadmin' ? 'Super Admin' : ucfirst($row['role']) ?></span></td>
-            <td><?= $row['pin'] ? '<span class="badge badge-ok">Set</span>' : '<span class="badge badge-off">Not set</span>' ?></td>
             <td><?= $row['section_names'] ? htmlspecialchars($row['section_names']) : '<span class="import-hint">Not routed — won\'t appear on any check sheet</span>' ?></td>
             <td><?= $row['is_active'] ? '<span class="badge badge-ok">Active</span>' : '<span class="badge badge-off">Inactive</span>' ?></td>
             <td class="row-actions">
@@ -231,7 +213,7 @@ require __DIR__ . '/../includes/app_top.php';
             </td>
         </tr>
         <?php endforeach; ?>
-        <?php if (!$rows): ?><tr><td colspan="8" class="empty">No users yet.</td></tr><?php endif; ?>
+        <?php if (!$rows): ?><tr><td colspan="7" class="empty">No users yet.</td></tr><?php endif; ?>
     </tbody>
 </table>
 </div>

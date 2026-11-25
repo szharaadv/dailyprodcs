@@ -155,9 +155,6 @@ function icon(string $name): string
 
     <nav class="sidebar-nav">
         <div class="nav-group-label">Workspace</div>
-        <a class="nav-item <?= $active_nav === 'dashboard' ? 'active' : '' ?>" href="<?= $base_url ?>dashboard.php">
-            <?= icon('grid') ?> Dashboard
-        </a>
         <a class="nav-item <?= $active_nav === 'checksheet' ? 'active' : '' ?>" href="<?= $checksheet_href ?>">
             <?= icon('doc') ?> Check Sheet
         </a>
@@ -242,6 +239,7 @@ function icon(string $name): string
         $mgmt_open = in_array($active_nav, $mgmt_children, true);
         $pending_edit_requests = is_admin() ? pending_edit_request_count($pdo) : 0;
         ?>
+        <?php if (is_admin()): ?>
         <div class="nav-group-label">Master Data</div>
         <a class="nav-parent <?= $config_open ? 'active' : '' ?>" href="#" data-nav-toggle>
             <?= icon('gear') ?> Configuration
@@ -263,34 +261,22 @@ function icon(string $name): string
         <a class="nav-item <?= $active_nav === 'config-holidays' ? 'active' : '' ?>" href="<?= $base_url ?>admin/holidays.php">
             <?= icon('clock') ?> YADIN Calendar
         </a>
-        <?php if (is_admin()): ?>
-        <a class="nav-item <?= $active_nav === 'config-prodstop' ? 'active' : '' ?>" href="<?= $base_url ?>admin/production_stop.php">
-            <?= icon('clock') ?> Stop Produksi
-        </a>
         <?php endif; ?>
 
-        <div class="nav-group-label">Management</div>
         <?php if (is_admin()): ?>
+        <div class="nav-group-label">Management</div>
         <a class="nav-parent <?= $mgmt_open ? 'active' : '' ?>" href="#" data-nav-toggle>
             <?= icon('users') ?> Management
             <?= icon('chevron') ?>
         </a>
         <div class="nav-submenu <?= $mgmt_open ? 'open' : '' ?>">
-            <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-edit-requests' ? 'active' : '' ?>" href="<?= $base_url ?>admin/edit_requests.php">Edit Requests<?php if ($pending_edit_requests > 0): ?> <span class="badge badge-accent" style="margin-left:6px;"><?= $pending_edit_requests ?></span><?php endif; ?></a>
+            <?php if (is_superadmin()): ?>
+            <a class="nav-subitem <?= $active_nav === 'mgmt-users' ? 'active' : '' ?>" href="<?= $base_url ?>admin/users.php">Users</a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-section-docs' ? 'active' : '' ?>" href="<?= $base_url ?>admin/section_docs.php">Document Numbers</a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-notifications' ? 'active' : '' ?>" href="<?= $base_url ?>admin/notifications.php">Notifications</a>
             <a class="nav-subitem <?= $active_nav === 'mgmt-dashboard-settings' ? 'active' : '' ?>" href="<?= $base_url ?>admin/dashboard_settings.php">Dashboard Settings</a>
-        </div>
-        <?php else: ?>
-        <!-- Visible but inert for non-admins: shows the nav exists without letting them click into it. -->
-        <span class="nav-parent disabled" aria-disabled="true" title="Admin only">
-            <?= icon('users') ?> Management
-            <?= icon('chevron') ?>
-        </span>
-        <div class="nav-submenu">
-            <span class="nav-subitem disabled" aria-disabled="true">Users</span>
-            <span class="nav-subitem disabled" aria-disabled="true">Edit Requests</span>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </nav>

@@ -2,8 +2,14 @@
 /**
  * Current-user / session layer.
  *
- * No password login — identity is picked from the Users list (m_user)
- * via login.php, a simple "who are you?" name picker.
+ * Interim login has no password — identity is picked from the Users list
+ * (m_user) via login.php, a simple "who are you?" name picker. The role comes
+ * from the chosen m_user row.
+ *
+ * This is also the integration seam for One YADIN (SSO): once YADIN
+ * authenticates a person it will hand us their identity (NIK + name), which the
+ * YADIN handler maps to an m_user row and passes to establish_session_for().
+ * Role handling then stays identical however the person signed in.
  */
 require_once __DIR__ . '/../config/db.php';
 
@@ -14,6 +20,22 @@ function current_user(): ?array
         return $_SESSION['auth_user'];
     }
     return null;
+}
+
+/**
+ * Establish the signed-in session from an m_user row (expects name + role, and
+ * optionally id + title). The single place a session is created — shared by the
+ * interim name login and, later, the One YADIN SSO handler — so the role granted
+ * here is the same no matter how the person was authenticated.
+ */
+function establish_session_for(array $u): void
+{
+    $_SESSION['auth_user'] = [
+        'id'    => isset($u['id']) ? (int) $u['id'] : null,
+        'name'  => $u['name'],
+        'role'  => $u['role'] ?? 'user',
+        'title' => $u['title'] ?? null,
+    ];
 }
 
 /**
@@ -48,7 +70,7 @@ function user_signoff_role(): ?string
 {
     $u = current_user();
     if ($u === null) return null;
-    if (($u['role'] ?? '') === 'admin') return 'admin';
+    if (in_array($u['role'] ?? '', ['admin', 'superadmin'], true)) return 'admin';
 
     switch (current_user_title()) {
         case 'Operator':
@@ -88,23 +110,48 @@ function require_login(): void
     }
 }
 
-/** Whether the current session is the Admin identity (not the shared User one). */
+/**
+ * Whether the current session may open admin (management) pages. Both 'admin'
+ * and 'superadmin' qualify — superadmin is admin plus the superadmin-only
+ * pages gated by require_superadmin(). A plain 'user' never qualifies.
+ */
 function is_admin(): bool
 {
     $u = current_user();
-    return $u !== null && ($u['role'] ?? '') === 'admin';
+    return $u !== null && in_array($u['role'] ?? '', ['admin', 'superadmin'], true);
+}
+
+/** Whether the current session is a Super Admin (the highest role). */
+function is_superadmin(): bool
+{
+    $u = current_user();
+    return $u !== null && ($u['role'] ?? '') === 'superadmin';
 }
 
 /**
- * Gate an admin-only page: must be logged in AND be Admin, else bounce to
- * index. Every admin-only page lives one level under /admin, so the
- * redirect target is relative to that, not to the site root.
+ * Gate an admin page: must be logged in AND be admin or superadmin, else bounce
+ * to index. Every admin page lives one level under /admin, so the redirect
+ * target is relative to that, not to the site root.
  */
 function require_admin(): void
 {
     require_login();
     if (!is_admin()) {
-        header('Location: ../index.php');
+        header('Location: ../index.php?denied=1');
+        exit;
+    }
+}
+
+/**
+ * Gate a superadmin-only page (Users & roles, Dashboard Settings, Document
+ * Numbers, Notifications): must be logged in AND be superadmin, else bounce to
+ * index. A plain admin is turned away here.
+ */
+function require_superadmin(): void
+{
+    require_login();
+    if (!is_superadmin()) {
+        header('Location: ../index.php?denied=1');
         exit;
     }
 }

@@ -64,6 +64,9 @@ if (current_user() !== null) {
                 <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
                 </button>
+                <a href="<?= $base_url ?>dashboard.php" class="home-btn" title="Home" aria-label="Home">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>
+                </a>
                 <div>
                     <h1><?= htmlspecialchars($page_title) ?></h1>
                     <?php if (!empty($breadcrumb)): ?>
@@ -100,7 +103,7 @@ if (current_user() !== null) {
                                 </div>
                             <?php endforeach; endif; ?>
                         </div>
-                        <?php if (is_admin()): ?>
+                        <?php if (is_superadmin()): ?>
                         <a class="notif-panel-foot" href="<?= $base_url ?>admin/notifications.php">Manage / send notifications &rarr;</a>
                         <?php endif; ?>
                     </div>

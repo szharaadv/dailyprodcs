@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
-require_login();
+require_admin();
 $pdo = get_db();
 
 $departments = $pdo->query("SELECT * FROM m_department WHERE form_type = 'checklist' ORDER BY sort_order, id")->fetchAll();
