@@ -5,9 +5,10 @@ require_superadmin();
 $pdo = get_db();
 
 $sections = $pdo->query(
-    "SELECT s.id, s.name, d.name AS dept_name FROM m_checksheet_section s
+    "SELECT s.id, s.name, s.group_label, d.name AS dept_name FROM m_checksheet_section s
      JOIN m_department d ON d.id = s.department_id
-     WHERE s.is_active = 1 ORDER BY d.sort_order, s.sort_order"
+     WHERE s.is_active = 1
+     ORDER BY d.sort_order, (s.group_label IS NOT NULL), s.group_label, s.sort_order"
 )->fetchAll();
 
 $error = null;
@@ -152,10 +153,12 @@ require __DIR__ . '/../includes/app_top.php';
             </div>
 
             <div class="form-row">
-                <label>Visible on check sheets</label>
+                <label>Check sheets &amp; department access</label>
                 <div class="checkbox-grid">
-                    <?php $lastDept = null; foreach ($sections as $s): if ($s['dept_name'] !== $lastDept): $lastDept = $s['dept_name']; ?>
-                        <div class="checkbox-grid-label"><?= htmlspecialchars($lastDept) ?></div>
+                    <?php $lastGroup = null; foreach ($sections as $s):
+                        $grp = ($s['group_label'] !== null && $s['group_label'] !== '') ? $s['group_label'] : $s['dept_name'];
+                        if ($grp !== $lastGroup): $lastGroup = $grp; ?>
+                        <div class="checkbox-grid-label"><?= htmlspecialchars($grp) ?></div>
                     <?php endif; ?>
                         <label class="checkbox-item">
                             <input type="checkbox" name="section_ids[]" value="<?= $s['id'] ?>" <?= in_array($s['id'], $editSectionIds, true) ? 'checked' : '' ?>>
@@ -163,7 +166,7 @@ require __DIR__ . '/../includes/app_top.php';
                         </label>
                     <?php endforeach; ?>
                 </div>
-                <p class="import-hint">Tick a check sheet to let this person be picked as "Checked by" there. Leave everything unchecked and they won't show up on any check sheet.</p>
+                <p class="import-hint">Tick the check sheets this person handles — they'll be pickable as "Checked by" there <b>and</b> get access to that check sheet's department. Ticking anything under <b>Assembling</b> opens the whole Assembling department, and so on. <b>Tick nothing → they can open nothing.</b> Admin &amp; Super Admin always see everything regardless.</p>
             </div>
 
             <div class="modal-actions">

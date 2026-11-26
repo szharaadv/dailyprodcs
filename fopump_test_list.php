@@ -9,6 +9,8 @@ if (isset($_GET['department_id'])) {
 }
 
 $department_id = $_SESSION['department_id'] ?? null;
+require_once __DIR__ . '/includes/access.php';
+if ($department_id) require_department_access((int) $department_id);
 
 $department = null;
 if ($department_id) {

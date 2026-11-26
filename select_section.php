@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/access.php';
+require_once __DIR__ . '/includes/picker_ui.php';
 require_login();
 $pdo = get_db();
 
@@ -12,6 +13,12 @@ $department = $stmt->fetch();
 
 if (!$department) {
     header('Location: index.php');
+    exit;
+}
+
+// Per-user routing: this person must be assigned to this department.
+if (!can_access_department($department_id)) {
+    header('Location: index.php?denied=1');
     exit;
 }
 
@@ -28,33 +35,26 @@ if (count($sections) <= 1) {
     exit;
 }
 
-// Sections that share a group_label collapse into a single card leading to
-// select_group.php, so a department with many related check sheets (e.g. FO
-// Pump's daily report / check sheet / test record / reject log) doesn't turn
-// into a wall of loose cards. A group with only one member is shown as a
-// plain direct-link card instead — no point routing through a sub-picker
-// for a single item.
+$info = picker_section_info($pdo); // section id => ['state','freq']
+
+// Sections sharing a group_label collapse into one grouped card whose
+// sub-sheets are shown inline. A single-member group is just a plain card.
+// FO Pump has its own card on the landing, so skip it inside its department.
 $groups = [];
-$cards = [];
+$items = [];
 foreach ($sections as $s) {
-    // FO Pump has its own card on the department landing (see index.php), so
-    // don't list it a second time here inside its home department.
     if ($s['group_label'] === 'FO Pump') continue;
     if ($s['group_label']) {
         $groups[$s['group_label']][] = $s;
     } else {
-        $cards[] = ['label' => $s['name'], 'href' => $s['route'] . '?department_id=' . $department_id];
+        $items[] = ['type' => 'section', 'row' => $s];
     }
 }
 foreach ($groups as $label => $members) {
     if (count($members) === 1) {
-        $cards[] = ['label' => $members[0]['name'], 'href' => $members[0]['route'] . '?department_id=' . $department_id];
+        $items[] = ['type' => 'section', 'row' => $members[0]];
     } else {
-        $cards[] = [
-            'label' => $label,
-            'href' => 'select_group.php?department_id=' . $department_id . '&group=' . urlencode($label),
-            'hint' => count($members) . ' check sheets',
-        ];
+        $items[] = ['type' => 'group', 'label' => $label, 'members' => $members];
     }
 }
 ?>
@@ -63,36 +63,71 @@ foreach ($groups as $label => $members) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Production Check Sheet - Select Section</title>
+    <title>Daily Production Check Sheet - <?= htmlspecialchars($department['name']) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/app.css">
-    <link rel="stylesheet" href="assets/css/landing.css">
+    <?php $ver = @filemtime(__DIR__ . '/assets/css/app.css') ?: '1'; $lver = @filemtime(__DIR__ . '/assets/css/landing.css') ?: '1'; ?>
+    <link rel="stylesheet" href="assets/css/app.css?v=<?= $ver ?>">
+    <link rel="stylesheet" href="assets/css/landing.css?v=<?= $lver ?>">
 </head>
 <body>
-<div class="landing">
-    <div class="landing-brand">
-        <div class="brand-mark">DP</div>
-        <div class="brand-text">
-            <div class="brand-title">Daily Prod</div>
-            <div class="brand-subtitle">Production Check Sheet</div>
-        </div>
+<?php render_picker_topbar(); ?>
+
+<div class="pk-wrap">
+    <div class="pk-crumbs">
+        <a href="index.php"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Department</a>
+        <span class="sep">/</span><span class="cur"><?= htmlspecialchars($department['name']) ?></span>
     </div>
 
-    <h1><?= htmlspecialchars($department['name']) ?></h1>
-    <p class="landing-hint">Choose a check sheet section to continue.</p>
+    <div class="pk-head">
+        <h1><?= htmlspecialchars($department['name']) ?></h1>
+        <p>Choose a check sheet section to continue.</p>
+    </div>
 
-    <div class="dept-grid">
-        <?php foreach ($cards as $c): ?>
-            <a class="dept-card" href="<?= htmlspecialchars($c['href']) ?>">
-                <div class="dept-icon"><?= strtoupper(substr($c['label'], 0, 2)) ?></div>
-                <div class="dept-name"><?= htmlspecialchars($c['label']) ?></div>
-                <div class="dept-go"><?= isset($c['hint']) ? htmlspecialchars($c['hint']) . ' &rarr;' : 'Open &rarr;' ?></div>
-            </a>
+    <div class="pk-grid">
+        <?php foreach ($items as $it): ?>
+            <?php if ($it['type'] === 'section'): $s = $it['row']; $meta = $info[(int) $s['id']] ?? null; ?>
+                <?php [$cls, $lbl] = picker_status($meta['state'] ?? 'missing'); ?>
+                <a class="pk-card" href="<?= htmlspecialchars($s['route']) ?>?department_id=<?= $department_id ?>">
+                    <div class="pk-card-top">
+                        <div class="pk-ic"><?= picker_icon($s['name']) ?></div>
+                        <div>
+                            <h3><?= htmlspecialchars($s['name']) ?></h3>
+                            <div class="pk-sub"><?= htmlspecialchars(dashboard_freq_label($meta['freq'] ?? 'daily')) ?></div>
+                        </div>
+                    </div>
+                    <div class="pk-foot">
+                        <span class="pk-status <?= $cls ?>"><?= htmlspecialchars($lbl) ?></span>
+                        <span class="pk-go">Open &rarr;</span>
+                    </div>
+                </a>
+            <?php else: ?>
+                <div class="pk-card group">
+                    <div class="pk-card-top">
+                        <div class="pk-ic"><?= picker_icon($it['label']) ?></div>
+                        <div>
+                            <h3><?= htmlspecialchars($it['label']) ?> <span style="font-size:12px;color:var(--fg-3);font-weight:500;">— <?= count($it['members']) ?> sheet</span></h3>
+                            <div class="pk-sub">Group — pick a check sheet below</div>
+                        </div>
+                    </div>
+                    <div class="pk-sheets">
+                        <?php foreach ($it['members'] as $m): $mm = $info[(int) $m['id']] ?? null; [$dCls] = picker_status($mm['state'] ?? 'missing'); ?>
+                            <a class="pk-sheet" href="<?= htmlspecialchars($m['route']) ?>?department_id=<?= $department_id ?>">
+                                <span class="pk-sic"><?= picker_icon($m['name']) ?></span>
+                                <span class="pk-sheet-main">
+                                    <span class="pk-snm"><?= htmlspecialchars($m['name']) ?></span>
+                                    <span class="pk-sfr"><?= htmlspecialchars(dashboard_freq_label($mm['freq'] ?? 'daily')) ?></span>
+                                </span>
+                                <span class="pk-dot <?= $dCls ?>"></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endforeach; ?>
     </div>
 
-    <p class="landing-hint" style="margin-top:28px;"><a href="index.php" class="dept-switch-link">&larr; Change Department</a></p>
+    <div class="pk-back"><a href="index.php">&larr; Change Department</a></div>
 </div>
 </body>
 </html>
