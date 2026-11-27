@@ -96,7 +96,8 @@ async function loadModel() {
     oilTempEl.value = header?.oil_temp ?? '';
     roomTempEl.value = header?.room_temp ?? '';
     startTestTimeEl.value = header?.start_test_time ?? '';
-    checkerEl.value = header?.checker_id ?? '';
+    // Checker is locked to the logged-in user (f_checker holds their id); don't
+    // overwrite it with the draft's stored value.
     foremanEl.value = header?.foreman_id ?? '';
     supervisorEl.value = header?.supervisor_id ?? '';
 

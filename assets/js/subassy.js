@@ -77,7 +77,12 @@ async function loadMonth() {
     const header = data.header;
     supervisorSelect.value = header?.supervisor_id ?? '';
     foremanSelect.value = header?.foreman_id ?? '';
-    checkerSelect.value = header?.checker_id ?? '';
+    // Checker is locked to the logged-in user (f_checker is a disabled select
+    // carrying their id), so it isn't saved via a change event — persist it
+    // whenever the stored header doesn't already match.
+    if (jigId && checkerSelect.value && String(header?.checker_id ?? '') !== String(checkerSelect.value)) {
+        saveHeaderField('checker_id', checkerSelect.value);
+    }
 
     const banner = document.getElementById('unlock-banner');
     if (banner) banner.style.display = unlocked ? '' : 'none';
@@ -140,6 +145,6 @@ wireMonthNav('btn-prev-month', 'btn-next-month', monthSelect, yearSelect);
 
 supervisorSelect.addEventListener('change', () => saveHeaderField('supervisor_id', supervisorSelect.value));
 foremanSelect.addEventListener('change', () => saveHeaderField('foreman_id', foremanSelect.value));
-checkerSelect.addEventListener('change', () => saveHeaderField('checker_id', checkerSelect.value));
+// Checker is auto-filled from the login and persisted in loadMonth(); no change event.
 
 loadMonth();

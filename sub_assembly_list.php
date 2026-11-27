@@ -2,6 +2,7 @@
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/edit_requests.php';
+require_once __DIR__ . '/includes/checker_field.php';
 require_login();
 $pdo = get_db();
 
@@ -148,15 +149,7 @@ $years = range((int)date('Y') - 1, (int)date('Y') + 1);
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="field-block">
-            <label>Checker</label>
-            <select id="f_checker">
-                <option value="">—</option>
-                <?php foreach ($operators as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+        <?php render_checker_field('Checker'); ?>
     </div>
 
     <?php if ($selectedJig): ?>

@@ -3,6 +3,7 @@ require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/edit_requests.php';
 require_once __DIR__ . '/includes/calendar_lib.php';
+require_once __DIR__ . '/includes/checker_field.php';
 require_login();
 $pdo = get_db();
 
@@ -157,14 +158,7 @@ require __DIR__ . '/includes/app_top.php';
             </select>
         </div>
 
-        <div class="field-block">
-            <label>Checked by</label>
-            <select id="f_checker">
-                <?php foreach ($checked_by as $ch): ?>
-                    <option value="<?= $ch['id'] ?>" <?= $draft && $ch['id'] == $draft['checker_id'] ? 'selected' : '' ?>><?= htmlspecialchars($ch['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+        <?php render_checker_field('Checked by'); ?>
 
         <div class="field-block">
             <label>Check Time</label>

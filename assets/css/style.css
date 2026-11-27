@@ -104,6 +104,16 @@
     cursor: not-allowed;
 }
 
+/* Checker locked to the logged-in user: disabled so it can't be changed, but
+   it must stay fully readable (not greyed/faded like a normal disabled field). */
+.field-block select.locked-select:disabled {
+    background: var(--surface-2);
+    color: var(--fg);
+    -webkit-text-fill-color: var(--fg); /* Safari keeps disabled text grey without this */
+    opacity: 1;
+    cursor: default;
+}
+
 /* ---------- Combo select (custom dropdown, replaces native <datalist>) ---------- */
 .combo-wrap { position: relative; }
 

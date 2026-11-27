@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/checker_field.php';
 require_login();
 $pdo = get_db();
 
@@ -98,15 +99,7 @@ $export_route = 'fopump_test_list.php'; $export_dept = (int)$department['id']; r
             <label>Start Test Time</label>
             <input type="text" id="f_start_test_time" class="time-24h" inputmode="numeric" maxlength="5" placeholder="HH:MM" pattern="([01][0-9]|2[0-3]):[0-5][0-9]">
         </div>
-        <div class="field-block">
-            <label>Checker</label>
-            <select id="f_checker">
-                <option value="">—</option>
-                <?php foreach ($operators as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+        <?php render_checker_field('Checker'); ?>
         <div class="field-block">
             <label>Foreman</label>
             <select id="f_foreman">
