@@ -116,6 +116,11 @@
 
 /* ---------- Combo select (custom dropdown, replaces native <datalist>) ---------- */
 .combo-wrap { position: relative; }
+/* The combo input lives inside .combo-wrap (not a direct flex child of
+   .field-block), so it doesn't inherit the stretch the other fields get and
+   falls back to its intrinsic width — overflowing its grid cell and crowding
+   the field beside it (e.g. Model bleeding into Checker on tablets). Pin it. */
+.combo-input { width: 100%; box-sizing: border-box; }
 
 .combo-menu {
     position: absolute;
